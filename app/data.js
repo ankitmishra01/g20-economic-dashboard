@@ -1,5 +1,8 @@
-// Frontend data layer — fetches World Bank + IMF data, merges into window.G20_DATA.
-// All WB/IMF calls go through /api/wb and /api/imf (server-side proxy, 24h cache).
+// Frontend data layer — reads G20 economic data from Supabase.
+// One REST call fetches the entire dataset; much faster than live WB/IMF API calls.
+
+const SUPABASE_URL = 'https://qozknjenyhewmkapsizk.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
 
 (function () {
   // Index structure: G20_DATA[iso3][indicatorKey][year] = value
@@ -7,36 +10,36 @@
   let _data = {};
 
   async function loadAllData() {
-    const wbKeys = Object.entries(window.INDICATORS)
-      .filter(([, v]) => v.wb)
-      .map(([k]) => k);
-
-    // Fetch all WB indicators in parallel
-    const wbFetches = wbKeys.map(key =>
-      fetch(`/api/wb?indicator=${window.INDICATORS[key].wb}`)
-        .then(r => r.json())
-        .then(json => ({ key, data: json.data || [] }))
-        .catch(() => ({ key, data: [] }))
-    );
-
-    // Fetch IMF debt data
-    const imfFetch = fetch('/api/imf?indicator=GGXWDG_NGDP')
-      .then(r => r.json())
-      .then(json => ({ key: 'DEBT_GDP', data: json.data || [] }))
-      .catch(() => ({ key: 'DEBT_GDP', data: [] }));
-
-    const results = await Promise.all([...wbFetches, imfFetch]);
+    // Supabase default page size is 1000 rows — paginate until all rows are fetched.
+    const PAGE = 1000;
+    const rows = [];
+    let offset = 0;
+    while (true) {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/g20_economic_data?select=country_iso3,indicator_key,year,value&order=year.asc`,
+        {
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Range': `${offset}-${offset + PAGE - 1}`,
+          },
+        }
+      );
+      if (!r.ok) throw new Error(`Supabase fetch failed: ${r.status}`);
+      const page = await r.json();
+      rows.push(...page);
+      if (page.length < PAGE) break; // last page
+      offset += PAGE;
+    }
 
     // Build nested index
     _data = {};
-    for (const { key, data } of results) {
-      for (const row of data) {
-        const iso3 = row.country;
-        if (!iso3) continue;
-        if (!_data[iso3]) _data[iso3] = {};
-        if (!_data[iso3][key]) _data[iso3][key] = {};
-        _data[iso3][key][row.year] = row.value;
-      }
+    for (const row of rows) {
+      const { country_iso3: iso3, indicator_key: key, year, value } = row;
+      if (!iso3 || !key) continue;
+      if (!_data[iso3]) _data[iso3] = {};
+      if (!_data[iso3][key]) _data[iso3][key] = {};
+      _data[iso3][key][year] = value;
     }
 
     // Build _latest: most recent non-null value per country per indicator
