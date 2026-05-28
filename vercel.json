@@ -4,7 +4,8 @@
     { "source": "/api/wb",    "destination": "/api/wb.js" },
     { "source": "/api/imf",   "destination": "/api/imf.js" },
     { "source": "/api/news",  "destination": "/api/news.js" },
-    { "source": "/api/agent", "destination": "/api/agent.js" },
+    { "source": "/api/agent",  "destination": "/api/agent.js" },
+    { "source": "/api/status", "destination": "/api/status.js" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "headers": [
