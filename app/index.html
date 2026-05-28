@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>G20 Economic Dashboard</title>
+  <meta name="description" content="Live G20 economic data — GDP, inflation, unemployment, debt, and more. Powered by World Bank and IMF open data.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles/main.css">
+
+  <!-- Config must load before everything -->
+  <script src="config.js"></script>
+</head>
+<body>
+<div class="dashboard" id="app">
+
+  <!-- ── Sidebar ──────────────────────────────────────────────────────────── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-name">G20 Dashboard</div>
+      <div class="sidebar-brand-sub">World Bank · IMF · Open Data</div>
+    </div>
+    <nav class="sidebar-nav" id="sidebar-nav">
+      <!-- Populated by main.js -->
+    </nav>
+    <div class="sidebar-foot">
+      Data: <a href="https://data.worldbank.org" target="_blank" rel="noopener">World Bank</a> &amp;
+      <a href="https://www.imf.org/external/datamapper" target="_blank" rel="noopener">IMF DataMapper</a>
+    </div>
+  </aside>
+
+  <!-- ── Topbar ───────────────────────────────────────────────────────────── -->
+  <header class="topbar" id="topbar">
+    <div class="topbar-crumbs" id="topbar-crumbs">
+      <span>G20 Dashboard</span>
+      <span>›</span>
+      <span class="topbar-crumb-active" id="topbar-page">Overview</span>
+    </div>
+    <div class="topbar-actions">
+      <div class="topbar-badge">
+        <div class="topbar-badge-dot"></div>
+        <span id="data-status">Loading data…</span>
+      </div>
+      <button class="agent-fab" id="agent-fab" onclick="toggleAgentDrawer()">
+        <span class="agent-fab-icon">✦</span>
+        <span>Ask AI Analyst</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Main content ─────────────────────────────────────────────────────── -->
+  <main class="main-content" id="main-content">
+    <!-- ── News ticker (inside main, at top) ──────────────────────────────── -->
+    <div class="news-ticker" id="news-ticker" style="margin: -32px -32px 28px; width: calc(100% + 64px);">
+      <div class="news-ticker-label">
+        <span class="news-ticker-dot"></span>
+        Economic News
+      </div>
+      <div class="news-ticker-mask">
+        <div class="news-ticker-track" id="news-ticker-track">
+          <span class="news-ticker-item" style="color:rgba(240,244,248,0.45)">Loading headlines…</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="page-root">
+      <div class="loading-spinner">
+        <div class="spinner"></div>
+        <span>Fetching World Bank &amp; IMF data…</span>
+      </div>
+    </div>
+  </main>
+
+</div><!-- /.dashboard -->
+
+<!-- ── Agent drawer ────────────────────────────────────────────────────────── -->
+<div class="agent-drawer-backdrop" id="agent-drawer-backdrop" onclick="toggleAgentDrawer()"></div>
+<aside class="agent-drawer" id="agent-drawer">
+  <div class="agent-head">
+    <div class="agent-head-title">
+      <span class="agent-head-icon">✦</span>
+      AI Economic Analyst
+    </div>
+    <button class="agent-close" onclick="toggleAgentDrawer()" aria-label="Close">×</button>
+  </div>
+  <div class="agent-input-area">
+    <input class="agent-input" id="agent-input" type="text"
+      placeholder="Ask about G20 economies…"
+      onkeydown="if(event.key==='Enter') sendAgentQuestion()">
+    <button class="agent-send" id="agent-send" onclick="sendAgentQuestion()">Ask</button>
+  </div>
+  <div class="agent-body" id="agent-body"></div>
+  <div class="agent-foot">
+    <div class="agent-suggested">
+      <label>Suggested questions</label>
+      <button class="agent-sq" onclick="askSuggested(this)">Which G20 country has the highest debt-to-GDP ratio?</button>
+      <button class="agent-sq" onclick="askSuggested(this)">Compare GDP growth in India and China over the last decade.</button>
+      <button class="agent-sq" onclick="askSuggested(this)">Which economies are showing signs of recession risk?</button>
+      <button class="agent-sq" onclick="askSuggested(this)">What is the current inflation outlook across G20 nations?</button>
+    </div>
+  </div>
+</aside>
+
+<!-- Scripts — order matters: config → data → atoms → motion → components → main -->
+<script src="data.js"></script>
+<script src="components/atoms.js"></script>
+<script src="components/motion.js"></script>
+<script src="components/overview.js"></script>
+<script src="components/country.js"></script>
+<script src="components/compare.js"></script>
+<script src="components/flags.js"></script>
+<script src="components/news.js"></script>
+<script src="main.js"></script>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+</body>
+</html>

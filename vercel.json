@@ -1,0 +1,18 @@
+{
+  "outputDirectory": "app",
+  "rewrites": [
+    { "source": "/api/wb",    "destination": "/api/wb.js" },
+    { "source": "/api/imf",   "destination": "/api/imf.js" },
+    { "source": "/api/news",  "destination": "/api/news.js" },
+    { "source": "/api/agent", "destination": "/api/agent.js" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" }
+      ]
+    }
+  ]
+}
