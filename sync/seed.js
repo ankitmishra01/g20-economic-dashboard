@@ -13,6 +13,11 @@ const G20_ISO3 = [
   'CHN','IND','BRA','MEX','ARG','RUS','SAU','ZAF','IDN','TUR','EUU',
 ];
 
+// OECD member countries that are also G20 members
+const OECD_G20 = ['AUS','CAN','DEU','FRA','GBR','ITA','JPN','KOR','MEX','TUR','USA'];
+// Plus OECD key partners that have meaningful R&D/health data
+const OECD_PARTNERS = ['CHN','IND','BRA','ARG','RUS','ZAF','IDN'];
+
 const WB_INDICATORS = {
   GDP:          'NY.GDP.MKTP.CD',
   GDP_GROWTH:   'NY.GDP.MKTP.KD.ZG',
@@ -23,6 +28,9 @@ const WB_INDICATORS = {
   CO2_CAPITA:   'EN.GHG.CO2.PC.CE.AR5',  // archived: was EN.ATM.CO2E.PC
   TRADE_GDP:    'NE.TRD.GNFS.ZS',
   POPULATION:   'SP.POP.TOTL',
+  HEALTH_EXP:   'SH.XPD.CHEX.GD.ZS',   // Current health expenditure % GDP (WHO via WB)
+  RD_EXP:       'GB.XPD.RSDV.GD.ZS',   // R&D expenditure % GDP (UNESCO via WB; OECD overwrites)
+  GINI:         'SI.POV.GINI',           // Gini inequality index (World Bank)
 };
 
 // IMF countries (EUU not available in IMF DataMapper)
@@ -52,6 +60,9 @@ const RANGES = {
   TRADE_GDP:    [0,     200],    // % of GDP; G20 none over 100 except Saudi ~60
   POPULATION:   [1e6,   2e9],
   DEBT_GDP:     [0,     350],    // % of GDP; Japan ~260%, some others high
+  HEALTH_EXP:   [1,     25],    // % GDP; USA ~17%, most OECD ~8-12%
+  RD_EXP:       [0,     7],     // % GDP; Korea ~4.9%, most 1-3%
+  GINI:         [20,    70],    // 0-100 index; ZAF ~63, DEN ~28
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -143,6 +154,55 @@ async function fetchIMF() {
   return rows;
 }
 
+// ── OECD ─────────────────────────────────────────────────────────────────────
+
+function parseOECDSDMX(json, indicatorKey) {
+  const structure = json?.data?.structures?.[0];
+  const dataSet   = json?.data?.dataSets?.[0];
+  if (!structure || !dataSet) return [];
+
+  const seriesDims = structure.dimensions?.series || [];
+  const obsDims    = structure.dimensions?.observation || [];
+
+  const areaIdx    = seriesDims.findIndex(d => d.id === 'REF_AREA');
+  if (areaIdx === -1) return [];
+  const areaValues = seriesDims[areaIdx].values;
+
+  const timeDim    = obsDims.find(d => d.id === 'TIME_PERIOD');
+  const timeValues = timeDim?.values || [];
+
+  const rows = [];
+  for (const [seriesKey, seriesData] of Object.entries(dataSet.series || {})) {
+    const parts = seriesKey.split(':');
+    const iso3  = areaValues[parseInt(parts[areaIdx])]?.id;
+    if (!iso3 || !G20_ISO3.includes(iso3)) continue;
+
+    for (const [obsIdx, obsArr] of Object.entries(seriesData.observations || {})) {
+      const value = Array.isArray(obsArr) ? obsArr[0] : obsArr;
+      const year  = parseInt(timeValues[parseInt(obsIdx)]?.id, 10);
+      if (!year || value === null || value === undefined || isNaN(Number(value))) continue;
+      rows.push({ country_iso3: iso3, indicator_key: indicatorKey, year, value: Number(value), source: 'oecd' });
+    }
+  }
+  return rows;
+}
+
+async function fetchOECDRD() {
+  // OECD MSTI — Gross domestic expenditure on R&D (GERD) as % of GDP.
+  // Overwrites WB R&D data for OECD members; non-members keep WB values.
+  const countries = [...OECD_G20, ...OECD_PARTNERS].join('+');
+  const url = `https://sdmx.oecd.org/public/rest/data/OECD.STI.STP,DSD_MSTI@DF_MSTI,1.0/A.${countries}.GERD.PT_B1GQ?format=jsondata&startPeriod=2000&endPeriod=2024`;
+  const r = await fetch(url, {
+    headers: { 'User-Agent': 'G20Dashboard-Seed/1.0', 'Accept': 'application/json' },
+    signal: AbortSignal.timeout(45000),
+  });
+  if (!r.ok) throw new Error(`OECD MSTI API ${r.status}`);
+  const json = await r.json();
+  const rows = parseOECDSDMX(json, 'RD_EXP');
+  if (!rows.length) throw new Error('OECD MSTI: no rows parsed — check dimension key');
+  return rows;
+}
+
 // ── Validation ────────────────────────────────────────────────────────────────
 
 async function validate() {
@@ -196,14 +256,17 @@ async function validate() {
 
     report.indicators[ind] = { covered: covered.length, missing, latestYear, outOfRange };
 
-    const staleMark = latestYear < 2021 ? ' ⚠ STALE'   : '';
-    const missMark  = missing.length > 2 ? ` ⚠ MISSING: ${missing.slice(0,4).join(',')}${missing.length > 4 ? '…' : ''}` : '';
+    // GINI is survey-based and only published every few years — relax thresholds
+    const staleYear    = ind === 'GINI' ? 2015 : 2021;
+    const minCoverage  = ind === 'GINI' ? 10   : 2;     // allow sparser coverage
+    const staleMark = latestYear < staleYear ? ' ⚠ STALE'   : '';
+    const missMark  = missing.length > minCoverage ? ` ⚠ MISSING: ${missing.slice(0,4).join(',')}${missing.length > 4 ? '…' : ''}` : '';
     const rangeMark = outOfRange.length  ? ` ⚠ OUT-OF-RANGE: ${outOfRange.join(',')}` : '';
     console.log(`  ${ind.padEnd(14)} covered:${String(covered.length).padStart(2)}/19  latest:${latestYear || '—'}${staleMark}${missMark}${rangeMark}`);
 
-    if (missing.length > 2)    issues.push(`${ind}: missing ${missing.join(', ')}`);
-    if (latestYear < 2021)     issues.push(`${ind}: latest year ${latestYear} — stale`);
-    if (outOfRange.length > 0) issues.push(`${ind}: out-of-range for ${outOfRange.join(', ')}`);
+    if (missing.length > minCoverage) issues.push(`${ind}: missing ${missing.join(', ')}`);
+    if (latestYear < staleYear)       issues.push(`${ind}: latest year ${latestYear} — stale`);
+    if (outOfRange.length > 0)        issues.push(`${ind}: out-of-range for ${outOfRange.join(', ')}`);
   }
 
   console.log(`\n  Total rows in Supabase: ${allRows.length.toLocaleString()}`);
@@ -249,6 +312,19 @@ async function main() {
       failures++;
     }
     await new Promise(r => setTimeout(r, 600)); // respect WB rate limit
+  }
+
+  // OECD R&D (MSTI) — overwrites WB R&D data for OECD member countries
+  process.stdout.write(`Fetching RD_EXP  (OECD MSTI GERD % GDP)…`);
+  try {
+    const rows = await fetchOECDRD();
+    process.stdout.write(` ${rows.length} rows → upserting…`);
+    await upsert(rows);
+    totalRows += rows.length;
+    console.log(` ✓`);
+  } catch (e) {
+    console.log(` ✗ ${e.message} (WB fallback retained)`);
+    // Non-fatal: WB R&D data already upserted above
   }
 
   // IMF debt / GDP

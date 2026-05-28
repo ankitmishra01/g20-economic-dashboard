@@ -204,5 +204,6 @@
   function mountPageCharts(page) {
     if (page === 'overview') mountOverviewCharts();
     if (page === 'compare')  mountCompareCharts();
+    if (page.startsWith('country/')) window.mountCountryProfileCharts(page.split('/')[1]);
   }
 })();

@@ -35,6 +35,9 @@ const INDICATORS = {
   CO2_CAPITA:   { wb: 'EN.ATM.CO2E.PC',    label: 'CO₂ per Capita',   unit: 'tonnes', format: 'decimal'   },
   TRADE_GDP:    { wb: 'NE.TRD.GNFS.ZS',    label: 'Trade',             unit: '% GDP',  format: 'percent'   },
   POPULATION:   { wb: 'SP.POP.TOTL',       label: 'Population',        unit: '',       format: 'millions'  },
+  HEALTH_EXP:   { wb: 'SH.XPD.CHEX.GD.ZS',label: 'Health Spending',   unit: '% GDP',  format: 'percent'   },
+  RD_EXP:       { oecd: true,              label: 'R&D Spending',       unit: '% GDP',  format: 'percent'   },
+  GINI:         { wb: 'SI.POV.GINI',       label: 'Gini Index',        unit: '',       format: 'decimal'   },
 };
 
 // Economic flag thresholds — mirrors the Holocene "Flag/Watch" concept.

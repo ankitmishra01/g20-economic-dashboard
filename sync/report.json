@@ -1,0 +1,87 @@
+{
+  "generatedAt": "2026-05-28T15:13:13.716Z",
+  "totalRows": 6299,
+  "indicators": {
+    "GDP": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2024,
+      "outOfRange": []
+    },
+    "GDP_GROWTH": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2024,
+      "outOfRange": []
+    },
+    "INFLATION": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2024,
+      "outOfRange": []
+    },
+    "UNEMPLOYMENT": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2024,
+      "outOfRange": []
+    },
+    "CURRENT_ACC": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2024,
+      "outOfRange": []
+    },
+    "GDP_CAPITA": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2024,
+      "outOfRange": []
+    },
+    "CO2_CAPITA": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2024,
+      "outOfRange": []
+    },
+    "TRADE_GDP": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2024,
+      "outOfRange": []
+    },
+    "POPULATION": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2024,
+      "outOfRange": []
+    },
+    "HEALTH_EXP": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2024,
+      "outOfRange": []
+    },
+    "RD_EXP": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2024,
+      "outOfRange": []
+    },
+    "GINI": {
+      "covered": 18,
+      "missing": [
+        "SAU"
+      ],
+      "latestYear": 2024,
+      "outOfRange": []
+    },
+    "DEBT_GDP": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2031,
+      "outOfRange": []
+    }
+  },
+  "issues": []
+}

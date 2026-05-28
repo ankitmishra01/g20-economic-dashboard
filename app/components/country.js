@@ -59,19 +59,24 @@ function renderCountryProfile(iso3) {
   const country = G20.find(c => c.iso3 === iso3);
   if (!country) return `<div class="error-state">Country not found: ${A.escapeText(iso3)}</div>`;
 
-  const gdp  = window.G20Data.getLatest(iso3, 'GDP');
-  const gr   = window.G20Data.getLatest(iso3, 'GDP_GROWTH');
-  const inf  = window.G20Data.getLatest(iso3, 'INFLATION');
-  const une  = window.G20Data.getLatest(iso3, 'UNEMPLOYMENT');
-  const debt = window.G20Data.getLatest(iso3, 'DEBT_GDP');
-  const cap  = window.G20Data.getLatest(iso3, 'GDP_CAPITA');
-  const co2  = window.G20Data.getLatest(iso3, 'CO2_CAPITA');
-  const trade= window.G20Data.getLatest(iso3, 'TRADE_GDP');
-  const pop  = window.G20Data.getLatest(iso3, 'POPULATION');
+  const gdp    = window.G20Data.getLatest(iso3, 'GDP');
+  const gr     = window.G20Data.getLatest(iso3, 'GDP_GROWTH');
+  const inf    = window.G20Data.getLatest(iso3, 'INFLATION');
+  const une    = window.G20Data.getLatest(iso3, 'UNEMPLOYMENT');
+  const debt   = window.G20Data.getLatest(iso3, 'DEBT_GDP');
+  const cap    = window.G20Data.getLatest(iso3, 'GDP_CAPITA');
+  const co2    = window.G20Data.getLatest(iso3, 'CO2_CAPITA');
+  const trade  = window.G20Data.getLatest(iso3, 'TRADE_GDP');
+  const pop    = window.G20Data.getLatest(iso3, 'POPULATION');
+  const health = window.G20Data.getLatest(iso3, 'HEALTH_EXP');
+  const rd     = window.G20Data.getLatest(iso3, 'RD_EXP');
+  const gini   = window.G20Data.getLatest(iso3, 'GINI');
 
   const growthColor = !gr?.value ? 'rgba(240,244,248,0.8)' :
                       gr.value >= 2 ? '#4ade80' :
                       gr.value < 0  ? '#f87171' : 'rgba(240,244,248,0.8)';
+
+  const hasOECDCharts = health?.value || rd?.value;
 
   return `
     <button class="back-btn" onclick="navTo('countries')">
@@ -136,6 +141,33 @@ function renderCountryProfile(iso3) {
       </div>
     </div>
 
+    <div class="kpi-strip hc-enter" style="margin-top:-8px">
+      <div class="kpi-card">
+        <div class="kpi-label">Health Spending</div>
+        <div class="kpi-value">${A.fmtPct(health?.value)}</div>
+        <div class="kpi-sub">% GDP · ${health?.year || '—'} · WHO</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">R&amp;D Spending</div>
+        <div class="kpi-value">${A.fmtPct(rd?.value)}</div>
+        <div class="kpi-sub">% GDP · ${rd?.year || '—'} · OECD</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Gini Index</div>
+        <div class="kpi-value" style="color:${gini?.value > 45 ? 'var(--g20-amber)' : 'var(--fg-1)'}">
+          ${gini?.value ? A.fmtDecimal(gini.value) : '—'}
+        </div>
+        <div class="kpi-sub">${gini?.year || 'not available'} · World Bank</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Current Account</div>
+        <div class="kpi-value" style="color:${(window.G20Data.getLatest(iso3,'CURRENT_ACC')?.value||0) < -5 ? 'var(--g20-red)' : 'var(--fg-1)'}">
+          ${A.fmtPct(window.G20Data.getLatest(iso3,'CURRENT_ACC')?.value)}
+        </div>
+        <div class="kpi-sub">% GDP · ${window.G20Data.getLatest(iso3,'CURRENT_ACC')?.year || '—'}</div>
+      </div>
+    </div>
+
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px" class="hc-enter">
       <div class="chart-card">
         <div class="chart-card__title">GDP — 10 Year Trend</div>
@@ -144,69 +176,84 @@ function renderCountryProfile(iso3) {
       </div>
       <div class="chart-card">
         <div class="chart-card__title">GDP Growth Rate</div>
-        <div class="chart-card__sub">Annual % change</div>
+        <div class="chart-card__sub">Annual % change, World Bank</div>
         <div class="chart-wrap"><canvas id="profile-growth-chart"></canvas></div>
       </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px" class="hc-enter">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px" class="hc-enter">
       <div class="chart-card">
         <div class="chart-card__title">Inflation (CPI)</div>
-        <div class="chart-card__sub">Annual % change</div>
+        <div class="chart-card__sub">Annual % change, World Bank</div>
         <div class="chart-wrap"><canvas id="profile-inflation-chart"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-card__title">Unemployment Rate</div>
-        <div class="chart-card__sub">% of total labour force</div>
+        <div class="chart-card__sub">% of total labour force, World Bank</div>
         <div class="chart-wrap"><canvas id="profile-unemployment-chart"></canvas></div>
       </div>
     </div>
 
-    <script>
-    (function() {
-      const iso3 = '${iso3}';
-      function mountProfileCharts() {
-        if (!window.Chart) { setTimeout(mountProfileCharts, 200); return; }
-
-        function lineChart(canvasId, key, color, label) {
-          const el = document.getElementById(canvasId);
-          if (!el) return;
-          const series = window.G20Data.getSeries(iso3, key, 2010);
-          if (!series.length) return;
-          new Chart(el.getContext('2d'), {
-            type: 'line',
-            data: {
-              labels: series.map(d => d.year),
-              datasets: [{
-                data: series.map(d => d.value),
-                borderColor: color,
-                backgroundColor: color.replace('1)', '0.08)'),
-                borderWidth: 2, fill: true, tension: 0.3, pointRadius: 3,
-                label: label,
-              }],
-            },
-            options: {
-              responsive: true, maintainAspectRatio: false,
-              plugins: { legend: { display: false }, tooltip: { callbacks: {
-                label: ctx => ' ' + ctx.parsed.y.toFixed(key === 'GDP' ? 2 : 1) + (key === 'GDP' ? ' USD' : '%'),
-              }}},
-              scales: {
-                x: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 } } },
-                y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 },
-                  callback: v => key === 'GDP' ? '$' + (v/1e12).toFixed(1) + 'T' : v.toFixed(1) + '%',
-                }},
-              },
-            },
-          });
-        }
-
-        lineChart('profile-gdp-chart',          'GDP',          'rgba(37,99,235,1)',   'GDP');
-        lineChart('profile-growth-chart',        'GDP_GROWTH',   'rgba(34,197,94,1)',   'Growth %');
-        lineChart('profile-inflation-chart',     'INFLATION',    'rgba(245,158,11,1)',  'Inflation %');
-        lineChart('profile-unemployment-chart',  'UNEMPLOYMENT', 'rgba(239,68,68,1)',   'Unemployment %');
-      }
-      setTimeout(mountProfileCharts, 100);
-    })();
-    </script>
+    ${hasOECDCharts ? `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px" class="hc-enter">
+      ${health?.value ? `
+      <div class="chart-card">
+        <div class="chart-card__title">Health Expenditure</div>
+        <div class="chart-card__sub">% of GDP, WHO / World Bank</div>
+        <div class="chart-wrap"><canvas id="profile-health-chart"></canvas></div>
+      </div>` : '<div></div>'}
+      ${rd?.value ? `
+      <div class="chart-card">
+        <div class="chart-card__title">R&amp;D Expenditure (GERD)</div>
+        <div class="chart-card__sub">% of GDP, OECD MSTI</div>
+        <div class="chart-wrap"><canvas id="profile-rd-chart"></canvas></div>
+      </div>` : '<div></div>'}
+    </div>` : ''}
   `;
 }
+
+// Charts are mounted by mountPageCharts in main.js — <script> inside innerHTML doesn't execute.
+window.mountCountryProfileCharts = function(iso3) {
+  function tryMount() {
+    if (!window.Chart) { setTimeout(tryMount, 200); return; }
+
+    function lineChart(canvasId, key, color, fmtFn) {
+      const el = document.getElementById(canvasId);
+      if (!el) return;
+      const series = window.G20Data.getSeries(iso3, key, 2010);
+      if (!series.length) return;
+      new Chart(el.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: series.map(d => d.year),
+          datasets: [{
+            data: series.map(d => d.value),
+            borderColor: color,
+            backgroundColor: color.replace('1)', '0.08)'),
+            borderWidth: 2, fill: true, tension: 0.3, pointRadius: 3,
+          }],
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { callbacks: {
+            label: ctx => ' ' + fmtFn(ctx.parsed.y),
+          }}},
+          scales: {
+            x: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 } } },
+            y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 },
+              callback: v => fmtFn(v),
+            }},
+          },
+        },
+      });
+    }
+
+    lineChart('profile-gdp-chart',          'GDP',          'rgba(37,99,235,1)',   v => '$' + (v/1e12).toFixed(2) + 'T');
+    lineChart('profile-growth-chart',        'GDP_GROWTH',   'rgba(34,197,94,1)',   v => v.toFixed(1) + '%');
+    lineChart('profile-inflation-chart',     'INFLATION',    'rgba(245,158,11,1)',  v => v.toFixed(1) + '%');
+    lineChart('profile-unemployment-chart',  'UNEMPLOYMENT', 'rgba(239,68,68,1)',   v => v.toFixed(1) + '%');
+    lineChart('profile-health-chart',        'HEALTH_EXP',   'rgba(16,185,129,1)',  v => v.toFixed(1) + '%');
+    lineChart('profile-rd-chart',            'RD_EXP',       'rgba(139,92,246,1)',  v => v.toFixed(2) + '%');
+  }
+  tryMount();
+};
