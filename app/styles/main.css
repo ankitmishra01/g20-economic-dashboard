@@ -1047,6 +1047,46 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
 .standing-legend { display: flex; align-items: center; gap: 12px; font-family: var(--font-mono); font-size: 10px; color: var(--text-3); padding: 0 16px 12px; }
 .standing-legend-dot { width: 8px; height: 8px; border-radius: 2px; }
 
+/* ── OECD-style country analysis sections ────────────────────────────────────── */
+.brief-kf {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 6px 16px;
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--rule);
+}
+.brief-kf__row { display: flex; flex-direction: column; gap: 2px; }
+.brief-kf__lbl {
+  font-size: 10px;
+  color: var(--text-4);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.brief-kf__val { font-size: 13px; font-weight: 600; color: var(--ink); }
+.brief-kf__yr  { font-size: 10px; color: var(--text-4); font-family: var(--font-mono); }
+
+.brief-section { margin-bottom: 18px; }
+.brief-section:last-child { margin-bottom: 0; }
+.brief-section__hd {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-bottom: 7px;
+  font-family: var(--font-mono);
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--rule);
+}
+.brief-section__body {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--text-2);
+}
+
 /* ── Compare page ────────────────────────────────────────────────────────────── */
 .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
 .compare-select-row { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }

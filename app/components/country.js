@@ -286,6 +286,42 @@ function renderStanding(iso3) {
     </div>`;
 }
 
+// ── Key facts strip (shown above analysis sections) ───────────────────────────
+function renderKeyFacts(iso3) {
+  const get = key => window.G20Data.getLatest(iso3, key);
+  const gdp    = get('GDP');
+  const gr     = get('GDP_GROWTH');
+  const inf    = get('INFLATION');
+  const une    = get('UNEMPLOYMENT');
+  const debt   = get('DEBT_GDP');
+  const fiscal = get('FISCAL_BAL');
+  const cap    = get('GDP_CAPITA');
+  const life   = get('LIFE_EXPECT');
+
+  const items = [
+    gdp    ? { label: 'GDP',          val: '$' + (gdp.value/1e12).toFixed(2) + 'T',   yr: gdp.year }    : null,
+    gr     ? { label: 'GDP Growth',   val: (gr.value >= 0 ? '+' : '') + gr.value.toFixed(1) + '%', yr: gr.year,
+               cls: gr.value < 0 ? 'color:#C0392B' : gr.value >= 4 ? 'color:#27AE60' : '' } : null,
+    inf    ? { label: 'Inflation',    val: inf.value.toFixed(1) + '%',    yr: inf.year,
+               cls: inf.value > 8 ? 'color:#C0392B' : inf.value > 4 ? 'color:#E8A236' : '' } : null,
+    une    ? { label: 'Unemployment', val: une.value.toFixed(1) + '%',    yr: une.year }    : null,
+    debt   ? { label: 'Debt / GDP',   val: debt.value.toFixed(0) + '%',   yr: debt.year,
+               cls: debt.value > 100 ? 'color:#E8A236' : '' } : null,
+    fiscal ? { label: 'Fiscal Bal.',  val: (fiscal.value >= 0 ? '+' : '') + fiscal.value.toFixed(1) + '%', yr: fiscal.year,
+               cls: fiscal.value < -6 ? 'color:#C0392B' : fiscal.value < 0 ? 'color:#E8A236' : 'color:#27AE60' } : null,
+    cap    ? { label: 'GDP / Capita', val: '$' + Math.round(cap.value/1000) + 'K',     yr: cap.year }    : null,
+    life   ? { label: 'Life Expect.', val: life.value.toFixed(1) + ' yrs',              yr: life.year }   : null,
+  ].filter(Boolean);
+
+  if (!items.length) return '';
+  return `<div class="brief-kf">${items.map(it => `
+    <div class="brief-kf__row">
+      <span class="brief-kf__lbl">${it.label}</span>
+      <span class="brief-kf__val" style="${it.cls || ''}">${it.val}</span>
+      <span class="brief-kf__yr">${it.yr}</span>
+    </div>`).join('')}</div>`;
+}
+
 // ── Analyst commentary block ──────────────────────────────────────────────────
 function renderAnalystBlock(iso3, countryName, contextSnippet, title, blockId) {
   blockId = blockId || 'main';
@@ -423,12 +459,28 @@ function loadSavedNotes(iso3) {
     if (blockId === 'main') {
       const cc = window.G20_COMMENTARY?.countries?.[iso3];
       if (cc) {
-        body.innerHTML = `
-          <div class="analyst-draft" style="padding:0">
-            <div style="font-weight:600;font-size:13px;margin-bottom:14px;color:var(--ink);line-height:1.4">${A.escapeText(cc.headline)}</div>
-            ${cc.paragraphs.map(p => `<p style="margin:0 0 12px;line-height:1.7;font-size:13px;color:var(--text-2)">${A.escapeText(p)}</p>`).join('')}
-          </div>`;
-        if (status) status.textContent = 'Research brief · edit or save to keep';
+        let inner = '';
+        if (cc.sections && cc.sections.length) {
+          // New OECD-style sections schema (5 named sections with headings)
+          inner = renderKeyFacts(iso3) +
+            cc.sections.map(s => `
+              <div class="brief-section">
+                <div class="brief-section__hd">${A.escapeText(s.heading)}</div>
+                <p class="brief-section__body">${A.escapeText(s.body)}</p>
+              </div>`).join('');
+        } else if (cc.paragraphs) {
+          // Legacy plain-paragraph schema (backward-compatible)
+          inner = renderKeyFacts(iso3) +
+            cc.paragraphs.map(p => `<p style="margin:0 0 12px;line-height:1.75;font-size:13px;color:var(--text-2)">${A.escapeText(p)}</p>`).join('');
+        }
+        if (inner) {
+          body.innerHTML = `
+            <div class="analyst-draft" style="padding:0">
+              <div style="font-weight:600;font-size:13px;margin-bottom:16px;color:var(--ink);line-height:1.4;padding-bottom:12px;border-bottom:1px solid var(--rule)">${A.escapeText(cc.headline)}</div>
+              ${inner}
+            </div>`;
+          if (status) status.textContent = 'Research brief · edit or save to keep';
+        }
       }
     }
   });

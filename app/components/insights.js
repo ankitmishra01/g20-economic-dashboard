@@ -306,10 +306,35 @@
       <tbody>${rows.map(r => `<tr><td>${esc(r[0])}</td><td>${r[1]}</td><td><span class="src-tag">${esc(r[2])}</span></td></tr>`).join('')}</tbody>
     </table>`;
 
+    // Auto-generated narrative sentences from live data
+    const g20ex = (window.G20 || []).filter(c => c.iso3 !== 'EUU');
+    const g20MedianGrowth  = median(g20ex.map(c => getLatest(c.iso3, 'GDP_GROWTH')?.value).filter(v => v != null));
+    const g20MedianYouth   = median(g20ex.map(c => getLatest(c.iso3, 'YOUTH_UNEMP')?.value).filter(v => v != null));
+    const g20MedianDebt    = median(g20ex.map(c => getLatest(c.iso3, 'DEBT_GDP')?.value).filter(v => v != null));
+
+    const sentences = [];
+    if (gr && g20MedianGrowth != null) {
+      const vs = gr.value >= g20MedianGrowth ? 'above' : 'below';
+      sentences.push(`${esc(country.name)} recorded ${sign(gr.value)}${pct(gr.value)} GDP growth in ${gr.year}, ${vs} the G20 median of ${sign(g20MedianGrowth)}${pct(g20MedianGrowth)}.`);
+    }
+    if (fiscal && debt) {
+      const balDesc = fiscal.value > 0 ? `a surplus of ${pct(fiscal.value)}` : `a deficit of ${pct(Math.abs(fiscal.value))}`;
+      const debtDesc = debt.value > g20MedianDebt ? 'above' : 'below';
+      sentences.push(`The fiscal position shows ${balDesc} of GDP (${fiscal.year}) with government debt at ${pct(debt.value, 0)} of GDP — ${debtDesc} the G20 median of ${pct(g20MedianDebt, 0)}.`);
+    }
+    if (youth && g20MedianYouth != null) {
+      const yDesc = youth.value > 25 ? `elevated at ${pct(youth.value)}` : youth.value > g20MedianYouth ? `${pct(youth.value)}, above the G20 median` : `${pct(youth.value)}, below the G20 median`;
+      sentences.push(`Youth unemployment stands at ${yDesc} of ${pct(g20MedianYouth)} (${youth.year}).`);
+    }
+
+    const narrative = sentences.length
+      ? `<p class="ins-p" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--rule)">${sentences.join(' ')}</p>`
+      : '';
+
     return wrap(
       `${country.flag} ${country.name} — Economic Profile`,
-      tbl,
-      'World Bank, IMF DataMapper, OECD MSTI'
+      tbl + narrative,
+      'World Bank, IMF DataMapper, OECD'
     );
   }
 

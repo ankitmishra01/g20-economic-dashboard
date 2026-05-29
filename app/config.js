@@ -47,6 +47,11 @@ const INDICATORS = {
   TAX_REVENUE:  { wb: 'GC.TAX.TOTL.GD.ZS',       label: 'Tax Revenue',       unit: '% GDP',  format: 'percent',   source: 'WB'   },
   MANUFACTURING:{ wb: 'NV.IND.MANF.ZS',          label: 'Manufacturing',     unit: '% GDP',  format: 'percent',   source: 'WB'   },
   FISCAL_BAL:   { imf: 'GGXCNL_NGDP',            label: 'Fiscal Balance',    unit: '% GDP',  format: 'percent',   source: 'IMF'  },
+  LIFE_EXPECT:  { wb: 'SP.DYN.LE00.IN',          label: 'Life Expectancy',   unit: 'yrs',    format: 'number',    source: 'WB'   },
+  FEMALE_LFP:   { wb: 'SL.TLF.CACT.FE.ZS',      label: 'Female LFP',        unit: '%',      format: 'percent',   source: 'WB'   },
+  GDP_CAPITA_PPP: { wb: 'NY.GDP.PCAP.PP.CD',     label: 'GDP/capita PPP',    unit: '$',      format: 'thousands', source: 'WB'   },
+  RESEARCHERS:  { wb: 'SP.POP.SCIE.RD.P6',       label: 'Researchers',       unit: '/mn pop',format: 'number',    source: 'WB+OECD' },
+  PRODUCTIVITY: { label: 'Labour Productivity',   unit: 'idx',                format: 'number', source: 'OECD'   },
 };
 
 // Economic flag thresholds — mirrors the Holocene "Flag/Watch" concept.

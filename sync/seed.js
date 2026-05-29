@@ -38,6 +38,10 @@ const WB_INDICATORS = {
   EXPORTS_GDP:  'NE.EXP.GNFS.ZS',        // Exports of goods & services % GDP
   TAX_REVENUE:  'GC.TAX.TOTL.GD.ZS',    // Tax revenue % GDP
   MANUFACTURING:'NV.IND.MANF.ZS',        // Manufacturing value added % GDP
+  LIFE_EXPECT:  'SP.DYN.LE00.IN',        // Life expectancy at birth (years)
+  FEMALE_LFP:   'SL.TLF.CACT.FE.ZS',   // Female labour force participation (%)
+  GDP_CAPITA_PPP: 'NY.GDP.PCAP.PP.CD',  // GDP per capita PPP (current intl $)
+  RESEARCHERS:  'SP.POP.SCIE.RD.P6',    // Researchers in R&D per million people (WB; OECD overrides for members)
 };
 
 // IMF countries (EUU not available in IMF DataMapper)
@@ -78,7 +82,11 @@ const RANGES = {
   TAX_REVENUE:  [5,     45],   // % GDP; Scandinavian ~40-45%, China ~7% (state-owned squeeze)
   MANUFACTURING:[2,     45],   // % GDP; China ~27%, Germany ~20%, USA ~11%
   FISCAL_BAL:   [-30,   10],   // % GDP (negative = deficit)
-  RESEARCHERS:  [0,     25],   // per 1000 employment; Korea ~16, Germany ~9
+  RESEARCHERS:  [50,  12000],  // per million people; Korea ~8000, Germany ~5000, India ~250
+  LIFE_EXPECT:  [50,    90],   // years
+  FEMALE_LFP:   [20,    80],   // %
+  GDP_CAPITA_PPP: [2000, 130000], // current intl $ PPP
+  PRODUCTIVITY: [30,   200],   // GDP per hour worked index (OECD, 2015=100)
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -242,6 +250,28 @@ async function fetchOECDResearchers() {
   return allRows; // non-fatal if empty
 }
 
+// OECD Labour Productivity (GDP per hour worked, volume index) — non-fatal.
+// Dataset: OECD.SDD.NAD,DSD_PDB@DF_PDB_LV  — different endpoint from MSTI, fresh rate-limit quota.
+// Only available for OECD G20 members.
+async function fetchOECDProductivity() {
+  const allRows = [];
+  for (const country of OECD_G20) {
+    try {
+      const url = `https://sdmx.oecd.org/public/rest/data/OECD.SDD.NAD,DSD_PDB@DF_PDB_LV,1.0/${country}.A.T_GDPHRS_V.USD_PPP._T.IDX?format=jsondata&startPeriod=2000&endPeriod=2023`;
+      const r = await fetch(url, {
+        headers: { 'User-Agent': 'G20Dashboard-Seed/1.0', 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(30000),
+      });
+      if (r.ok) {
+        const json = await r.json();
+        allRows.push(...parseOECDSDMX(json, 'PRODUCTIVITY'));
+      }
+      await new Promise(r => setTimeout(r, 200));
+    } catch (_) {}
+  }
+  return allRows; // non-fatal if empty
+}
+
 // ── Validation ────────────────────────────────────────────────────────────────
 
 async function validate() {
@@ -269,15 +299,18 @@ async function validate() {
   }
 
   // Build summary: summary[indicator][country] = { latestYear, latestValue }
+  // Cap at 2024 to prevent IMF multi-year forecasts (through 2031) appearing as current data.
+  const LATEST_YEAR_CAP = 2024;
   const summary = {};
   for (const { country_iso3: c, indicator_key: k, year, value } of allRows) {
+    if (year > LATEST_YEAR_CAP) continue;
     if (!summary[k]) summary[k] = {};
     if (!summary[k][c] || year > summary[k][c].latestYear) {
       summary[k][c] = { latestYear: year, latestValue: value };
     }
   }
 
-  const ALL_INDICATORS = [...Object.keys(WB_INDICATORS), 'DEBT_GDP', 'FISCAL_BAL'];
+  const ALL_INDICATORS = [...Object.keys(WB_INDICATORS), 'DEBT_GDP', 'FISCAL_BAL', 'PRODUCTIVITY'];
   const issues = [];
   const report = { generatedAt: new Date().toISOString(), totalRows: allRows.length, indicators: {} };
 
@@ -295,9 +328,9 @@ async function validate() {
 
     report.indicators[ind] = { covered: covered.length, missing, latestYear, outOfRange };
 
-    // GINI is survey-based and only published every few years — relax thresholds
-    const staleYear    = ind === 'GINI' ? 2015 : 2021;
-    const minCoverage  = ind === 'GINI' ? 10   : 2;     // allow sparser coverage
+    // GINI is survey-based (sparse); PRODUCTIVITY is experimental OECD-only — relax thresholds
+    const staleYear    = (ind === 'GINI' || ind === 'PRODUCTIVITY') ? 2010 : 2021;
+    const minCoverage  = (ind === 'GINI' || ind === 'PRODUCTIVITY') ? 0    : 2;
     const staleMark = latestYear < staleYear ? ' ⚠ STALE'   : '';
     const missMark  = missing.length > minCoverage ? ` ⚠ MISSING: ${missing.slice(0,4).join(',')}${missing.length > 4 ? '…' : ''}` : '';
     const rangeMark = outOfRange.length  ? ` ⚠ OUT-OF-RANGE: ${outOfRange.join(',')}` : '';
@@ -358,43 +391,54 @@ function buildDataTable(summary) {
   const get = (summary, key, iso3) => summary[key]?.[iso3];
 
   return COMMENTARY_COUNTRIES.map(({ iso3, name }) => {
-    const gdp    = get(summary, 'GDP',          iso3);
-    const gr     = get(summary, 'GDP_GROWTH',   iso3);
-    const inf    = get(summary, 'INFLATION',    iso3);
-    const une    = get(summary, 'UNEMPLOYMENT', iso3);
-    const debt   = get(summary, 'DEBT_GDP',     iso3);
-    const cacc   = get(summary, 'CURRENT_ACC',  iso3);
-    const gdppc  = get(summary, 'GDP_CAPITA',   iso3);
-    const health = get(summary, 'HEALTH_EXP',   iso3);
-    const rd     = get(summary, 'RD_EXP',       iso3);
-    const gini   = get(summary, 'GINI',         iso3);
-    const youth  = get(summary, 'YOUTH_UNEMP',  iso3);
-    const capfrm = get(summary, 'CAPITAL_FORM', iso3);
-    const fdi    = get(summary, 'FDI_INFLOWS',  iso3);
-    const educ   = get(summary, 'EDUC_EXP',     iso3);
+    const gdp    = get(summary, 'GDP',            iso3);
+    const gr     = get(summary, 'GDP_GROWTH',    iso3);
+    const inf    = get(summary, 'INFLATION',     iso3);
+    const une    = get(summary, 'UNEMPLOYMENT',  iso3);
+    const debt   = get(summary, 'DEBT_GDP',      iso3);
+    const cacc   = get(summary, 'CURRENT_ACC',   iso3);
+    const gdppc  = get(summary, 'GDP_CAPITA',    iso3);
+    const health = get(summary, 'HEALTH_EXP',    iso3);
+    const rd     = get(summary, 'RD_EXP',        iso3);
+    const gini   = get(summary, 'GINI',          iso3);
+    const youth  = get(summary, 'YOUTH_UNEMP',   iso3);
+    const capfrm = get(summary, 'CAPITAL_FORM',  iso3);
+    const fdi    = get(summary, 'FDI_INFLOWS',   iso3);
+    const educ   = get(summary, 'EDUC_EXP',      iso3);
+    const fiscal = get(summary, 'FISCAL_BAL',    iso3);
+    const life   = get(summary, 'LIFE_EXPECT',   iso3);
+    const flfp   = get(summary, 'FEMALE_LFP',    iso3);
+    const gdpPPP = get(summary, 'GDP_CAPITA_PPP',iso3);
+    const research= get(summary, 'RESEARCHERS',  iso3);
 
-    const gdpStr   = gdp    ? `$${(gdp.latestValue/1e12).toFixed(2)}T (${gdp.latestYear})`       : 'N/A';
-    const grStr    = gr     ? `${gr.latestValue >= 0 ? '+' : ''}${gr.latestValue.toFixed(1)}% (${gr.latestYear})`           : 'N/A';
-    const infStr   = inf    ? `${inf.latestValue.toFixed(1)}% (${inf.latestYear})`                : 'N/A';
-    const uneStr   = une    ? `${une.latestValue.toFixed(1)}% (${une.latestYear})`                : 'N/A';
-    const debtStr  = debt   ? `${debt.latestValue.toFixed(0)}% (${debt.latestYear})`             : 'N/A';
-    const caccStr  = cacc   ? `${cacc.latestValue >= 0 ? '+' : ''}${cacc.latestValue.toFixed(1)}% GDP (${cacc.latestYear})` : 'N/A';
-    const gdppcStr = gdppc  ? `$${Math.round(gdppc.latestValue).toLocaleString()} (${gdppc.latestYear})` : 'N/A';
-    const hlthStr  = health ? `${health.latestValue.toFixed(1)}% GDP (${health.latestYear})`     : 'N/A';
-    const rdStr    = rd     ? `${rd.latestValue.toFixed(2)}% GDP (${rd.latestYear})`             : 'N/A';
-    const giniStr  = gini   ? `${gini.latestValue.toFixed(1)} (${gini.latestYear})`              : 'N/A';
-    const youthStr = youth  ? `${youth.latestValue.toFixed(1)}% (${youth.latestYear})`           : 'N/A';
-    const capfStr  = capfrm ? `${capfrm.latestValue.toFixed(1)}% GDP (${capfrm.latestYear})`    : 'N/A';
-    const fdiStr   = fdi    ? `${fdi.latestValue >= 0 ? '+' : ''}${fdi.latestValue.toFixed(2)}% GDP (${fdi.latestYear})` : 'N/A';
-    const educStr  = educ   ? `${educ.latestValue.toFixed(1)}% GDP (${educ.latestYear})`         : 'N/A';
+    const gdpStr    = gdp      ? `$${(gdp.latestValue/1e12).toFixed(2)}T (${gdp.latestYear})` : 'N/A';
+    const grStr     = gr      ? `${gr.latestValue >= 0 ? '+' : ''}${gr.latestValue.toFixed(1)}% (${gr.latestYear})` : 'N/A';
+    const infStr    = inf     ? `${inf.latestValue.toFixed(1)}% (${inf.latestYear})` : 'N/A';
+    const uneStr    = une     ? `${une.latestValue.toFixed(1)}% (${une.latestYear})` : 'N/A';
+    const debtStr   = debt    ? `${debt.latestValue.toFixed(0)}% (${debt.latestYear})` : 'N/A';
+    const fiscStr   = fiscal  ? `${fiscal.latestValue >= 0 ? '+' : ''}${fiscal.latestValue.toFixed(1)}% GDP (${fiscal.latestYear})` : 'N/A';
+    const caccStr   = cacc    ? `${cacc.latestValue >= 0 ? '+' : ''}${cacc.latestValue.toFixed(1)}% GDP (${cacc.latestYear})` : 'N/A';
+    const gdppcStr  = gdppc   ? `$${Math.round(gdppc.latestValue).toLocaleString()} (${gdppc.latestYear})` : 'N/A';
+    const gdpPPPStr = gdpPPP  ? `$${Math.round(gdpPPP.latestValue).toLocaleString()} PPP (${gdpPPP.latestYear})` : 'N/A';
+    const hlthStr   = health  ? `${health.latestValue.toFixed(1)}% GDP (${health.latestYear})` : 'N/A';
+    const rdStr     = rd      ? `${rd.latestValue.toFixed(2)}% GDP (${rd.latestYear})` : 'N/A';
+    const giniStr   = gini    ? `${gini.latestValue.toFixed(1)} (${gini.latestYear})` : 'N/A';
+    const youthStr  = youth   ? `${youth.latestValue.toFixed(1)}% (${youth.latestYear})` : 'N/A';
+    const capfStr   = capfrm  ? `${capfrm.latestValue.toFixed(1)}% GDP (${capfrm.latestYear})` : 'N/A';
+    const fdiStr    = fdi     ? `${fdi.latestValue >= 0 ? '+' : ''}${fdi.latestValue.toFixed(2)}% GDP (${fdi.latestYear})` : 'N/A';
+    const educStr   = educ    ? `${educ.latestValue.toFixed(1)}% GDP (${educ.latestYear})` : 'N/A';
+    const lifeStr   = life    ? `${life.latestValue.toFixed(1)} yrs (${life.latestYear})` : 'N/A';
+    const flfpStr   = flfp    ? `${flfp.latestValue.toFixed(1)}% (${flfp.latestYear})` : 'N/A';
+    const resStr    = research ? `${Math.round(research.latestValue)}/mn (${research.latestYear})` : 'N/A';
 
     return [
       `## ${name} (${iso3})`,
       `GDP: ${gdpStr} | Growth: ${grStr} | Inflation: ${infStr}`,
-      `Unemployment: ${uneStr} | Youth Unemp: ${youthStr} | Debt/GDP: ${debtStr}`,
-      `GDP/Capita: ${gdppcStr} | Current Account: ${caccStr}`,
-      `Health: ${hlthStr} | R&D: ${rdStr} | Education: ${educStr}`,
+      `Unemployment: ${uneStr} | Youth Unemp: ${youthStr} | Debt/GDP: ${debtStr} | Fiscal Balance: ${fiscStr}`,
+      `GDP/Capita: ${gdppcStr} | GDP/Capita PPP: ${gdpPPPStr} | Current Account: ${caccStr}`,
+      `Health: ${hlthStr} | R&D: ${rdStr} | Education: ${educStr} | Researchers: ${resStr}`,
       `Capital Formation: ${capfStr} | FDI Inflows: ${fdiStr} | Gini: ${giniStr}`,
+      `Life Expectancy: ${lifeStr} | Female Labour Participation: ${flfpStr}`,
     ].join('\n');
   }).join('\n\n');
 }
@@ -409,7 +453,7 @@ async function generateCommentary(summary) {
   const dataTable = buildDataTable(summary);
   const currentYear = new Date().getFullYear();
 
-  const prompt = `You are a senior OECD/IMF economic analyst writing a structured data brief for a public dashboard.
+  const prompt = `You are a senior OECD/IMF economic analyst writing a structured country-by-country brief for a public economic dashboard, modelled on OECD Economic Outlook reports.
 
 Generate commentary based on the G20 data table below. Return ONLY valid JSON (no code fences, no preamble, no trailing text) with this exact structure:
 {
@@ -422,23 +466,32 @@ Generate commentary based on the G20 data table below. Return ONLY valid JSON (n
   },
   "countries": {
     "USA": {
-      "headline": "max 12 words summarising outlook",
-      "paragraphs": ["p1", "p2", "p3", "p4"]
+      "headline": "max 12 words summarising the economy's outlook",
+      "sections": [
+        { "heading": "Economic Performance",        "body": "100-130 word paragraph" },
+        { "heading": "Labour Market & Prices",       "body": "100-130 word paragraph" },
+        { "heading": "Fiscal Position",              "body": "100-130 word paragraph" },
+        { "heading": "External Sector & Investment", "body": "100-130 word paragraph" },
+        { "heading": "Outlook & Key Risks",          "body": "100-130 word paragraph" }
+      ]
     }
   }
 }
 
+Heading definitions (follow these precisely for every country):
+  "Economic Performance"        — GDP size, growth rate, sector drivers, productivity
+  "Labour Market & Prices"      — Unemployment (total + youth), inflation, wage trends, female participation
+  "Fiscal Position"             — Government debt, fiscal balance, primary balance, health/education/R&D spending
+  "External Sector & Investment"— Current account, exports, FDI inflows, capital formation
+  "Outlook & Key Risks"         — Near-term GDP forecast, 2 structural priorities, 2 key risks with data support
+
 Rules:
 - Global paragraphs: ~120 words each, data-driven, cite specific numbers and years
-- keyRisks: short phrases (under 12 words each), e.g. "Persistent inflation above 2% target in advanced economies"
-- upside: short phrases (under 12 words each)
-- Per-country paragraphs: 80–120 words each
-  P1 — GDP size, growth rate, key sector drivers
-  P2 — Inflation, unemployment, current account trajectory
-  P3 — Fiscal position, health/education/R&D spending, youth unemployment
-  P4 — Near-term outlook, key risks, structural priorities
-- Always cite data years in parentheses e.g. (2024)
-- No markdown within paragraph strings (no **, no ##, no bullet symbols)
+- keyRisks: short phrases under 12 words each
+- upside: short phrases under 12 words each
+- Section bodies: 100–130 words each, data-driven, cite years in parentheses
+- No markdown within body strings (no **, no ##, no bullet symbols, no dashes as bullets)
+- Always cite data years, e.g. "2.8% growth in (2024)"
 - Include ALL 19 non-EU countries: USA, GBR, CAN, DEU, FRA, ITA, JPN, AUS, KOR, CHN, IND, BRA, MEX, ARG, RUS, SAU, ZAF, IDN, TUR
 
 DATA TABLE:
@@ -455,7 +508,7 @@ ${dataTable}`;
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 8192,
+        max_tokens: 12000,
         system: 'You are a senior OECD/IMF economic analyst. Write concise, data-driven country briefs. Always cite specific numbers with their data year. No markdown within paragraphs.',
         messages: [{ role: 'user', content: prompt }],
       }),
@@ -479,6 +532,12 @@ ${dataTable}`;
   const countryKeys = Object.keys(parsed?.countries || {});
   if (countryKeys.length < 16) {
     console.log(`  ⚠ Only ${countryKeys.length}/19 countries in response — skipping to preserve existing file.`);
+    return;
+  }
+  // Verify at least one country has the new sections schema
+  const hasSections = countryKeys.some(k => Array.isArray(parsed.countries[k]?.sections));
+  if (!hasSections) {
+    console.log(`  ⚠ Response uses old paragraphs schema instead of sections — skipping.`);
     return;
   }
 
@@ -540,20 +599,20 @@ async function main() {
     console.log(` ✗ ${e.message} (WB fallback retained)`);
   }
 
-  // OECD Researchers per 1,000 employment (OECD G20 members only)
-  process.stdout.write(`Fetching RESEARCHERS (OECD MSTI, OECD G20 members)…`);
+  // OECD Labour Productivity — GDP per hour worked (non-fatal; OECD G20 members only)
+  process.stdout.write(`Fetching PRODUCTIVITY (OECD PDB, OECD G20 members)…`);
   try {
-    const rows = await fetchOECDResearchers();
+    const rows = await fetchOECDProductivity();
     if (rows.length) {
       process.stdout.write(` ${rows.length} rows → upserting…`);
       await upsert(rows);
       totalRows += rows.length;
       console.log(` ✓`);
     } else {
-      console.log(` ⚠ no data (skipped)`);
+      console.log(` ⚠ no data (API may be rate-limited or dataset key changed; skipped)`);
     }
   } catch (e) {
-    console.log(` ✗ ${e.message}`);
+    console.log(` ✗ ${e.message} (skipped — non-fatal)`);
   }
 
   // IMF debt / GDP

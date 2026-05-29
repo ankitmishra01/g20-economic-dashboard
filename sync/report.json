@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-05-29T13:39:45.677Z",
-  "totalRows": 10122,
+  "generatedAt": "2026-05-29T14:05:11.900Z",
+  "totalRows": 12013,
   "indicators": {
     "GDP": {
       "covered": 19,
@@ -120,19 +120,43 @@
       "latestYear": 2024,
       "outOfRange": []
     },
+    "LIFE_EXPECT": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2024,
+      "outOfRange": []
+    },
+    "FEMALE_LFP": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2024,
+      "outOfRange": []
+    },
+    "GDP_CAPITA_PPP": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2024,
+      "outOfRange": []
+    },
+    "RESEARCHERS": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2024,
+      "outOfRange": []
+    },
     "DEBT_GDP": {
       "covered": 19,
       "missing": [],
-      "latestYear": 2031,
+      "latestYear": 2024,
       "outOfRange": []
     },
     "FISCAL_BAL": {
       "covered": 19,
       "missing": [],
-      "latestYear": 2031,
+      "latestYear": 2024,
       "outOfRange": []
     },
-    "RESEARCHERS": {
+    "PRODUCTIVITY": {
       "covered": 0,
       "missing": [
         "USA",
@@ -160,7 +184,7 @@
     }
   },
   "issues": [
-    "RESEARCHERS: missing USA, GBR, CAN, DEU, FRA, ITA, JPN, AUS, KOR, CHN, IND, BRA, MEX, ARG, RUS, SAU, ZAF, IDN, TUR",
-    "RESEARCHERS: latest year 0 — stale"
+    "PRODUCTIVITY: missing USA, GBR, CAN, DEU, FRA, ITA, JPN, AUS, KOR, CHN, IND, BRA, MEX, ARG, RUS, SAU, ZAF, IDN, TUR",
+    "PRODUCTIVITY: latest year 0 — stale"
   ]
 }
