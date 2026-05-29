@@ -31,6 +31,10 @@ const WB_INDICATORS = {
   HEALTH_EXP:   'SH.XPD.CHEX.GD.ZS',   // Current health expenditure % GDP (WHO via WB)
   RD_EXP:       'GB.XPD.RSDV.GD.ZS',   // R&D expenditure % GDP (UNESCO via WB; OECD overwrites)
   GINI:         'SI.POV.GINI',           // Gini inequality index (World Bank)
+  YOUTH_UNEMP:  'SL.UEM.1524.ZS',        // Youth unemployment rate (15–24), %
+  CAPITAL_FORM: 'NE.GDI.TOTL.ZS',        // Gross capital formation % GDP
+  FDI_INFLOWS:  'BX.KLT.DINV.WD.GD.ZS', // FDI net inflows % GDP
+  EDUC_EXP:     'SE.XPD.TOTL.GD.ZS',    // Govt education expenditure % GDP
 };
 
 // IMF countries (EUU not available in IMF DataMapper)
@@ -63,6 +67,10 @@ const RANGES = {
   HEALTH_EXP:   [1,     25],    // % GDP; USA ~17%, most OECD ~8-12%
   RD_EXP:       [0,     7],     // % GDP; Korea ~4.9%, most 1-3%
   GINI:         [20,    70],    // 0-100 index; ZAF ~63, DEN ~28
+  YOUTH_UNEMP:  [0,     65],
+  CAPITAL_FORM: [10,    50],
+  FDI_INFLOWS:  [-10,   25],
+  EDUC_EXP:     [0,     12],
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -286,6 +294,181 @@ async function validate() {
       JSON.stringify({ ...report, issues }, null, 2)
     );
   } catch (_) { /* non-fatal if running in an env without fs write access */ }
+
+  return summary;
+}
+
+// ── Commentary Generation ─────────────────────────────────────────────────────
+
+const COMMENTARY_COUNTRIES = [
+  { iso3: 'USA', name: 'United States' },
+  { iso3: 'GBR', name: 'United Kingdom' },
+  { iso3: 'CAN', name: 'Canada' },
+  { iso3: 'DEU', name: 'Germany' },
+  { iso3: 'FRA', name: 'France' },
+  { iso3: 'ITA', name: 'Italy' },
+  { iso3: 'JPN', name: 'Japan' },
+  { iso3: 'AUS', name: 'Australia' },
+  { iso3: 'KOR', name: 'South Korea' },
+  { iso3: 'CHN', name: 'China' },
+  { iso3: 'IND', name: 'India' },
+  { iso3: 'BRA', name: 'Brazil' },
+  { iso3: 'MEX', name: 'Mexico' },
+  { iso3: 'ARG', name: 'Argentina' },
+  { iso3: 'RUS', name: 'Russia' },
+  { iso3: 'SAU', name: 'Saudi Arabia' },
+  { iso3: 'ZAF', name: 'South Africa' },
+  { iso3: 'IDN', name: 'Indonesia' },
+  { iso3: 'TUR', name: 'Turkey' },
+];
+
+function buildDataTable(summary) {
+  const fmt = (v, unit) => v !== undefined && v !== null ? `${typeof v === 'number' && v >= 1e9 ? '$' + (v/1e12).toFixed(2) + 'T' : v.toFixed(1)}${unit ? ' ' + unit : ''}` : 'N/A';
+  const get = (summary, key, iso3) => summary[key]?.[iso3];
+
+  return COMMENTARY_COUNTRIES.map(({ iso3, name }) => {
+    const gdp    = get(summary, 'GDP',          iso3);
+    const gr     = get(summary, 'GDP_GROWTH',   iso3);
+    const inf    = get(summary, 'INFLATION',    iso3);
+    const une    = get(summary, 'UNEMPLOYMENT', iso3);
+    const debt   = get(summary, 'DEBT_GDP',     iso3);
+    const cacc   = get(summary, 'CURRENT_ACC',  iso3);
+    const gdppc  = get(summary, 'GDP_CAPITA',   iso3);
+    const health = get(summary, 'HEALTH_EXP',   iso3);
+    const rd     = get(summary, 'RD_EXP',       iso3);
+    const gini   = get(summary, 'GINI',         iso3);
+    const youth  = get(summary, 'YOUTH_UNEMP',  iso3);
+    const capfrm = get(summary, 'CAPITAL_FORM', iso3);
+    const fdi    = get(summary, 'FDI_INFLOWS',  iso3);
+    const educ   = get(summary, 'EDUC_EXP',     iso3);
+
+    const gdpStr   = gdp    ? `$${(gdp.latestValue/1e12).toFixed(2)}T (${gdp.latestYear})`       : 'N/A';
+    const grStr    = gr     ? `${gr.latestValue >= 0 ? '+' : ''}${gr.latestValue.toFixed(1)}% (${gr.latestYear})`           : 'N/A';
+    const infStr   = inf    ? `${inf.latestValue.toFixed(1)}% (${inf.latestYear})`                : 'N/A';
+    const uneStr   = une    ? `${une.latestValue.toFixed(1)}% (${une.latestYear})`                : 'N/A';
+    const debtStr  = debt   ? `${debt.latestValue.toFixed(0)}% (${debt.latestYear})`             : 'N/A';
+    const caccStr  = cacc   ? `${cacc.latestValue >= 0 ? '+' : ''}${cacc.latestValue.toFixed(1)}% GDP (${cacc.latestYear})` : 'N/A';
+    const gdppcStr = gdppc  ? `$${Math.round(gdppc.latestValue).toLocaleString()} (${gdppc.latestYear})` : 'N/A';
+    const hlthStr  = health ? `${health.latestValue.toFixed(1)}% GDP (${health.latestYear})`     : 'N/A';
+    const rdStr    = rd     ? `${rd.latestValue.toFixed(2)}% GDP (${rd.latestYear})`             : 'N/A';
+    const giniStr  = gini   ? `${gini.latestValue.toFixed(1)} (${gini.latestYear})`              : 'N/A';
+    const youthStr = youth  ? `${youth.latestValue.toFixed(1)}% (${youth.latestYear})`           : 'N/A';
+    const capfStr  = capfrm ? `${capfrm.latestValue.toFixed(1)}% GDP (${capfrm.latestYear})`    : 'N/A';
+    const fdiStr   = fdi    ? `${fdi.latestValue >= 0 ? '+' : ''}${fdi.latestValue.toFixed(2)}% GDP (${fdi.latestYear})` : 'N/A';
+    const educStr  = educ   ? `${educ.latestValue.toFixed(1)}% GDP (${educ.latestYear})`         : 'N/A';
+
+    return [
+      `## ${name} (${iso3})`,
+      `GDP: ${gdpStr} | Growth: ${grStr} | Inflation: ${infStr}`,
+      `Unemployment: ${uneStr} | Youth Unemp: ${youthStr} | Debt/GDP: ${debtStr}`,
+      `GDP/Capita: ${gdppcStr} | Current Account: ${caccStr}`,
+      `Health: ${hlthStr} | R&D: ${rdStr} | Education: ${educStr}`,
+      `Capital Formation: ${capfStr} | FDI Inflows: ${fdiStr} | Gini: ${giniStr}`,
+    ].join('\n');
+  }).join('\n\n');
+}
+
+async function generateCommentary(summary) {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.log('\n  ⚠ ANTHROPIC_API_KEY not set — skipping commentary regeneration.');
+    return;
+  }
+
+  console.log('\n── Generating Commentary ────────────────────────');
+  const dataTable = buildDataTable(summary);
+  const currentYear = new Date().getFullYear();
+
+  const prompt = `You are a senior OECD/IMF economic analyst writing a structured data brief for a public dashboard.
+
+Generate commentary based on the G20 data table below. Return ONLY valid JSON (no code fences, no preamble, no trailing text) with this exact structure:
+{
+  "global": {
+    "title": "G20 Economic Outlook — ${currentYear} Assessment",
+    "cutoff": "Data as of [Month Year of most recent data point]",
+    "paragraphs": ["paragraph 1", "paragraph 2", "paragraph 3", "paragraph 4", "paragraph 5"],
+    "keyRisks": ["risk 1", "risk 2", "risk 3", "risk 4", "risk 5"],
+    "upside": ["factor 1", "factor 2", "factor 3", "factor 4"]
+  },
+  "countries": {
+    "USA": {
+      "headline": "max 12 words summarising outlook",
+      "paragraphs": ["p1", "p2", "p3", "p4"]
+    }
+  }
+}
+
+Rules:
+- Global paragraphs: ~120 words each, data-driven, cite specific numbers and years
+- keyRisks: short phrases (under 12 words each), e.g. "Persistent inflation above 2% target in advanced economies"
+- upside: short phrases (under 12 words each)
+- Per-country paragraphs: 80–120 words each
+  P1 — GDP size, growth rate, key sector drivers
+  P2 — Inflation, unemployment, current account trajectory
+  P3 — Fiscal position, health/education/R&D spending, youth unemployment
+  P4 — Near-term outlook, key risks, structural priorities
+- Always cite data years in parentheses e.g. (2024)
+- No markdown within paragraph strings (no **, no ##, no bullet symbols)
+- Include ALL 19 non-EU countries: USA, GBR, CAN, DEU, FRA, ITA, JPN, AUS, KOR, CHN, IND, BRA, MEX, ARG, RUS, SAU, ZAF, IDN, TUR
+
+DATA TABLE:
+${dataTable}`;
+
+  let parsed;
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 8192,
+        system: 'You are a senior OECD/IMF economic analyst. Write concise, data-driven country briefs. Always cite specific numbers with their data year. No markdown within paragraphs.',
+        messages: [{ role: 'user', content: prompt }],
+      }),
+      signal: AbortSignal.timeout(120_000),
+    });
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      console.log(`  ⚠ Anthropic API error (${resp.status}): ${errText.slice(0, 200)} — skipping.`);
+      return;
+    }
+
+    const data = await resp.json();
+    const raw = data?.content?.[0]?.text || '';
+    parsed = JSON.parse(raw);
+  } catch (e) {
+    console.log(`  ⚠ Commentary generation failed: ${e.message} — skipping.`);
+    return;
+  }
+
+  const countryKeys = Object.keys(parsed?.countries || {});
+  if (countryKeys.length < 16) {
+    console.log(`  ⚠ Only ${countryKeys.length}/19 countries in response — skipping to preserve existing file.`);
+    return;
+  }
+
+  parsed.global._generatedAt = new Date().toISOString();
+  parsed.global.cutoff = `Data as of ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
+
+  const fileContent = [
+    `// AUTO-GENERATED by sync/seed.js — ${parsed.global._generatedAt}`,
+    `// Do not edit manually. Regenerated on each monthly data refresh.`,
+    `// Data: World Bank, IMF, OECD via Supabase. Commentary: Claude Sonnet.\n`,
+    `window.G20_COMMENTARY = ${JSON.stringify(parsed, null, 2)};`,
+  ].join('\n');
+
+  try {
+    const fs = await import('fs');
+    const outPath = new URL('../app/components/commentary.js', import.meta.url).pathname;
+    fs.writeFileSync(outPath, fileContent, 'utf8');
+    console.log(`  ✓ commentary.js written (${countryKeys.length} countries, generated ${parsed.global._generatedAt})`);
+  } catch (e) {
+    console.log(`  ⚠ Could not write commentary.js: ${e.message}`);
+  }
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
@@ -342,7 +525,8 @@ async function main() {
 
   console.log(`\n✓ Seeded ${totalRows.toLocaleString()} rows (${failures} failure(s)).`);
 
-  await validate();
+  const summary = await validate();
+  await generateCommentary(summary);
 
   if (failures > 0) process.exit(1); // signal failure to GitHub Actions
 }

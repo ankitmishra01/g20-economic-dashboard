@@ -38,6 +38,10 @@ const INDICATORS = {
   HEALTH_EXP:   { wb: 'SH.XPD.CHEX.GD.ZS',label: 'Health Spending',   unit: '% GDP',  format: 'percent'   },
   RD_EXP:       { oecd: true,              label: 'R&D Spending',       unit: '% GDP',  format: 'percent'   },
   GINI:         { wb: 'SI.POV.GINI',       label: 'Gini Index',        unit: '',       format: 'decimal'   },
+  YOUTH_UNEMP:  { wb: 'SL.UEM.1524.ZS',        label: 'Youth Unemployment', unit: '%',     format: 'percent'   },
+  CAPITAL_FORM: { wb: 'NE.GDI.TOTL.ZS',        label: 'Capital Formation',  unit: '% GDP', format: 'percent'   },
+  FDI_INFLOWS:  { wb: 'BX.KLT.DINV.WD.GD.ZS',  label: 'FDI Inflows',        unit: '% GDP', format: 'percent'   },
+  EDUC_EXP:     { wb: 'SE.XPD.TOTL.GD.ZS',     label: 'Education Spending', unit: '% GDP', format: 'percent'   },
 };
 
 // Economic flag thresholds — mirrors the Holocene "Flag/Watch" concept.
@@ -47,6 +51,7 @@ const FLAGS_CONFIG = {
   negativeGrowth:  { key: 'GDP_GROWTH',   threshold: 0,   dir: 'below', label: 'Contraction',       severity: 'high'   },
   highUnemploy:    { key: 'UNEMPLOYMENT', threshold: 10,  dir: 'above', label: 'High Unemployment', severity: 'medium' },
   currentAccDeficit:{ key: 'CURRENT_ACC', threshold: -5,  dir: 'below', label: 'Large CA Deficit',  severity: 'low'    },
+  highYouthUnemp:   { key: 'YOUTH_UNEMP', threshold: 25,  dir: 'above', label: 'High Youth Unemp.', severity: 'medium' },
 };
 
 // Nav items for the sidebar.

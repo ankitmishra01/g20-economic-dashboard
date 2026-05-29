@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-05-28T15:13:13.716Z",
-  "totalRows": 6299,
+  "generatedAt": "2026-05-29T13:06:57.089Z",
+  "totalRows": 8122,
   "indicators": {
     "GDP": {
       "covered": 19,
@@ -73,6 +73,30 @@
       "missing": [
         "SAU"
       ],
+      "latestYear": 2024,
+      "outOfRange": []
+    },
+    "YOUTH_UNEMP": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2024,
+      "outOfRange": []
+    },
+    "CAPITAL_FORM": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2024,
+      "outOfRange": []
+    },
+    "FDI_INFLOWS": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2024,
+      "outOfRange": []
+    },
+    "EDUC_EXP": {
+      "covered": 19,
+      "missing": [],
       "latestYear": 2024,
       "outOfRange": []
     },

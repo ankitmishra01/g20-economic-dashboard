@@ -64,12 +64,24 @@ function renderCountryProfile(iso3) {
   const health = window.G20Data.getLatest(iso3, 'HEALTH_EXP');
   const rd     = window.G20Data.getLatest(iso3, 'RD_EXP');
   const pop    = window.G20Data.getLatest(iso3, 'POPULATION');
+  const youth  = window.G20Data.getLatest(iso3, 'YOUTH_UNEMP');
+  const capfrm = window.G20Data.getLatest(iso3, 'CAPITAL_FORM');
+  const fdi    = window.G20Data.getLatest(iso3, 'FDI_INFLOWS');
+  const educ   = window.G20Data.getLatest(iso3, 'EDUC_EXP');
 
   const gv = gr?.value;
   const iv = inf?.value;
   const dv = debt?.value;
 
   const growthCls = gv !== undefined ? (gv < 0 ? '#F08F8F' : gv >= 4 ? '#6FCBA8' : 'var(--text-on-ink)') : 'var(--text-on-ink)';
+
+  const vintage = Math.max(
+    gdp?.year || 0, gr?.year || 0, inf?.year || 0, une?.year || 0, debt?.year || 0
+  );
+  const commentaryDate = window.G20_COMMENTARY?.global?._generatedAt
+    ? new Date(window.G20_COMMENTARY.global._generatedAt)
+        .toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+    : null;
 
   // AI draft context for this country
   const contextSnippet = [
@@ -78,6 +90,10 @@ function renderCountryProfile(iso3) {
     iv !== undefined ? `Inflation: ${iv.toFixed(1)}%` : null,
     une?.value !== undefined ? `Unemployment: ${une.value.toFixed(1)}%` : null,
     dv !== undefined ? `Debt/GDP: ${dv.toFixed(0)}%` : null,
+    youth?.value !== undefined ? `Youth Unemp: ${youth.value.toFixed(1)}%` : null,
+    educ?.value  !== undefined ? `Education: ${educ.value.toFixed(1)}% GDP` : null,
+    capfrm?.value !== undefined ? `Capital Formation: ${capfrm.value.toFixed(1)}% GDP` : null,
+    fdi?.value   !== undefined ? `FDI Inflows: ${fdi.value.toFixed(1)}% GDP` : null,
   ].filter(Boolean).join(', ');
 
   return `
@@ -94,6 +110,7 @@ function renderCountryProfile(iso3) {
         ${une?.value !== undefined ? `<div><div class="profile-hero__stat-lbl">Unemp.</div><div class="profile-hero__stat-val">${une.value.toFixed(1)}%</div></div>` : ''}
         ${dv !== undefined ? `<div><div class="profile-hero__stat-lbl">Debt/GDP</div><div class="profile-hero__stat-val" style="${dv > 100 ? 'color:#E8C063' : ''}">${dv.toFixed(0)}%</div></div>` : ''}
       </div>
+      ${vintage || commentaryDate ? `<div style="font-family:var(--font-mono);font-size:10px;color:rgba(245,245,242,0.4);margin-top:10px">${vintage ? `Data vintage ${vintage}` : ''}${vintage && commentaryDate ? ' · ' : ''}${commentaryDate ? `Analysis updated ${commentaryDate}` : ''}</div>` : ''}
     </div>
   </div>
 </section>
@@ -123,11 +140,13 @@ function renderCountryProfile(iso3) {
           <span style="font-family:var(--font-mono);font-size:10.5px;color:var(--text-3)">${gr?.year || ''}</span>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:20px">
         ${renderMiniKPI('GDP per Capita', cap?.value ? '$' + (cap.value/1000).toFixed(0) + 'K' : '—', cap?.year)}
         ${renderMiniKPI('Current Acct', ca?.value !== undefined ? (ca.value >= 0 ? '+' : '') + ca.value.toFixed(1) + '% GDP' : '—', ca?.year, ca?.value < -2 ? 'v-warn' : '')}
         ${renderMiniKPI('Health Spending', health?.value !== undefined ? health.value.toFixed(1) + '% GDP' : '—', health?.year)}
         ${renderMiniKPI('R&D Spending', rd?.value !== undefined ? rd.value.toFixed(2) + '% GDP' : '—', rd?.year)}
+        ${renderMiniKPI('Youth Unemp.', youth?.value !== undefined ? youth.value.toFixed(1) + '%' : '—', youth?.year, youth?.value > 25 ? 'v-warn' : '')}
+        ${renderMiniKPI('Education', educ?.value !== undefined ? educ.value.toFixed(1) + '% GDP' : '—', educ?.year)}
       </div>
 
       <!-- Charts 2×2 -->
@@ -206,11 +225,14 @@ function renderMiniKPI(label, value, year, cls) {
 // ── Standing chart (vs G20 median) ───────────────────────────────────────────
 function renderStanding(iso3) {
   const keys = [
-    { key: 'GDP_GROWTH', label: 'Growth', unit: '%', factor: 1 },
-    { key: 'INFLATION',  label: 'Inflation', unit: '%', factor: 1 },
-    { key: 'UNEMPLOYMENT', label: 'Unemp.', unit: '%', factor: 1 },
-    { key: 'DEBT_GDP',   label: 'Debt/GDP', unit: '%', factor: 1 },
-    { key: 'HEALTH_EXP', label: 'Health', unit: '% GDP', factor: 1 },
+    { key: 'GDP_GROWTH',   label: 'Growth',      unit: '%',     factor: 1 },
+    { key: 'INFLATION',    label: 'Inflation',   unit: '%',     factor: 1 },
+    { key: 'UNEMPLOYMENT', label: 'Unemp.',      unit: '%',     factor: 1 },
+    { key: 'DEBT_GDP',     label: 'Debt/GDP',    unit: '%',     factor: 1 },
+    { key: 'HEALTH_EXP',   label: 'Health',      unit: '% GDP', factor: 1 },
+    { key: 'YOUTH_UNEMP',  label: 'Youth Unemp.',unit: '%',     factor: 1 },
+    { key: 'CAPITAL_FORM', label: 'Investment',  unit: '% GDP', factor: 1 },
+    { key: 'EDUC_EXP',     label: 'Education',   unit: '% GDP', factor: 1 },
   ];
 
   const rows = keys.map(({ key, label, unit }) => {

@@ -15,11 +15,24 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Fetch and seed data
+      - name: Fetch, seed data, and generate commentary
         run: node sync/seed.js
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Commit updated commentary
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add app/components/commentary.js
+          if git diff --staged --quiet; then
+            echo "No commentary changes to commit."
+          else
+            git commit -m "chore: auto-update commentary.js $(date -u +'%Y-%m') [skip ci]"
+            git push
+          fi
 
       - name: Upload validation report
         if: always()
