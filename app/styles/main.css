@@ -29,12 +29,12 @@
   --ink-3:     #2A2A2A;
 
   --text-1:    #0A0A0A;
-  --text-2:    #525252;
-  --text-3:    #8A8A8A;
-  --text-4:    #B0B0B0;
+  --text-2:    #383838;
+  --text-3:    #656565;
+  --text-4:    #959595;
 
-  --rule:      #EBEBE7;
-  --rule-2:    #DCDCD7;
+  --rule:      #DEDAD4;
+  --rule-2:    #CECAC2;
   --rule-on-ink:    rgba(255,255,255,0.10);
   --text-on-ink:    #F5F5F2;
   --text-on-ink-2:  rgba(245,245,242,0.62);
@@ -79,8 +79,8 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
 
 /* ── Sidebar / Rail ──────────────────────────────────────────────────────────── */
 .rail {
-  background: var(--bg-2);
-  border-right: 1px solid var(--rule);
+  background: var(--ink);
+  border-right: 1px solid rgba(255,255,255,0.07);
   display: flex;
   flex-direction: column;
   position: sticky;
@@ -92,18 +92,18 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
 
 .rail__brand {
   padding: 18px 18px 16px;
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule-on-ink);
   display: flex;
   align-items: center;
   gap: 10px;
 }
 .rail__mark {
   width: 28px; height: 28px;
-  background: var(--ink);
-  color: var(--text-on-ink);
+  background: #FFFFFF;
+  color: var(--ink);
   display: flex; align-items: center; justify-content: center;
   font-family: var(--font-mono);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 11px;
   border-radius: 5px;
   letter-spacing: 0.02em;
@@ -112,7 +112,7 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
 .rail__title {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-1);
+  color: var(--text-on-ink);
   letter-spacing: -0.015em;
   line-height: 1.2;
 }
@@ -121,12 +121,12 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   margin-left: 6px;
   padding: 1px 5px;
   border-radius: 3px;
-  background: var(--bg-3);
-  border: 1px solid var(--rule);
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
   font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 500;
-  color: var(--text-3);
+  color: var(--text-on-ink-2);
   letter-spacing: 0.02em;
   text-transform: uppercase;
   vertical-align: middle;
@@ -134,31 +134,32 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
 .rail__sub {
   font-family: var(--font-mono);
   font-size: 10px;
-  color: var(--text-3);
+  color: var(--text-on-ink-3);
   margin-top: 1px;
 }
 
 .rail__switch {
   margin: 14px 12px 8px;
   padding: 9px 12px;
-  border: 1px solid var(--rule);
-  background: var(--bg);
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.05);
   border-radius: 6px;
   font-size: 12px;
+  color: var(--text-on-ink-2);
   display: flex;
   align-items: center;
   justify-content: space-between;
   cursor: pointer;
 }
-.rail__switch:hover { border-color: var(--rule-2); }
+.rail__switch:hover { border-color: rgba(255,255,255,0.20); }
 .rail__switch-left { display: flex; align-items: center; gap: 8px; }
 .rail__switch-dot {
   width: 6px; height: 6px;
   border-radius: 50%;
-  background: var(--pos);
-  box-shadow: 0 0 0 3px rgba(4,120,87,0.16);
+  background: #5EC78F;
+  box-shadow: 0 0 0 3px rgba(94,199,143,0.25);
 }
-.rail__switch-chev { color: var(--text-3); }
+.rail__switch-chev { color: var(--text-on-ink-3); }
 
 .rail__hdr {
   padding: 14px 18px 6px;
@@ -166,7 +167,7 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   font-size: 9.5px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-3);
+  color: var(--text-on-ink-3);
 }
 
 .rail__nav { padding: 0 10px; }
@@ -178,43 +179,44 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   padding: 7px 10px;
   border-radius: 5px;
   font-size: 13px;
-  color: var(--text-2);
+  color: var(--text-on-ink-2);
   cursor: pointer;
   transition: background 100ms, color 100ms;
   line-height: 1;
   user-select: none;
 }
 .rail__item .ic {
-  opacity: 0.6;
+  opacity: 0.55;
   width: 14px;
   flex-shrink: 0;
   color: currentColor;
 }
-.rail__item:hover { background: var(--bg-3); color: var(--text-1); }
-.rail__item.active { background: var(--ink); color: var(--text-on-ink); }
-.rail__item.active .ic { opacity: 1; }
+.rail__item:hover { background: rgba(255,255,255,0.07); color: var(--text-on-ink); }
+.rail__item:hover .ic { opacity: 0.9; }
+.rail__item.active { background: #FFFFFF; color: var(--ink); }
+.rail__item.active .ic { opacity: 1; color: var(--ink); }
 .rail__item .kbd {
   margin-left: auto;
   font-family: var(--font-mono);
   font-size: 10px;
-  color: var(--text-4);
+  color: var(--text-on-ink-3);
   padding: 1px 4px;
-  border: 1px solid var(--rule);
+  border: 1px solid rgba(255,255,255,0.12);
   border-radius: 3px;
-  background: var(--bg);
+  background: rgba(255,255,255,0.05);
   line-height: 1;
 }
 .rail__item.active .kbd {
-  color: var(--text-on-ink-3);
-  background: rgba(255,255,255,0.06);
-  border-color: rgba(255,255,255,0.12);
+  color: var(--text-3);
+  background: var(--bg-2);
+  border-color: var(--rule);
 }
 
 .rail__spacer { flex: 1; }
 
 .rail__foot {
   padding: 14px 16px;
-  border-top: 1px solid var(--rule);
+  border-top: 1px solid var(--rule-on-ink);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -224,14 +226,14 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   align-items: center;
   gap: 9px;
   padding: 7px;
-  border: 1px solid var(--rule);
+  border: 1px solid rgba(255,255,255,0.10);
   border-radius: 6px;
-  background: var(--bg);
+  background: rgba(255,255,255,0.05);
 }
 .rail__avatar {
   width: 24px; height: 24px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ddd 0%, #999 100%);
+  background: linear-gradient(135deg, #555 0%, #333 100%);
   flex-shrink: 0;
   color: white;
   display: flex;
@@ -240,16 +242,16 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   font-size: 10px;
   font-weight: 600;
 }
-.rail__user-name { font-size: 12px; font-weight: 500; color: var(--text-1); line-height: 1.2; }
-.rail__user-sub { font-size: 10.5px; color: var(--text-3); font-family: var(--font-mono); }
+.rail__user-name { font-size: 12px; font-weight: 500; color: var(--text-on-ink); line-height: 1.2; }
+.rail__user-sub { font-size: 10.5px; color: var(--text-on-ink-3); font-family: var(--font-mono); }
 
 /* ── Main column ─────────────────────────────────────────────────────────────── */
 .main-col { display: flex; flex-direction: column; min-width: 0; }
 
 /* ── Command bar / Topbar ────────────────────────────────────────────────────── */
 .cmdbar {
-  background: var(--bg);
-  border-bottom: 1px solid var(--rule);
+  background: var(--ink-2);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
   padding: 0 24px;
   height: 52px;
   display: flex;
@@ -263,13 +265,13 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
 
 .crumbs {
   font-size: 12.5px;
-  color: var(--text-3);
+  color: var(--text-on-ink-3);
   display: flex;
   align-items: center;
   gap: 8px;
 }
-.crumbs .sep { color: var(--text-4); }
-.crumbs .here { color: var(--text-1); font-weight: 500; }
+.crumbs .sep { color: var(--text-on-ink-3); }
+.crumbs .here { color: var(--text-on-ink); font-weight: 500; }
 
 .cmd-search {
   flex: 1;
@@ -278,24 +280,24 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   align-items: center;
   gap: 8px;
   padding: 6px 10px;
-  border: 1px solid var(--rule);
+  border: 1px solid rgba(255,255,255,0.10);
   border-radius: 6px;
-  background: var(--bg-2);
-  color: var(--text-3);
+  background: rgba(255,255,255,0.06);
+  color: var(--text-on-ink-2);
   font-size: 12.5px;
   cursor: text;
 }
-.cmd-search:hover { border-color: var(--rule-2); }
-.cmd-search .icon { color: var(--text-4); flex-shrink: 0; }
+.cmd-search:hover { border-color: rgba(255,255,255,0.18); }
+.cmd-search .icon { color: var(--text-on-ink-3); flex-shrink: 0; }
 .cmd-search .kbd-hint {
   margin-left: auto;
   font-family: var(--font-mono);
   font-size: 10px;
-  color: var(--text-3);
+  color: var(--text-on-ink-3);
   padding: 1px 4px;
-  border: 1px solid var(--rule);
+  border: 1px solid rgba(255,255,255,0.12);
   border-radius: 3px;
-  background: var(--bg);
+  background: rgba(255,255,255,0.05);
   line-height: 1;
 }
 
@@ -306,19 +308,19 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   align-items: center;
   gap: 7px;
   padding: 5px 10px;
-  border: 1px solid var(--rule);
+  border: 1px solid rgba(255,255,255,0.10);
   border-radius: 5px;
-  background: var(--bg-2);
+  background: rgba(255,255,255,0.06);
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--text-2);
+  color: var(--text-on-ink-2);
   letter-spacing: 0.02em;
 }
 .live-pill .dot {
   width: 6px; height: 6px;
-  background: var(--pos);
+  background: #5EC78F;
   border-radius: 50%;
-  box-shadow: 0 0 0 3px rgba(4,120,87,0.18);
+  box-shadow: 0 0 0 3px rgba(94,199,143,0.25);
   animation: pulse 2.5s ease-in-out infinite;
 }
 @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(0.85)} }
@@ -327,16 +329,15 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  background: var(--ink);
-  color: var(--text-on-ink);
+  background: #FFFFFF;
+  color: var(--ink);
   border-radius: 6px;
   padding: 7px 13px;
   font-size: 12.5px;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1;
-  box-shadow: 0 0 0 1px var(--ink), 0 1px 0 rgba(255,255,255,0.10) inset;
 }
-.ask-btn:hover { background: var(--ink-2); }
+.ask-btn:hover { background: var(--bg-2); }
 .ask-btn .ai-glyph {
   width: 14px; height: 14px;
   display: inline-flex;
@@ -500,10 +501,10 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
 }
 .sec-head:first-child { margin-top: 0; }
 .sec-head__title {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 14.5px;
+  font-weight: 700;
   color: var(--text-1);
-  letter-spacing: -0.005em;
+  letter-spacing: -0.01em;
 }
 .sec-head__title .count {
   color: var(--text-3);
@@ -545,13 +546,13 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--bg);
+  background: var(--bg-2);
 }
 .panel__title {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-1);
-  letter-spacing: -0.005em;
+  letter-spacing: -0.01em;
 }
 .panel__sub {
   margin-left: 8px;
