@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-05-29T13:06:57.089Z",
-  "totalRows": 8122,
+  "generatedAt": "2026-05-29T13:39:45.677Z",
+  "totalRows": 10122,
   "indicators": {
     "GDP": {
       "covered": 19,
@@ -100,12 +100,67 @@
       "latestYear": 2024,
       "outOfRange": []
     },
+    "EXPORTS_GDP": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2024,
+      "outOfRange": []
+    },
+    "TAX_REVENUE": {
+      "covered": 18,
+      "missing": [
+        "JPN"
+      ],
+      "latestYear": 2024,
+      "outOfRange": []
+    },
+    "MANUFACTURING": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2024,
+      "outOfRange": []
+    },
     "DEBT_GDP": {
       "covered": 19,
       "missing": [],
       "latestYear": 2031,
       "outOfRange": []
+    },
+    "FISCAL_BAL": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2031,
+      "outOfRange": []
+    },
+    "RESEARCHERS": {
+      "covered": 0,
+      "missing": [
+        "USA",
+        "GBR",
+        "CAN",
+        "DEU",
+        "FRA",
+        "ITA",
+        "JPN",
+        "AUS",
+        "KOR",
+        "CHN",
+        "IND",
+        "BRA",
+        "MEX",
+        "ARG",
+        "RUS",
+        "SAU",
+        "ZAF",
+        "IDN",
+        "TUR"
+      ],
+      "latestYear": 0,
+      "outOfRange": []
     }
   },
-  "issues": []
+  "issues": [
+    "RESEARCHERS: missing USA, GBR, CAN, DEU, FRA, ITA, JPN, AUS, KOR, CHN, IND, BRA, MEX, ARG, RUS, SAU, ZAF, IDN, TUR",
+    "RESEARCHERS: latest year 0 — stale"
+  ]
 }

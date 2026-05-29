@@ -770,6 +770,7 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
 .v-neg { color: var(--neg); }
 .v-warn { color: var(--warn); }
 .v-mute { color: var(--text-3); }
+.src-tag { font-size: 9.5px; font-family: var(--font-mono); color: var(--text-4); opacity: .85; }
 
 /* Inline sparkline */
 .spark { display: block; }
@@ -1367,7 +1368,7 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   text-transform: uppercase;
 }
 .agent-msg-text {
-  max-width: 90%;
+  max-width: 94%;
   padding: 10px 14px;
   border-radius: 8px;
   font-size: 13px;
@@ -1376,7 +1377,9 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   border: 1px solid var(--rule);
   color: var(--text-1);
   white-space: pre-wrap;
+  overflow-x: auto;
 }
+.agent-msg-text .ins-block { white-space: normal; }
 .agent-msg.user .agent-msg-text {
   background: var(--ink);
   color: var(--text-on-ink);

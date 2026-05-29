@@ -24,24 +24,29 @@ const G20 = [
 ];
 
 // World Bank indicator codes + display metadata.
+// source field is displayed in KPI tiles and insight responses.
 const INDICATORS = {
-  GDP:          { wb: 'NY.GDP.MKTP.CD',     label: 'GDP',               unit: 'USD',    format: 'trillions' },
-  GDP_GROWTH:   { wb: 'NY.GDP.MKTP.KD.ZG', label: 'GDP Growth',        unit: '%',      format: 'percent'   },
-  INFLATION:    { wb: 'FP.CPI.TOTL.ZG',    label: 'Inflation (CPI)',   unit: '%',      format: 'percent'   },
-  UNEMPLOYMENT: { wb: 'SL.UEM.TOTL.ZS',    label: 'Unemployment',      unit: '%',      format: 'percent'   },
-  DEBT_GDP:     { imf: 'GGXWDG_NGDP',      label: 'Govt Debt / GDP',   unit: '%',      format: 'percent'   },
-  CURRENT_ACC:  { wb: 'BN.CAB.XOKA.GD.ZS', label: 'Current Account',  unit: '% GDP',  format: 'percent'   },
-  GDP_CAPITA:   { wb: 'NY.GDP.PCAP.CD',    label: 'GDP per Capita',    unit: 'USD',    format: 'thousands' },
-  CO2_CAPITA:   { wb: 'EN.ATM.CO2E.PC',    label: 'CO₂ per Capita',   unit: 'tonnes', format: 'decimal'   },
-  TRADE_GDP:    { wb: 'NE.TRD.GNFS.ZS',    label: 'Trade',             unit: '% GDP',  format: 'percent'   },
-  POPULATION:   { wb: 'SP.POP.TOTL',       label: 'Population',        unit: '',       format: 'millions'  },
-  HEALTH_EXP:   { wb: 'SH.XPD.CHEX.GD.ZS',label: 'Health Spending',   unit: '% GDP',  format: 'percent'   },
-  RD_EXP:       { oecd: true,              label: 'R&D Spending',       unit: '% GDP',  format: 'percent'   },
-  GINI:         { wb: 'SI.POV.GINI',       label: 'Gini Index',        unit: '',       format: 'decimal'   },
-  YOUTH_UNEMP:  { wb: 'SL.UEM.1524.ZS',        label: 'Youth Unemployment', unit: '%',     format: 'percent'   },
-  CAPITAL_FORM: { wb: 'NE.GDI.TOTL.ZS',        label: 'Capital Formation',  unit: '% GDP', format: 'percent'   },
-  FDI_INFLOWS:  { wb: 'BX.KLT.DINV.WD.GD.ZS',  label: 'FDI Inflows',        unit: '% GDP', format: 'percent'   },
-  EDUC_EXP:     { wb: 'SE.XPD.TOTL.GD.ZS',     label: 'Education Spending', unit: '% GDP', format: 'percent'   },
+  GDP:          { wb: 'NY.GDP.MKTP.CD',         label: 'GDP',               unit: 'USD',    format: 'trillions', source: 'WB'   },
+  GDP_GROWTH:   { wb: 'NY.GDP.MKTP.KD.ZG',      label: 'GDP Growth',        unit: '%',      format: 'percent',   source: 'WB'   },
+  INFLATION:    { wb: 'FP.CPI.TOTL.ZG',         label: 'Inflation (CPI)',   unit: '%',      format: 'percent',   source: 'WB'   },
+  UNEMPLOYMENT: { wb: 'SL.UEM.TOTL.ZS',         label: 'Unemployment',      unit: '%',      format: 'percent',   source: 'WB'   },
+  DEBT_GDP:     { imf: 'GGXWDG_NGDP',           label: 'Govt Debt / GDP',   unit: '%',      format: 'percent',   source: 'IMF'  },
+  CURRENT_ACC:  { wb: 'BN.CAB.XOKA.GD.ZS',      label: 'Current Account',   unit: '% GDP',  format: 'percent',   source: 'WB'   },
+  GDP_CAPITA:   { wb: 'NY.GDP.PCAP.CD',          label: 'GDP per Capita',    unit: 'USD',    format: 'thousands', source: 'WB'   },
+  CO2_CAPITA:   { wb: 'EN.ATM.CO2E.PC',          label: 'CO₂ per Capita',   unit: 'tonnes', format: 'decimal',   source: 'WB'   },
+  TRADE_GDP:    { wb: 'NE.TRD.GNFS.ZS',          label: 'Trade Openness',    unit: '% GDP',  format: 'percent',   source: 'WB'   },
+  POPULATION:   { wb: 'SP.POP.TOTL',             label: 'Population',        unit: '',       format: 'millions',  source: 'WB'   },
+  HEALTH_EXP:   { wb: 'SH.XPD.CHEX.GD.ZS',      label: 'Health Spending',   unit: '% GDP',  format: 'percent',   source: 'WB'   },
+  RD_EXP:       { oecd: true,                    label: 'R&D Spending',      unit: '% GDP',  format: 'percent',   source: 'OECD' },
+  GINI:         { wb: 'SI.POV.GINI',             label: 'Gini Index',        unit: '',       format: 'decimal',   source: 'WB'   },
+  YOUTH_UNEMP:  { wb: 'SL.UEM.1524.ZS',          label: 'Youth Unemployment', unit: '%',     format: 'percent',   source: 'WB'   },
+  CAPITAL_FORM: { wb: 'NE.GDI.TOTL.ZS',          label: 'Capital Formation', unit: '% GDP',  format: 'percent',   source: 'WB'   },
+  FDI_INFLOWS:  { wb: 'BX.KLT.DINV.WD.GD.ZS',   label: 'FDI Inflows',       unit: '% GDP',  format: 'percent',   source: 'WB'   },
+  EDUC_EXP:     { wb: 'SE.XPD.TOTL.GD.ZS',      label: 'Education Spending', unit: '% GDP', format: 'percent',   source: 'WB'   },
+  EXPORTS_GDP:  { wb: 'NE.EXP.GNFS.ZS',          label: 'Exports',           unit: '% GDP',  format: 'percent',   source: 'WB'   },
+  TAX_REVENUE:  { wb: 'GC.TAX.TOTL.GD.ZS',       label: 'Tax Revenue',       unit: '% GDP',  format: 'percent',   source: 'WB'   },
+  MANUFACTURING:{ wb: 'NV.IND.MANF.ZS',          label: 'Manufacturing',     unit: '% GDP',  format: 'percent',   source: 'WB'   },
+  FISCAL_BAL:   { imf: 'GGXCNL_NGDP',            label: 'Fiscal Balance',    unit: '% GDP',  format: 'percent',   source: 'IMF'  },
 };
 
 // Economic flag thresholds — mirrors the Holocene "Flag/Watch" concept.
@@ -52,6 +57,7 @@ const FLAGS_CONFIG = {
   highUnemploy:    { key: 'UNEMPLOYMENT', threshold: 10,  dir: 'above', label: 'High Unemployment', severity: 'medium' },
   currentAccDeficit:{ key: 'CURRENT_ACC', threshold: -5,  dir: 'below', label: 'Large CA Deficit',  severity: 'low'    },
   highYouthUnemp:   { key: 'YOUTH_UNEMP', threshold: 25,  dir: 'above', label: 'High Youth Unemp.', severity: 'medium' },
+  fiscalDeficit:    { key: 'FISCAL_BAL',  threshold: -6,  dir: 'below', label: 'Large Fiscal Deficit', severity: 'medium' },
 };
 
 // Nav items for the sidebar.

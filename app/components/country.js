@@ -68,6 +68,10 @@ function renderCountryProfile(iso3) {
   const capfrm = window.G20Data.getLatest(iso3, 'CAPITAL_FORM');
   const fdi    = window.G20Data.getLatest(iso3, 'FDI_INFLOWS');
   const educ   = window.G20Data.getLatest(iso3, 'EDUC_EXP');
+  const fiscal = window.G20Data.getLatest(iso3, 'FISCAL_BAL');
+  const tax    = window.G20Data.getLatest(iso3, 'TAX_REVENUE');
+  const exports_gdp = window.G20Data.getLatest(iso3, 'EXPORTS_GDP');
+  const mfg    = window.G20Data.getLatest(iso3, 'MANUFACTURING');
 
   const gv = gr?.value;
   const iv = inf?.value;
@@ -94,6 +98,10 @@ function renderCountryProfile(iso3) {
     educ?.value  !== undefined ? `Education: ${educ.value.toFixed(1)}% GDP` : null,
     capfrm?.value !== undefined ? `Capital Formation: ${capfrm.value.toFixed(1)}% GDP` : null,
     fdi?.value   !== undefined ? `FDI Inflows: ${fdi.value.toFixed(1)}% GDP` : null,
+    fiscal?.value !== undefined ? `Fiscal Balance: ${fiscal.value.toFixed(1)}% GDP` : null,
+    tax?.value   !== undefined ? `Tax Revenue: ${tax.value.toFixed(1)}% GDP` : null,
+    exports_gdp?.value !== undefined ? `Exports: ${exports_gdp.value.toFixed(1)}% GDP` : null,
+    mfg?.value   !== undefined ? `Manufacturing: ${mfg.value.toFixed(1)}% GDP` : null,
   ].filter(Boolean).join(', ');
 
   return `
@@ -141,12 +149,14 @@ function renderCountryProfile(iso3) {
         </div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:20px">
-        ${renderMiniKPI('GDP per Capita', cap?.value ? '$' + (cap.value/1000).toFixed(0) + 'K' : '—', cap?.year)}
-        ${renderMiniKPI('Current Acct', ca?.value !== undefined ? (ca.value >= 0 ? '+' : '') + ca.value.toFixed(1) + '% GDP' : '—', ca?.year, ca?.value < -2 ? 'v-warn' : '')}
-        ${renderMiniKPI('Health Spending', health?.value !== undefined ? health.value.toFixed(1) + '% GDP' : '—', health?.year)}
-        ${renderMiniKPI('R&D Spending', rd?.value !== undefined ? rd.value.toFixed(2) + '% GDP' : '—', rd?.year)}
-        ${renderMiniKPI('Youth Unemp.', youth?.value !== undefined ? youth.value.toFixed(1) + '%' : '—', youth?.year, youth?.value > 25 ? 'v-warn' : '')}
-        ${renderMiniKPI('Education', educ?.value !== undefined ? educ.value.toFixed(1) + '% GDP' : '—', educ?.year)}
+        ${renderMiniKPI('GDP per Capita', cap?.value ? '$' + (cap.value/1000).toFixed(0) + 'K' : '—', cap?.year, '', 'WB')}
+        ${renderMiniKPI('Current Acct', ca?.value !== undefined ? (ca.value >= 0 ? '+' : '') + ca.value.toFixed(1) + '% GDP' : '—', ca?.year, ca?.value < -2 ? 'v-warn' : '', 'WB')}
+        ${renderMiniKPI('Fiscal Balance', fiscal?.value !== undefined ? (fiscal.value >= 0 ? '+' : '') + fiscal.value.toFixed(1) + '% GDP' : '—', fiscal?.year, fiscal?.value < -6 ? 'v-warn' : '', 'IMF')}
+        ${renderMiniKPI('Tax Revenue', tax?.value !== undefined ? tax.value.toFixed(1) + '% GDP' : '—', tax?.year, '', 'WB')}
+        ${renderMiniKPI('Health Spending', health?.value !== undefined ? health.value.toFixed(1) + '% GDP' : '—', health?.year, '', 'WB')}
+        ${renderMiniKPI('R&D Spending', rd?.value !== undefined ? rd.value.toFixed(2) + '% GDP' : '—', rd?.year, '', 'OECD')}
+        ${renderMiniKPI('Youth Unemp.', youth?.value !== undefined ? youth.value.toFixed(1) + '%' : '—', youth?.year, youth?.value > 25 ? 'v-warn' : '', 'WB')}
+        ${renderMiniKPI('Education', educ?.value !== undefined ? educ.value.toFixed(1) + '% GDP' : '—', educ?.year, '', 'WB')}
       </div>
 
       <!-- Charts 2×2 -->
@@ -211,13 +221,14 @@ function renderCountryProfile(iso3) {
 }
 
 // ── Mini KPI card ─────────────────────────────────────────────────────────────
-function renderMiniKPI(label, value, year, cls) {
+function renderMiniKPI(label, value, year, cls, source) {
+  const srcHtml = source ? ` <span class="src-tag">${source}</span>` : '';
   return `
     <div class="panel">
       <div class="panel__body" style="padding:12px 14px">
         <div class="kpi-tile__lbl">${label}</div>
         <div class="kpi-tile__val ${cls || ''}" style="font-size:18px;margin-top:6px">${value}</div>
-        <div class="kpi-tile__delta">${year || '—'}</div>
+        <div class="kpi-tile__delta">${year || '—'}${srcHtml}</div>
       </div>
     </div>`;
 }
@@ -225,14 +236,17 @@ function renderMiniKPI(label, value, year, cls) {
 // ── Standing chart (vs G20 median) ───────────────────────────────────────────
 function renderStanding(iso3) {
   const keys = [
-    { key: 'GDP_GROWTH',   label: 'Growth',      unit: '%',     factor: 1 },
-    { key: 'INFLATION',    label: 'Inflation',   unit: '%',     factor: 1 },
-    { key: 'UNEMPLOYMENT', label: 'Unemp.',      unit: '%',     factor: 1 },
-    { key: 'DEBT_GDP',     label: 'Debt/GDP',    unit: '%',     factor: 1 },
-    { key: 'HEALTH_EXP',   label: 'Health',      unit: '% GDP', factor: 1 },
-    { key: 'YOUTH_UNEMP',  label: 'Youth Unemp.',unit: '%',     factor: 1 },
-    { key: 'CAPITAL_FORM', label: 'Investment',  unit: '% GDP', factor: 1 },
-    { key: 'EDUC_EXP',     label: 'Education',   unit: '% GDP', factor: 1 },
+    { key: 'GDP_GROWTH',   label: 'Growth',        unit: '%',     factor: 1 },
+    { key: 'INFLATION',    label: 'Inflation',     unit: '%',     factor: 1 },
+    { key: 'UNEMPLOYMENT', label: 'Unemp.',        unit: '%',     factor: 1 },
+    { key: 'DEBT_GDP',     label: 'Govt Debt',     unit: '%',     factor: 1 },
+    { key: 'FISCAL_BAL',   label: 'Fiscal Bal.',   unit: '% GDP', factor: 1 },
+    { key: 'HEALTH_EXP',   label: 'Health',        unit: '% GDP', factor: 1 },
+    { key: 'YOUTH_UNEMP',  label: 'Youth Unemp.',  unit: '%',     factor: 1 },
+    { key: 'CAPITAL_FORM', label: 'Investment',    unit: '% GDP', factor: 1 },
+    { key: 'EDUC_EXP',     label: 'Education',     unit: '% GDP', factor: 1 },
+    { key: 'EXPORTS_GDP',  label: 'Exports',       unit: '% GDP', factor: 1 },
+    { key: 'TAX_REVENUE',  label: 'Tax Revenue',   unit: '% GDP', factor: 1 },
   ];
 
   const rows = keys.map(({ key, label, unit }) => {

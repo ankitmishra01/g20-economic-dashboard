@@ -191,12 +191,28 @@
     const loadingId = 'loading-' + Date.now();
     body.innerHTML += `
       <div class="agent-msg loading" id="${loadingId}">
-        <div class="agent-msg-label">AI Analyst</div>
-        <div class="agent-msg-text">Analysing data…</div>
+        <div class="agent-msg-label">Data Engine</div>
+        <div class="agent-msg-text">Analysing G20 data…</div>
       </div>
     `;
     body.scrollTop = body.scrollHeight;
 
+    // Try local insight engine first (no API key required)
+    const localInsight = window.generateLocalInsight?.(question);
+    if (localInsight) {
+      document.getElementById(loadingId)?.remove();
+      body.innerHTML += `
+        <div class="agent-msg">
+          <div class="agent-msg-label">Data Engine · G20</div>
+          <div class="agent-msg-text">${localInsight}</div>
+        </div>
+      `;
+      sendBtn.disabled = false;
+      body.scrollTop = body.scrollHeight;
+      return;
+    }
+
+    // Fall back to Claude API
     try {
       const context = window.G20Data ? window.G20Data.buildAgentContext() : '';
       const r = await fetch('/api/agent', {
@@ -204,20 +220,30 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question, context }),
       });
-      const { text, error } = await r.json();
+      const data = await r.json();
       document.getElementById(loadingId)?.remove();
-      body.innerHTML += `
-        <div class="agent-msg">
-          <div class="agent-msg-label">AI Analyst</div>
-          <div class="agent-msg-text">${A.escapeText(text || error || 'No response')}</div>
-        </div>
-      `;
+
+      if (data.error && data.error.includes('API key')) {
+        body.innerHTML += `
+          <div class="agent-msg">
+            <div class="agent-msg-label">Data Engine</div>
+            <div class="agent-msg-text">No AI API key is configured on this server. The data engine can answer questions about specific countries, rankings, fiscal health, growth trends, inflation, trade, and regional comparisons — try one of the suggested questions below, or ask about any G20 economy by name.</div>
+          </div>
+        `;
+      } else {
+        body.innerHTML += `
+          <div class="agent-msg">
+            <div class="agent-msg-label">AI Analyst</div>
+            <div class="agent-msg-text">${A.escapeText(data.text || data.error || 'No response')}</div>
+          </div>
+        `;
+      }
     } catch (e) {
       document.getElementById(loadingId)?.remove();
       body.innerHTML += `
         <div class="agent-msg">
-          <div class="agent-msg-label">AI Analyst</div>
-          <div class="agent-msg-text">Error: ${A.escapeText(e.message)}</div>
+          <div class="agent-msg-label">Data Engine</div>
+          <div class="agent-msg-text">Could not reach the AI endpoint — but I can still answer data-driven questions from the live G20 dataset. Try asking about a specific country, ranking, or economic indicator.</div>
         </div>
       `;
     }

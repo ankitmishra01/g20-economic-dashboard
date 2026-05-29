@@ -114,6 +114,12 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
       if (debt)  parts.push(`debt/GDP ${debt.value.toFixed(0)}% (${debt.year})`);
       if (youth) parts.push(`youth unemp ${youth.value.toFixed(1)}% (${youth.year})`);
       if (educ)  parts.push(`education ${educ.value.toFixed(1)}% GDP (${educ.year})`);
+      const fisc = getLatest(c.iso3, 'FISCAL_BAL');
+      const tax  = getLatest(c.iso3, 'TAX_REVENUE');
+      const exp  = getLatest(c.iso3, 'EXPORTS_GDP');
+      if (fisc) parts.push(`fiscal balance ${fisc.value.toFixed(1)}% GDP (${fisc.year})`);
+      if (tax)  parts.push(`tax revenue ${tax.value.toFixed(1)}% GDP (${tax.year})`);
+      if (exp)  parts.push(`exports ${exp.value.toFixed(1)}% GDP (${exp.year})`);
       lines.push(parts.join(' | '));
     }
     return lines.join('\n');

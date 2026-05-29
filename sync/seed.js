@@ -35,6 +35,9 @@ const WB_INDICATORS = {
   CAPITAL_FORM: 'NE.GDI.TOTL.ZS',        // Gross capital formation % GDP
   FDI_INFLOWS:  'BX.KLT.DINV.WD.GD.ZS', // FDI net inflows % GDP
   EDUC_EXP:     'SE.XPD.TOTL.GD.ZS',    // Govt education expenditure % GDP
+  EXPORTS_GDP:  'NE.EXP.GNFS.ZS',        // Exports of goods & services % GDP
+  TAX_REVENUE:  'GC.TAX.TOTL.GD.ZS',    // Tax revenue % GDP
+  MANUFACTURING:'NV.IND.MANF.ZS',        // Manufacturing value added % GDP
 };
 
 // IMF countries (EUU not available in IMF DataMapper)
@@ -71,6 +74,11 @@ const RANGES = {
   CAPITAL_FORM: [10,    50],
   FDI_INFLOWS:  [-10,   25],
   EDUC_EXP:     [0,     12],
+  EXPORTS_GDP:  [5,    100],   // % GDP; Saudi ~42%, Germany ~47%, China ~20%
+  TAX_REVENUE:  [5,     45],   // % GDP; Scandinavian ~40-45%, China ~7% (state-owned squeeze)
+  MANUFACTURING:[2,     45],   // % GDP; China ~27%, Germany ~20%, USA ~11%
+  FISCAL_BAL:   [-30,   10],   // % GDP (negative = deficit)
+  RESEARCHERS:  [0,     25],   // per 1000 employment; Korea ~16, Germany ~9
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -133,33 +141,31 @@ async function fetchWB(indicatorKey, wbCode) {
 
 // ── IMF DataMapper ────────────────────────────────────────────────────────────
 
-async function fetchIMF() {
-  const url = 'https://www.imf.org/external/datamapper/api/v1/GGXWDG_NGDP';
+async function fetchIMFDataset(imfCode, indicatorKey) {
+  const url = `https://www.imf.org/external/datamapper/api/v1/${imfCode}`;
   const r = await fetch(url, {
     headers: { 'User-Agent': 'G20Dashboard-Seed/1.0', 'Accept': 'application/json' },
     signal: AbortSignal.timeout(45000),
   });
-  if (!r.ok) throw new Error(`IMF API ${r.status}`);
+  if (!r.ok) throw new Error(`IMF API ${r.status} for ${imfCode}`);
 
   const json = await r.json();
-  const values = json?.values?.GGXWDG_NGDP || {};
+  const values = json?.values?.[imfCode] || {};
 
   const rows = [];
-  for (const [imfCode, years] of Object.entries(values)) {
-    if (!IMF_COUNTRIES.includes(imfCode)) continue;
+  for (const [imfCode2, years] of Object.entries(values)) {
+    if (!IMF_COUNTRIES.includes(imfCode2)) continue;
     for (const [yearStr, value] of Object.entries(years)) {
       const year = parseInt(yearStr, 10);
       if (year < 2000 || value === null || value === undefined) continue;
-      rows.push({
-        country_iso3:  imfCode,
-        indicator_key: 'DEBT_GDP',
-        year,
-        value,
-        source: 'imf',
-      });
+      rows.push({ country_iso3: imfCode2, indicator_key: indicatorKey, year, value, source: 'imf' });
     }
   }
   return rows;
+}
+
+async function fetchIMF() {
+  return fetchIMFDataset('GGXWDG_NGDP', 'DEBT_GDP');
 }
 
 // ── OECD ─────────────────────────────────────────────────────────────────────
@@ -195,20 +201,45 @@ function parseOECDSDMX(json, indicatorKey) {
   return rows;
 }
 
-async function fetchOECDRD() {
-  // OECD MSTI — Gross domestic expenditure on R&D (GERD) as % of GDP.
-  // Overwrites WB R&D data for OECD members; non-members keep WB values.
-  const countries = [...OECD_G20, ...OECD_PARTNERS].join('+');
-  const url = `https://sdmx.oecd.org/public/rest/data/OECD.STI.STP,DSD_MSTI@DF_MSTI,1.0/A.${countries}.GERD.PT_B1GQ?format=jsondata&startPeriod=2000&endPeriod=2024`;
+// Fetch one OECD MSTI measure per-country to avoid API response-size limits.
+// Dimension order (new API): REF_AREA.FREQ.MEASURE.UNIT_MEASURE.PRICE_BASE.TRANSFORMATION
+async function fetchOECDMSTICountry(country, measure, unit, indicatorKey) {
+  const url = `https://sdmx.oecd.org/public/rest/data/OECD.STI.STP,DSD_MSTI@DF_MSTI,1.0/${country}.A.${measure}.${unit}._Z._Z?format=jsondata&startPeriod=2000&endPeriod=2023`;
   const r = await fetch(url, {
     headers: { 'User-Agent': 'G20Dashboard-Seed/1.0', 'Accept': 'application/json' },
-    signal: AbortSignal.timeout(45000),
+    signal: AbortSignal.timeout(30000),
   });
-  if (!r.ok) throw new Error(`OECD MSTI API ${r.status}`);
+  if (!r.ok) return [];
   const json = await r.json();
-  const rows = parseOECDSDMX(json, 'RD_EXP');
-  if (!rows.length) throw new Error('OECD MSTI: no rows parsed — check dimension key');
-  return rows;
+  return parseOECDSDMX(json, indicatorKey);
+}
+
+async function fetchOECDRD() {
+  // OECD MSTI — Gross domestic expenditure on R&D (GERD) as % of GDP.
+  // Fetch per-country: batch API hits a response-size ceiling and returns sparse data.
+  const allRows = [];
+  for (const country of [...OECD_G20, ...OECD_PARTNERS]) {
+    try {
+      const rows = await fetchOECDMSTICountry(country, 'G', 'PT_B1GQ', 'RD_EXP');
+      allRows.push(...rows);
+      await new Promise(r => setTimeout(r, 150));
+    } catch (_) {}
+  }
+  if (!allRows.length) throw new Error('OECD MSTI: no rows parsed');
+  return allRows;
+}
+
+async function fetchOECDResearchers() {
+  // OECD MSTI — R&D researchers per 1,000 employment (OECD G20 members only).
+  const allRows = [];
+  for (const country of OECD_G20) {
+    try {
+      const rows = await fetchOECDMSTICountry(country, 'T_RS', '10P3EMP', 'RESEARCHERS');
+      allRows.push(...rows);
+      await new Promise(r => setTimeout(r, 150));
+    } catch (_) {}
+  }
+  return allRows; // non-fatal if empty
 }
 
 // ── Validation ────────────────────────────────────────────────────────────────
@@ -246,7 +277,7 @@ async function validate() {
     }
   }
 
-  const ALL_INDICATORS = [...Object.keys(WB_INDICATORS), 'DEBT_GDP'];
+  const ALL_INDICATORS = [...Object.keys(WB_INDICATORS), 'DEBT_GDP', 'FISCAL_BAL'];
   const issues = [];
   const report = { generatedAt: new Date().toISOString(), totalRows: allRows.length, indicators: {} };
 
@@ -497,8 +528,8 @@ async function main() {
     await new Promise(r => setTimeout(r, 600)); // respect WB rate limit
   }
 
-  // OECD R&D (MSTI) — overwrites WB R&D data for OECD member countries
-  process.stdout.write(`Fetching RD_EXP  (OECD MSTI GERD % GDP)…`);
+  // OECD R&D (MSTI) — overwrites WB R&D for OECD members (per-country fetch to avoid API size limits)
+  process.stdout.write(`Fetching RD_EXP  (OECD MSTI GERD % GDP, per-country)…`);
   try {
     const rows = await fetchOECDRD();
     process.stdout.write(` ${rows.length} rows → upserting…`);
@@ -507,13 +538,41 @@ async function main() {
     console.log(` ✓`);
   } catch (e) {
     console.log(` ✗ ${e.message} (WB fallback retained)`);
-    // Non-fatal: WB R&D data already upserted above
+  }
+
+  // OECD Researchers per 1,000 employment (OECD G20 members only)
+  process.stdout.write(`Fetching RESEARCHERS (OECD MSTI, OECD G20 members)…`);
+  try {
+    const rows = await fetchOECDResearchers();
+    if (rows.length) {
+      process.stdout.write(` ${rows.length} rows → upserting…`);
+      await upsert(rows);
+      totalRows += rows.length;
+      console.log(` ✓`);
+    } else {
+      console.log(` ⚠ no data (skipped)`);
+    }
+  } catch (e) {
+    console.log(` ✗ ${e.message}`);
   }
 
   // IMF debt / GDP
   process.stdout.write(`Fetching DEBT_GDP (IMF GGXWDG_NGDP)…`);
   try {
     const rows = await fetchIMF();
+    process.stdout.write(` ${rows.length} rows → upserting…`);
+    await upsert(rows);
+    totalRows += rows.length;
+    console.log(` ✓`);
+  } catch (e) {
+    console.log(` ✗ ${e.message}`);
+    failures++;
+  }
+
+  // IMF government fiscal balance (net lending / borrowing % GDP)
+  process.stdout.write(`Fetching FISCAL_BAL (IMF GGXCNL_NGDP)…`);
+  try {
+    const rows = await fetchIMFDataset('GGXCNL_NGDP', 'FISCAL_BAL');
     process.stdout.write(` ${rows.length} rows → upserting…`);
     await upsert(rows);
     totalRows += rows.length;

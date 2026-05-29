@@ -268,16 +268,61 @@ function renderOverview() {
   <!-- Global Outlook editorial -->
   ${renderGlobalOutlook()}
 
+  <!-- Data sources table -->
+  <div class="sec-head" style="margin-top:24px">
+    <div class="sec-head__title">Data sources</div>
+  </div>
+  <div class="panel" style="margin-bottom:20px">
+    <div class="panel__body" style="padding:0">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="border-bottom:1px solid var(--rule)">
+            <th style="padding:8px 14px;text-align:left;color:var(--text-3);font-weight:600;font-size:11px;letter-spacing:.03em">Indicator</th>
+            <th style="padding:8px 14px;text-align:left;color:var(--text-3);font-weight:600;font-size:11px;letter-spacing:.03em">Source</th>
+            <th style="padding:8px 14px;text-align:left;color:var(--text-3);font-weight:600;font-size:11px;letter-spacing:.03em">Coverage</th>
+            <th style="padding:8px 14px;text-align:left;color:var(--text-3);font-weight:600;font-size:11px;letter-spacing:.03em">Frequency</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${[
+            ['GDP, GDP Growth, GDP per Capita', 'World Bank (NY.GDP.*)', '19/19 G20', 'Annual'],
+            ['Inflation (CPI)', 'World Bank (FP.CPI.TOTL.ZG)', '19/19 G20', 'Annual'],
+            ['Unemployment, Youth Unemployment', 'World Bank / ILO modelled', '19/19 G20', 'Annual'],
+            ['Current Account Balance', 'World Bank (BN.CAB.XOKA.GD.ZS)', '19/19 G20', 'Annual'],
+            ['Health Spending', 'World Bank / WHO (SH.XPD.CHEX.GD.ZS)', '19/19 G20', 'Annual'],
+            ['Education Spending', 'World Bank / UNESCO (SE.XPD.TOTL.GD.ZS)', '19/19 G20', 'Annual'],
+            ['Capital Formation, Exports, Manufacturing', 'World Bank National Accounts', '19/19 G20', 'Annual'],
+            ['FDI Inflows', 'World Bank (BX.KLT.DINV.WD.GD.ZS)', '19/19 G20', 'Annual'],
+            ['Tax Revenue', 'World Bank / IMF GFS (GC.TAX.TOTL.GD.ZS)', '18/19 G20', 'Annual'],
+            ['Gross Government Debt', 'IMF World Economic Outlook (GGXWDG_NGDP)', '19/19 G20', 'Annual'],
+            ['Government Fiscal Balance', 'IMF World Economic Outlook (GGXCNL_NGDP)', '19/19 G20', 'Annual'],
+            ['R&D Expenditure', 'OECD MSTI / World Bank UNESCO (GB.XPD.RSDV.GD.ZS)', '19/19 G20', 'Annual'],
+            ['CO₂ Emissions per Capita', 'World Bank / EDGAR (EN.GHG.CO2.PC.CE.AR5)', '19/19 G20', 'Annual'],
+            ['Gini Coefficient', 'World Bank PovcalNet (SI.POV.GINI)', '18/19 G20', 'Periodic'],
+            ['Population', 'World Bank (SP.POP.TOTL)', '19/19 G20', 'Annual'],
+            ['Trade Openness', 'World Bank National Accounts (NE.TRD.GNFS.ZS)', '19/19 G20', 'Annual'],
+          ].map(([ind, src, cov, freq]) => `
+            <tr style="border-bottom:1px solid rgba(0,0,0,.04)">
+              <td style="padding:7px 14px;color:var(--text-1)">${ind}</td>
+              <td style="padding:7px 14px;color:var(--text-2);font-family:var(--font-mono);font-size:11px">${src}</td>
+              <td style="padding:7px 14px;color:var(--text-3)">${cov}</td>
+              <td style="padding:7px 14px;color:var(--text-3)">${freq}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- Methodology -->
   <div class="methodology">
     <h4>About this dataset</h4>
-    Latest reads at the publication cut-off (${latestYear}). GDP in current USD —
-    <a href="https://data.worldbank.org" target="_blank" rel="noopener">World Bank Open Data</a>.
-    CPI, unemployment, and current-account series — same. Gross government debt as share of GDP —
-    <a href="https://www.imf.org/external/datamapper" target="_blank" rel="noopener">IMF DataMapper</a>.
-    R&amp;D and science indicators supplement from
+    Latest reads at the publication cut-off (${latestYear}). All data sourced from official open APIs:
+    <a href="https://data.worldbank.org" target="_blank" rel="noopener">World Bank Open Data</a> (CC BY 4.0) ·
+    <a href="https://www.imf.org/external/datamapper" target="_blank" rel="noopener">IMF DataMapper</a> ·
     <a href="https://stats.oecd.org" target="_blank" rel="noopener">OECD MSTI</a>.
-    Series refreshed monthly via automated pipelines.
+    Fiscal balance and government debt data include IMF projections capped at 2024.
+    Series refreshed monthly via automated pipelines (GitHub Actions → Supabase).
   </div>
 
   <div class="page-foot">
