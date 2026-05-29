@@ -43,8 +43,8 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
     }
 
     // Build _latest: most recent non-null value per country per indicator,
-    // capped at 2024 so IMF multi-year projections don't appear as current data.
-    const LATEST_YEAR_CAP = 2024;
+    // capped at 2025 so IMF forward projections (2026+) don't appear as current data.
+    const LATEST_YEAR_CAP = 2025;
     _data._latest = {};
     for (const iso3 of Object.keys(_data)) {
       if (iso3 === '_latest') continue;
@@ -65,12 +65,80 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
     }
 
     window.G20_DATA = _data;
+
+    // Load quarterly data from g20_quarterly_data table (non-blocking; graceful fallback)
+    try {
+      const qr = await fetch(
+        `${SUPABASE_URL}/rest/v1/g20_quarterly_data?select=country_iso3,indicator_key,period,value&order=period.asc`,
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+      );
+      if (qr.ok) {
+        const qrows = await qr.json();
+        window.G20_QDATA = buildQuarterlyIndex(Array.isArray(qrows) ? qrows : []);
+      }
+    } catch (_) { /* quarterly table may not exist yet — no-op */ }
+
+    // Load indicator metadata (non-blocking; graceful fallback)
+    try {
+      const mr = await fetch(
+        `${SUPABASE_URL}/rest/v1/g20_indicators?select=*`,
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+      );
+      if (mr.ok) {
+        const meta = await mr.json();
+        window.G20_INDICATOR_META = Array.isArray(meta) ? meta : [];
+      }
+    } catch (_) {}
+
     return _data;
   }
 
-  // Get the latest value + year for a country + indicator.
+  // Build quarterly data index from flat row array.
+  // Index: _qdata[iso3][key][period] = value
+  // _qlatest[iso3][key] = { value, period } for most recent period
+  function buildQuarterlyIndex(rows) {
+    const idx = {};
+    const latest = {};
+    for (const { country_iso3: iso3, indicator_key: key, period, value } of rows) {
+      if (!iso3 || !key || !period) continue;
+      if (!idx[iso3]) idx[iso3] = {};
+      if (!idx[iso3][key]) idx[iso3][key] = {};
+      idx[iso3][key][period] = value;
+      if (!latest[iso3]) latest[iso3] = {};
+      if (!latest[iso3][key] || period > latest[iso3][key].period) {
+        latest[iso3][key] = { value, period };
+      }
+    }
+    idx._qlatest = latest;
+    return idx;
+  }
+
+  // Get the latest value for a country + indicator.
+  // Prefers quarterly data from g20_quarterly_data when it is more recent than annual data.
+  // Returns { value, year, period? } where period is set (e.g. '2026Q1') when quarterly data wins.
   function getLatest(iso3, key) {
-    return window.G20_DATA?._latest?.[iso3]?.[key] || null;
+    const qLatest = window.G20_QDATA?._qlatest?.[iso3]?.[key];
+    const aLatest = window.G20_DATA?._latest?.[iso3]?.[key];
+
+    if (!qLatest && !aLatest) return null;
+    if (!qLatest) return aLatest;
+    if (!aLatest) return { value: qLatest.value, year: parseInt(qLatest.period, 10), period: qLatest.period, isQuarterly: true };
+
+    // Quarterly wins if its year is more recent, or same year but has a quarter suffix
+    const qYear = parseInt(qLatest.period, 10);
+    if (qYear > aLatest.year || (qYear === aLatest.year && qLatest.period.length > 4)) {
+      return { value: qLatest.value, year: qYear, period: qLatest.period, isQuarterly: true };
+    }
+    return aLatest;
+  }
+
+  // Get quarterly time series [{period, year, value}] sorted ascending.
+  function getQuarterlySeries(iso3, key, fromPeriod) {
+    const raw = window.G20_QDATA?.[iso3]?.[key] || {};
+    return Object.entries(raw)
+      .map(([p, v]) => ({ period: p, year: parseInt(p, 10), value: v }))
+      .filter(d => !fromPeriod || d.period >= fromPeriod)
+      .sort((a, b) => a.period.localeCompare(b.period));
   }
 
   // Get time series [{year, value}] for a country + indicator, sorted ascending.
@@ -125,5 +193,10 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
     return lines.join('\n');
   }
 
-  window.G20Data = { loadAllData, getLatest, getSeries, getRanking, buildAgentContext };
+  // Get metadata (label, source, unit, description) for an indicator key.
+  function getIndicatorMeta(key) {
+    return window.G20_INDICATOR_META?.find(m => m.key === key) || null;
+  }
+
+  window.G20Data = { loadAllData, getLatest, getSeries, getRanking, buildAgentContext, getIndicatorMeta, getQuarterlySeries };
 })();

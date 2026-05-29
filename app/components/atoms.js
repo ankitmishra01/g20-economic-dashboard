@@ -41,7 +41,8 @@
 
   function fmtPct(n, decimals) {
     if (n == null || isNaN(n)) return '—';
-    return `${n.toFixed(decimals ?? 1)}%`;
+    const d = decimals ?? 1;
+    return `${parseFloat(n.toFixed(d)).toFixed(d)}%`;
   }
 
   function fmtMillions(n) {
@@ -62,6 +63,14 @@
     return n.toFixed(1);
   }
 
+  // Signed percentage: "+1.2%" or "-3.4%" — never "-0.0%"
+  function fmtSignedPct(n, decimals) {
+    if (n == null || isNaN(n)) return '—';
+    const d = decimals ?? 1;
+    const rounded = parseFloat(n.toFixed(d));
+    return (rounded >= 0 ? '+' : '') + rounded.toFixed(d) + '%';
+  }
+
   // Format a value by INDICATORS format key.
   function fmtByFormat(value, format) {
     if (value == null || isNaN(value)) return '—';
@@ -78,9 +87,10 @@
   // Delta badge: +1.2% in green or -0.5% in red.
   function deltaBadge(value, goodDir) {
     if (value == null || isNaN(value)) return '';
-    const sign = value >= 0 ? '+' : '';
-    const cls = (goodDir === 'up' ? value >= 0 : value <= 0) ? 'badge-good' : 'badge-bad';
-    return `<span class="delta-badge ${cls}">${sign}${value.toFixed(1)}</span>`;
+    const rounded = parseFloat(value.toFixed(1));
+    const sign = rounded >= 0 ? '+' : '';
+    const cls = (goodDir === 'up' ? rounded >= 0 : rounded <= 0) ? 'badge-good' : 'badge-bad';
+    return `<span class="delta-badge ${cls}">${sign}${rounded.toFixed(1)}</span>`;
   }
 
   function escapeText(s) {
@@ -92,6 +102,6 @@
     }[ch]));
   }
 
-  global.A = { icon, colorHash, fmtGDP, fmtPct, fmtMillions, fmtThousands, fmtDecimal,
+  global.A = { icon, colorHash, fmtGDP, fmtPct, fmtSignedPct, fmtMillions, fmtThousands, fmtDecimal,
                fmtByFormat, deltaBadge, escapeText, escapeAttr };
 })(window);

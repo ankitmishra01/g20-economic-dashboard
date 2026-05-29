@@ -1,38 +1,44 @@
 {
-  "generatedAt": "2026-05-29T14:05:11.900Z",
-  "totalRows": 12013,
+  "generatedAt": "2026-05-29T21:37:18.068Z",
+  "totalRows": 12203,
   "indicators": {
     "GDP": {
       "covered": 19,
       "missing": [],
-      "latestYear": 2024,
+      "latestYear": 2025,
       "outOfRange": []
     },
     "GDP_GROWTH": {
       "covered": 19,
       "missing": [],
-      "latestYear": 2024,
+      "latestYear": 2025,
       "outOfRange": []
     },
     "INFLATION": {
       "covered": 19,
       "missing": [],
-      "latestYear": 2024,
+      "latestYear": 2025,
       "outOfRange": []
     },
     "UNEMPLOYMENT": {
       "covered": 19,
       "missing": [],
-      "latestYear": 2024,
+      "latestYear": 2025,
       "outOfRange": []
     },
     "CURRENT_ACC": {
       "covered": 19,
       "missing": [],
-      "latestYear": 2024,
+      "latestYear": 2025,
       "outOfRange": []
     },
     "GDP_CAPITA": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2025,
+      "outOfRange": []
+    },
+    "GDP_CAPITA_PPP": {
       "covered": 19,
       "missing": [],
       "latestYear": 2024,
@@ -50,33 +56,7 @@
       "latestYear": 2024,
       "outOfRange": []
     },
-    "POPULATION": {
-      "covered": 19,
-      "missing": [],
-      "latestYear": 2024,
-      "outOfRange": []
-    },
-    "HEALTH_EXP": {
-      "covered": 19,
-      "missing": [],
-      "latestYear": 2024,
-      "outOfRange": []
-    },
-    "RD_EXP": {
-      "covered": 19,
-      "missing": [],
-      "latestYear": 2024,
-      "outOfRange": []
-    },
-    "GINI": {
-      "covered": 18,
-      "missing": [
-        "SAU"
-      ],
-      "latestYear": 2024,
-      "outOfRange": []
-    },
-    "YOUTH_UNEMP": {
+    "EXPORTS_GDP": {
       "covered": 19,
       "missing": [],
       "latestYear": 2024,
@@ -88,7 +68,25 @@
       "latestYear": 2024,
       "outOfRange": []
     },
+    "MANUFACTURING": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2024,
+      "outOfRange": []
+    },
+    "POPULATION": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2025,
+      "outOfRange": []
+    },
     "FDI_INFLOWS": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2024,
+      "outOfRange": []
+    },
+    "HEALTH_EXP": {
       "covered": 19,
       "missing": [],
       "latestYear": 2024,
@@ -100,7 +98,31 @@
       "latestYear": 2024,
       "outOfRange": []
     },
-    "EXPORTS_GDP": {
+    "LIFE_EXPECT": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2024,
+      "outOfRange": []
+    },
+    "YOUTH_UNEMP": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2025,
+      "outOfRange": []
+    },
+    "FEMALE_LFP": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2025,
+      "outOfRange": []
+    },
+    "RESEARCHERS": {
+      "covered": 19,
+      "missing": [],
+      "latestYear": 2024,
+      "outOfRange": []
+    },
+    "RD_EXP": {
       "covered": 19,
       "missing": [],
       "latestYear": 2024,
@@ -114,77 +136,26 @@
       "latestYear": 2024,
       "outOfRange": []
     },
-    "MANUFACTURING": {
-      "covered": 19,
-      "missing": [],
-      "latestYear": 2024,
-      "outOfRange": []
-    },
-    "LIFE_EXPECT": {
-      "covered": 19,
-      "missing": [],
-      "latestYear": 2024,
-      "outOfRange": []
-    },
-    "FEMALE_LFP": {
-      "covered": 19,
-      "missing": [],
-      "latestYear": 2024,
-      "outOfRange": []
-    },
-    "GDP_CAPITA_PPP": {
-      "covered": 19,
-      "missing": [],
-      "latestYear": 2024,
-      "outOfRange": []
-    },
-    "RESEARCHERS": {
-      "covered": 19,
-      "missing": [],
-      "latestYear": 2024,
+    "GINI": {
+      "covered": 18,
+      "missing": [
+        "SAU"
+      ],
+      "latestYear": 2025,
       "outOfRange": []
     },
     "DEBT_GDP": {
       "covered": 19,
       "missing": [],
-      "latestYear": 2024,
+      "latestYear": 2031,
       "outOfRange": []
     },
     "FISCAL_BAL": {
       "covered": 19,
       "missing": [],
-      "latestYear": 2024,
-      "outOfRange": []
-    },
-    "PRODUCTIVITY": {
-      "covered": 0,
-      "missing": [
-        "USA",
-        "GBR",
-        "CAN",
-        "DEU",
-        "FRA",
-        "ITA",
-        "JPN",
-        "AUS",
-        "KOR",
-        "CHN",
-        "IND",
-        "BRA",
-        "MEX",
-        "ARG",
-        "RUS",
-        "SAU",
-        "ZAF",
-        "IDN",
-        "TUR"
-      ],
-      "latestYear": 0,
+      "latestYear": 2031,
       "outOfRange": []
     }
   },
-  "issues": [
-    "PRODUCTIVITY: missing USA, GBR, CAN, DEU, FRA, ITA, JPN, AUS, KOR, CHN, IND, BRA, MEX, ARG, RUS, SAU, ZAF, IDN, TUR",
-    "PRODUCTIVITY: latest year 0 — stale"
-  ]
+  "issues": []
 }

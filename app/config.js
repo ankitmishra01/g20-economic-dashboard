@@ -51,7 +51,6 @@ const INDICATORS = {
   FEMALE_LFP:   { wb: 'SL.TLF.CACT.FE.ZS',      label: 'Female LFP',        unit: '%',      format: 'percent',   source: 'WB'   },
   GDP_CAPITA_PPP: { wb: 'NY.GDP.PCAP.PP.CD',     label: 'GDP/capita PPP',    unit: '$',      format: 'thousands', source: 'WB'   },
   RESEARCHERS:  { wb: 'SP.POP.SCIE.RD.P6',       label: 'Researchers',       unit: '/mn pop',format: 'number',    source: 'WB+OECD' },
-  PRODUCTIVITY: { label: 'Labour Productivity',   unit: 'idx',                format: 'number', source: 'OECD'   },
 };
 
 // Economic flag thresholds — mirrors the Holocene "Flag/Watch" concept.

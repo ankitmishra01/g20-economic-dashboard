@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>G20 Economic Dashboard</title>
-  <meta name="description" content="Live G20 economic data — GDP, inflation, unemployment, debt, and more. Powered by World Bank and IMF open data.">
+  <title>G20 Economic Monitor</title>
+  <meta name="description" content="Live G20 economic data — GDP, inflation, unemployment, debt, and more. Powered by World Bank, IMF, and OECD open data.">
 
-  <!-- Fonts -->
+  <!-- Fallback font while Geist loads from @font-face in CSS -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="styles/main.css">
 
@@ -17,108 +17,107 @@
   <script src="config.js"></script>
 </head>
 <body>
-<div class="dashboard" id="app">
 
-  <!-- ── Sidebar ──────────────────────────────────────────────────────────── -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-brand">
-      <div class="sidebar-brand-name">G20 Dashboard</div>
-      <div class="sidebar-brand-sub">World Bank · IMF · Open Data</div>
+<div class="shell" id="app">
+
+  <!-- ── Rail / Sidebar ─────────────────────────────────────────────────────── -->
+  <aside class="rail" id="rail">
+    <div class="rail__brand">
+      <div class="rail__mark">G20</div>
+      <div>
+        <div class="rail__title">Monitor <span class="badge">live</span></div>
+        <div class="rail__sub" id="rail-period">Q4·2024</div>
+      </div>
     </div>
-    <nav class="sidebar-nav" id="sidebar-nav">
+
+    <div class="rail__switch" title="World Bank · IMF · OECD open data">
+      <div class="rail__switch-left">
+        <span class="rail__switch-dot"></span>
+        <span>Public dataset</span>
+      </div>
+      <span class="rail__switch-chev">⌄</span>
+    </div>
+
+    <div class="rail__hdr">Browse</div>
+    <nav class="rail__nav" id="rail-nav">
       <!-- Populated by main.js -->
     </nav>
-    <div class="sidebar-foot">
-      Data: <a href="https://data.worldbank.org" target="_blank" rel="noopener">World Bank</a>,
-      <a href="https://www.imf.org/external/datamapper" target="_blank" rel="noopener">IMF</a> &amp;
-      <a href="https://stats.oecd.org" target="_blank" rel="noopener">OECD</a>
-    </div>
-  </aside>
 
-  <!-- ── Topbar ───────────────────────────────────────────────────────────── -->
-  <header class="topbar" id="topbar">
-    <div class="topbar-crumbs" id="topbar-crumbs">
-      <span>G20 Dashboard</span>
-      <span>›</span>
-      <span class="topbar-crumb-active" id="topbar-page">Overview</span>
-    </div>
-    <div class="topbar-actions">
-      <div class="topbar-badge">
-        <div class="topbar-badge-dot"></div>
-        <span id="data-status">Loading data…</span>
-      </div>
-      <button class="agent-fab" id="agent-fab" onclick="toggleAgentDrawer()">
-        <span class="agent-fab-icon">✦</span>
-        <span>Ask AI Analyst</span>
-      </button>
-    </div>
-  </header>
+    <div class="rail__spacer"></div>
 
-  <!-- ── Main content ─────────────────────────────────────────────────────── -->
-  <main class="main-content" id="main-content">
-    <!-- ── News ticker (inside main, at top) ──────────────────────────────── -->
-    <div class="news-ticker" id="news-ticker" style="margin: -32px -32px 28px; width: calc(100% + 64px);">
-      <div class="news-ticker-label">
-        <span class="news-ticker-dot"></span>
-        Economic News
-      </div>
-      <div class="news-ticker-mask">
-        <div class="news-ticker-track" id="news-ticker-track">
-          <span class="news-ticker-item" style="color:rgba(240,244,248,0.45)">Loading headlines…</span>
+    <div class="rail__foot">
+      <div class="rail__userbox">
+        <div class="rail__avatar">G20</div>
+        <div>
+          <div class="rail__user-name">Public viewer</div>
+          <div class="rail__user-sub" id="data-status">Loading data…</div>
         </div>
       </div>
     </div>
+  </aside>
 
-    <div id="page-root">
+  <!-- ── Main column ────────────────────────────────────────────────────────── -->
+  <div class="main-col" id="main-col">
+
+    <!-- Command bar -->
+    <header class="cmdbar" id="cmdbar">
+      <div class="crumbs" id="crumbs">
+        <span>Monitor</span>
+        <span class="sep">/</span>
+        <span class="here" id="crumb-page">Overview</span>
+      </div>
+      <div class="cmd-search">
+        <svg class="icon" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/>
+        </svg>
+        Search country, indicator, or year…
+        <span class="kbd-hint">⌘ K</span>
+      </div>
+      <div class="cmd-actions">
+        <div class="live-pill">
+          <span class="dot"></span>
+          <span id="live-time">Live · —</span>
+        </div>
+        <button class="ask-btn" id="ask-btn" onclick="toggleAgentDrawer()">
+          <svg class="ai-glyph" viewBox="0 0 14 14" fill="currentColor">
+            <path d="M7 0l1.5 3.5L12 5 8.5 6.5 7 10 5.5 6.5 2 5l3.5-1.5z"/>
+          </svg>
+          Ask AI
+        </button>
+      </div>
+    </header>
+
+    <!-- Page root — content swapped by router -->
+    <div id="page-root" style="flex:1">
       <div class="loading-spinner">
         <div class="spinner"></div>
         <span>Fetching World Bank &amp; IMF data…</span>
       </div>
     </div>
-  </main>
 
-  <!-- ── Mobile bottom nav ─────────────────────────────────────────────────── -->
-  <nav class="bottom-nav" id="bottom-nav">
-    <button class="bottom-nav-item active" data-page="overview" onclick="navTo('overview')">
-      <span class="bottom-nav-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>
-      </span>
-      <span>Overview</span>
-    </button>
-    <button class="bottom-nav-item" data-page="countries" onclick="navTo('countries')">
-      <span class="bottom-nav-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M22 21v-2a4 4 0 0 0-3-3.87M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>
-      </span>
-      <span>Countries</span>
-    </button>
-    <button class="bottom-nav-item" data-page="compare" onclick="navTo('compare')">
-      <span class="bottom-nav-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V8m4 13V13m4 8V5m4 16v-7"/></svg>
-      </span>
-      <span>Compare</span>
-    </button>
-    <button class="bottom-nav-item" data-page="flags" onclick="navTo('flags')">
-      <span class="bottom-nav-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V4M4 4h12l-2 4 2 4H4"/></svg>
-      </span>
-      <span>Flags</span>
-    </button>
-    <button class="bottom-nav-item" data-page="news" onclick="navTo('news')">
-      <span class="bottom-nav-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
-      </span>
-      <span>News</span>
-    </button>
-  </nav>
+    <!-- News strip (footer) -->
+    <div class="news-strip" id="news-strip">
+      <div class="news-strip__lbl">
+        <span class="news-strip__dot"></span>
+        Wires
+      </div>
+      <div class="news-strip__track" id="news-strip-track">
+        <span class="news-strip__item" style="color:rgba(245,245,242,0.3)">Loading headlines…</span>
+      </div>
+    </div>
 
-</div><!-- /.dashboard -->
+  </div><!-- /.main-col -->
 
-<!-- ── Agent drawer ────────────────────────────────────────────────────────── -->
+</div><!-- /.shell -->
+
+<!-- ── Agent drawer ────────────────────────────────────────────────────────────── -->
 <div class="agent-drawer-backdrop" id="agent-drawer-backdrop" onclick="toggleAgentDrawer()"></div>
 <aside class="agent-drawer" id="agent-drawer">
   <div class="agent-head">
     <div class="agent-head-title">
-      <span class="agent-head-icon">✦</span>
+      <svg class="agent-head-icon" width="16" height="16" viewBox="0 0 14 14" fill="currentColor">
+        <path d="M7 0l1.5 3.5L12 5 8.5 6.5 7 10 5.5 6.5 2 5l3.5-1.5z"/>
+      </svg>
       AI Economic Analyst
     </div>
     <button class="agent-close" onclick="toggleAgentDrawer()" aria-label="Close">×</button>
@@ -132,11 +131,11 @@
   <div class="agent-body" id="agent-body"></div>
   <div class="agent-foot">
     <div class="agent-suggested">
-      <label>Suggested questions</label>
-      <button class="agent-sq" onclick="askSuggested(this)">Which G20 country has the highest debt-to-GDP ratio?</button>
-      <button class="agent-sq" onclick="askSuggested(this)">Compare GDP growth in India and China over the last decade.</button>
+      <label>Suggested</label>
+      <button class="agent-sq" onclick="askSuggested(this)">Show me the G20 fiscal health overview — debt, deficits, and tax revenue.</button>
+      <button class="agent-sq" onclick="askSuggested(this)">Compare India, China, and USA economic performance.</button>
       <button class="agent-sq" onclick="askSuggested(this)">Which economies are showing signs of recession risk?</button>
-      <button class="agent-sq" onclick="askSuggested(this)">What is the current inflation outlook across G20 nations?</button>
+      <button class="agent-sq" onclick="askSuggested(this)">Show the G20 youth unemployment rankings.</button>
     </div>
   </div>
 </aside>
@@ -145,14 +144,18 @@
 <script src="data.js"></script>
 <script src="components/atoms.js"></script>
 <script src="components/motion.js"></script>
+<script src="components/commentary.js"></script>
 <script src="components/overview.js"></script>
 <script src="components/country.js"></script>
 <script src="components/compare.js"></script>
 <script src="components/flags.js"></script>
 <script src="components/news.js"></script>
+<script src="components/insights.js"></script>
 <script src="main.js"></script>
 
 <!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<!-- Chart.js datalabels plugin — value labels on bar charts -->
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 </body>
 </html>

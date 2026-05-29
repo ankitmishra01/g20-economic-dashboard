@@ -103,7 +103,17 @@ function mountCompareCharts() {
     'rgba(161,98,7,1)', 'rgba(30,64,175,1)', 'rgba(109,40,217,1)',
   ];
 
+  const unit = meta?.unit ? ' ' + meta.unit : '';
   const TICK_OPTS = { font: { size: 10, family: "'Geist Mono', monospace" }, color: '#8A8A8A' };
+  const TOOLTIP_STYLE = {
+    backgroundColor: 'rgba(10,10,10,0.88)',
+    titleColor: '#8A8A8A',
+    bodyColor: '#F5F5F2',
+    titleFont: { family: "'Geist Mono', monospace", size: 10 },
+    bodyFont:  { family: "'Geist Mono', monospace", size: 11 },
+    padding: 8,
+    cornerRadius: 4,
+  };
 
   const lineEl = document.getElementById('compare-line-chart');
   if (lineEl) {
@@ -129,13 +139,21 @@ function mountCompareCharts() {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { position: 'bottom', labels: { font: { size: 11, family: "'Geist Mono', monospace" }, padding: 14, color: '#525252' } },
-          tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y?.toFixed(1)}${meta?.unit || ''}` } },
+          tooltip: {
+            ...TOOLTIP_STYLE,
+            callbacks: {
+              title: ctx => `${ctx[0]?.label}`,
+              label: ctx => `  ${ctx.dataset.label}: ${ctx.parsed.y != null ? ctx.parsed.y.toFixed(1) + unit : '—'}`,
+            },
+          },
+          datalabels: { display: false },
         },
         scales: {
           x: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: TICK_OPTS },
-          y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: TICK_OPTS },
+          y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { ...TICK_OPTS, callback: v => v.toFixed(1) + unit } },
         },
       },
     });
@@ -145,29 +163,87 @@ function mountCompareCharts() {
   if (barEl) {
     const latest = countries.map((c, i) => {
       const l = window.G20Data.getLatest(c.iso3, indicator);
-      return { name: c.name, value: l?.value ?? null, color: COLORS[i] };
+      return { name: c.name, iso3: c.iso3, value: l?.value ?? null, year: l?.year ?? null, color: COLORS[i] };
     }).filter(d => d.value !== null);
+
+    // G20 average reference line (excludes EUU aggregate)
+    const g20Ranking = window.G20Data.getRanking(indicator).filter(c => c.iso3 !== 'EUU');
+    const g20Avg = g20Ranking.length
+      ? g20Ranking.reduce((s, c) => s + c.value, 0) / g20Ranking.length
+      : null;
+
+    const barDatasets = [{
+      label: meta?.label || indicator,
+      data: latest.map(d => d.value),
+      backgroundColor: latest.map(d => d.color.replace('1)', '0.82)')),
+      borderRadius: 4,
+      datalabels: {
+        anchor: 'end', align: 'top',
+        formatter: v => v != null ? v.toFixed(1) + unit : '',
+        font: { family: "'Geist Mono', monospace", size: 9, weight: '600' },
+        color: '#383838',
+        offset: 2,
+        clip: false,
+      },
+    }];
+
+    if (g20Avg !== null) {
+      barDatasets.push({
+        type: 'line',
+        label: 'G20 avg',
+        data: Array(latest.length).fill(g20Avg),
+        borderColor: 'rgba(161,98,7,0.65)',
+        borderDash: [5, 3],
+        borderWidth: 1.5,
+        pointRadius: 0,
+        fill: false,
+        datalabels: { display: false },
+      });
+    }
+
+    // Register datalabels plugin if available
+    if (window.ChartDataLabels) Chart.register(window.ChartDataLabels);
 
     new Chart(barEl.getContext('2d'), {
       type: 'bar',
       data: {
         labels: latest.map(d => d.name),
-        datasets: [{
-          data: latest.map(d => d.value),
-          backgroundColor: latest.map(d => d.color.replace('1)', '0.85)')),
-          borderRadius: 4,
-        }],
+        datasets: barDatasets,
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        layout: { padding: { top: 24 } },
         plugins: {
-          legend: { display: false },
-          tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y?.toFixed(1)}${meta?.unit || ''}` } },
+          legend: {
+            display: g20Avg !== null,
+            position: 'bottom',
+            labels: {
+              font: { size: 10, family: "'Geist Mono', monospace" },
+              padding: 10,
+              color: '#525252',
+              filter: item => item.text !== (meta?.label || indicator),
+            },
+          },
+          tooltip: {
+            ...TOOLTIP_STYLE,
+            callbacks: {
+              title: ctx => ctx[0]?.label,
+              label: ctx => ctx.dataset.label === 'G20 avg'
+                ? `  G20 average: ${ctx.parsed.y.toFixed(1)}${unit}`
+                : `  ${ctx.parsed.y.toFixed(1)}${unit} (${latest[ctx.dataIndex]?.year || '—'})`,
+            },
+          },
+          datalabels: window.ChartDataLabels ? {} : { display: false },
         },
         scales: {
           x: { grid: { display: false }, ticks: TICK_OPTS },
-          y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: TICK_OPTS },
+          y: {
+            beginAtZero: true,
+            grace: '8%',
+            grid: { color: 'rgba(0,0,0,0.04)' },
+            ticks: { ...TICK_OPTS, callback: v => v.toFixed(1) + unit },
+          },
         },
       },
     });
