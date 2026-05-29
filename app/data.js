@@ -42,13 +42,18 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
       _data[iso3][key][year] = value;
     }
 
-    // Build _latest: most recent non-null value per country per indicator
+    // Build _latest: most recent non-null value per country per indicator,
+    // capped at 2024 so IMF multi-year projections don't appear as current data.
+    const LATEST_YEAR_CAP = 2024;
     _data._latest = {};
     for (const iso3 of Object.keys(_data)) {
       if (iso3 === '_latest') continue;
       _data._latest[iso3] = {};
       for (const key of Object.keys(_data[iso3])) {
-        const years = Object.keys(_data[iso3][key]).map(Number).sort((a, b) => b - a);
+        const years = Object.keys(_data[iso3][key])
+          .map(Number)
+          .filter(y => y <= LATEST_YEAR_CAP)
+          .sort((a, b) => b - a);
         for (const yr of years) {
           const v = _data[iso3][key][yr];
           if (v !== null && v !== undefined && !isNaN(v)) {

@@ -372,13 +372,29 @@ function loadSavedNotes(iso3) {
     const body = document.getElementById(`analyst-body-${blockId}`);
     const status = document.getElementById(`analyst-status-${blockId}`);
     if (!body) return;
+
+    // 1. localStorage takes priority (user edits)
     try {
       const saved = localStorage.getItem(storageKey);
       if (saved) {
         body.innerHTML = `<div class="analyst-saved">${A.escapeText(saved)}</div>`;
         if (status) status.textContent = 'Saved';
+        return;
       }
     } catch(e) {}
+
+    // 2. Pre-written commentary for the lead block
+    if (blockId === 'main') {
+      const cc = window.G20_COMMENTARY?.countries?.[iso3];
+      if (cc) {
+        body.innerHTML = `
+          <div class="analyst-draft" style="padding:0">
+            <div style="font-weight:600;font-size:13px;margin-bottom:14px;color:var(--ink);line-height:1.4">${A.escapeText(cc.headline)}</div>
+            ${cc.paragraphs.map(p => `<p style="margin:0 0 12px;line-height:1.7;font-size:13px;color:var(--text-2)">${A.escapeText(p)}</p>`).join('')}
+          </div>`;
+        if (status) status.textContent = 'Research brief · edit or save to keep';
+      }
+    }
   });
 }
 

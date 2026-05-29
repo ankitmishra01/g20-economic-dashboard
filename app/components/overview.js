@@ -265,6 +265,9 @@ function renderOverview() {
     </div>
   </div>
 
+  <!-- Global Outlook editorial -->
+  ${renderGlobalOutlook()}
+
   <!-- Methodology -->
   <div class="methodology">
     <h4>About this dataset</h4>
@@ -452,6 +455,48 @@ function median(arr) {
   const s = [...arr].sort((a, b) => a - b);
   const m = Math.floor(s.length / 2);
   return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+
+// ── Global Outlook editorial ───────────────────────────────────────────────────
+function renderGlobalOutlook() {
+  const g = window.G20_COMMENTARY?.global;
+  if (!g) return '';
+
+  return `
+  <div class="sec-head">
+    <div class="sec-head__title">${A.escapeText(g.title)}<span class="sec-head__sub">${A.escapeText(g.cutoff)}</span></div>
+  </div>
+
+  <div class="panel" style="margin-bottom:24px">
+    <div class="panel__body" style="padding:20px 24px">
+      <div style="display:grid;grid-template-columns:1fr 260px;gap:32px;align-items:start">
+
+        <div>
+          ${g.paragraphs.map(p => `<p style="margin:0 0 14px;line-height:1.7;font-size:13px;color:var(--text-2)">${A.escapeText(p)}</p>`).join('')}
+        </div>
+
+        <div style="border-left:1px solid var(--rule);padding-left:20px">
+          <div style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-4);margin-bottom:10px">Key risks</div>
+          <ul style="margin:0 0 20px;padding:0;list-style:none">
+            ${g.keyRisks.map(r => `
+              <li style="display:flex;gap:8px;align-items:baseline;margin-bottom:8px;font-size:12px;line-height:1.5;color:var(--text-2)">
+                <span style="color:var(--neg);flex-shrink:0;font-size:10px">▲</span>
+                ${A.escapeText(r)}
+              </li>`).join('')}
+          </ul>
+          <div style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-4);margin-bottom:10px">Upside factors</div>
+          <ul style="margin:0;padding:0;list-style:none">
+            ${g.upside.map(r => `
+              <li style="display:flex;gap:8px;align-items:baseline;margin-bottom:8px;font-size:12px;line-height:1.5;color:var(--text-2)">
+                <span style="color:var(--pos);flex-shrink:0;font-size:10px">▲</span>
+                ${A.escapeText(r)}
+              </li>`).join('')}
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </div>`;
 }
 
 // mountOverviewCharts is called by main.js after render — no chart.js needed now (pure CSS bars)
