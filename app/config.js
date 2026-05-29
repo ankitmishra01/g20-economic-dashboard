@@ -51,11 +51,11 @@ const FLAGS_CONFIG = {
 
 // Nav items for the sidebar.
 const NAV_ITEMS = [
-  { id: 'overview',  label: 'Overview',         icon: 'home'    },
-  { id: 'countries', label: 'All Countries',    icon: 'users'   },
-  { id: 'compare',   label: 'Compare',          icon: 'chart'   },
-  { id: 'flags',     label: 'Economic Flags',   icon: 'flag'    },
-  { id: 'news',      label: 'News',             icon: 'inbox'   },
+  { id: 'overview',  label: 'Overview',         icon: 'home',   key: 'O' },
+  { id: 'countries', label: 'Countries',        icon: 'users',  key: 'C' },
+  { id: 'compare',   label: 'Compare',          icon: 'chart',  key: 'P' },
+  { id: 'flags',     label: 'Risk flags',       icon: 'flag',   key: 'F' },
+  { id: 'news',      label: 'News',             icon: 'inbox',  key: 'N' },
 ];
 
 // Expose globally for all components.

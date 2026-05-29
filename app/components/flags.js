@@ -1,7 +1,6 @@
-// Economic Flags view — countries with red-flag metrics (mirrors Holocene's Flags & Watch page).
+// Economic Flags view — Direction B design
 
 function renderFlags() {
-  // Compute flags for each G20 country
   const flagged = [];
 
   for (const country of G20) {
@@ -16,95 +15,97 @@ function renderFlags() {
       }
     }
     if (badges.length > 0) {
-      flagged.push({ ...country, badges, worstSeverity: badges.some(b => b.severity === 'high') ? 'high' : badges.some(b => b.severity === 'medium') ? 'medium' : 'low' });
+      flagged.push({
+        ...country,
+        badges,
+        worstSeverity: badges.some(b => b.severity === 'high') ? 'high'
+                     : badges.some(b => b.severity === 'medium') ? 'medium' : 'low',
+      });
     }
   }
 
-  // Sort: high severity first, then medium, then low
   const order = { high: 0, medium: 1, low: 2 };
   flagged.sort((a, b) => order[a.worstSeverity] - order[b.worstSeverity]);
-
   const healthy = G20.filter(c => !flagged.find(f => f.iso3 === c.iso3));
 
   return `
-    <div class="page-head hc-enter">
-      <div class="page-head__eyebrow">Risk Monitor</div>
-      <h1 class="page-head__title">Economic Flags</h1>
-      <p class="page-head__lede">
-        Countries breaching key thresholds: inflation above 8%, govt debt above 120% of GDP,
-        negative GDP growth, or unemployment above 10%.
-      </p>
+<div class="page-body">
+  <div class="sec-head">
+    <div class="sec-head__title">Risk flags <span class="count">/ ${flagged.length}</span><span class="sec-head__sub">automated · latest data</span></div>
+    <div class="sec-head__actions">
+      <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-3)">${healthy.length} on track</span>
     </div>
+  </div>
 
-    <div class="kpi-strip hc-enter" style="grid-template-columns:repeat(4,1fr)">
-      <div class="kpi-card">
-        <div class="kpi-label">Flagged Countries</div>
-        <div class="kpi-value" style="color:${flagged.length > 10 ? 'var(--g20-red)' : 'var(--g20-amber)'}">
-          ${flagged.length}
-        </div>
-        <div class="kpi-sub">of ${G20.length} G20 members</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">High Severity</div>
-        <div class="kpi-value" style="color:var(--g20-red)">
-          ${flagged.filter(c => c.worstSeverity === 'high').length}
-        </div>
-        <div class="kpi-sub">contraction or very high inflation</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Medium Severity</div>
-        <div class="kpi-value" style="color:var(--g20-amber)">
-          ${flagged.filter(c => c.worstSeverity === 'medium').length}
-        </div>
-        <div class="kpi-sub">high debt or unemployment</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">On Track</div>
-        <div class="kpi-value" style="color:var(--g20-green)">${healthy.length}</div>
-        <div class="kpi-sub">within normal ranges</div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px">
+    <div class="panel">
+      <div class="panel__body">
+        <div class="kpi-tile__lbl">Flagged countries</div>
+        <div class="kpi-tile__val ${flagged.length > 10 ? 'v-neg' : 'v-warn'}" style="font-size:20px;margin:8px 0">${flagged.length}</div>
+        <div class="kpi-tile__delta">of ${G20.length} G20 members</div>
       </div>
     </div>
+    <div class="panel">
+      <div class="panel__body">
+        <div class="kpi-tile__lbl">High severity</div>
+        <div class="kpi-tile__val v-neg" style="font-size:20px;margin:8px 0">${flagged.filter(c => c.worstSeverity === 'high').length}</div>
+        <div class="kpi-tile__delta">contraction or high inflation</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel__body">
+        <div class="kpi-tile__lbl">Medium severity</div>
+        <div class="kpi-tile__val v-warn" style="font-size:20px;margin:8px 0">${flagged.filter(c => c.worstSeverity === 'medium').length}</div>
+        <div class="kpi-tile__delta">high debt or unemployment</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel__body">
+        <div class="kpi-tile__lbl">On track</div>
+        <div class="kpi-tile__val v-pos" style="font-size:20px;margin:8px 0">${healthy.length}</div>
+        <div class="kpi-tile__delta">within normal ranges</div>
+      </div>
+    </div>
+  </div>
 
-    ${flagged.length ? `
-      <div class="section-divider hc-enter">
-        <span class="section-divider-label">Flagged — ${flagged.length} countries</span>
-      </div>
-      <div class="flags-grid">
-        ${flagged.map(c => `
-          <div class="flag-row sev-${c.worstSeverity} hc-enter" onclick="navTo('country/${c.iso3}')">
-            <div class="flag-country">
-              <span style="font-size:22px">${c.flag}</span>
-              <span class="flag-name">${A.escapeText(c.name)}</span>
-            </div>
-            <div class="flag-badges">
-              ${c.badges.map(b => `
-                <span class="status-badge ${b.severity}">
-                  ${A.escapeText(b.label)}: ${A.fmtPct(b.value)} (${b.year})
-                </span>
-              `).join('')}
-            </div>
+  ${flagged.length ? `
+  <div class="flags-section">
+    <div class="flags-section-title">Flagged — ${flagged.length} countries</div>
+    <div class="panel" style="overflow:hidden">
+      ${flagged.map((c, i) => `
+        <div class="flag-item" onclick="navTo('country/${c.iso3}')">
+          <div class="flag-item__rank">${String(i+1).padStart(2,'0')}</div>
+          <span class="flag-rect" style="background-image:url('https://flagcdn.com/${c.code.toLowerCase()}.svg');background-size:cover;background-position:center;"></span>
+          <div>
+            <div class="flag-item__name">${A.escapeText(c.name)}</div>
+            <div class="flag-item__desc">${A.escapeText(c.region)}</div>
           </div>
-        `).join('')}
-      </div>
-    ` : `<div class="error-state">No flags detected — all G20 economies within normal ranges.</div>`}
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            ${c.badges.map(b => `<span class="flag-badge ${b.severity}">${b.label}</span>`).join('')}
+          </div>
+          <div class="flag-item__val ${c.worstSeverity === 'high' ? 'v-neg' : 'v-warn'}">
+            ${c.badges[0]?.value?.toFixed(1) ?? '—'}${c.badges[0]?.key === 'GDP' ? 'T' : '%'}
+          </div>
+        </div>`).join('')}
+    </div>
+  </div>` : ''}
 
-    ${healthy.length ? `
-      <div class="section-divider hc-enter" style="margin-top:28px">
-        <span class="section-divider-label">On Track — ${healthy.length} countries</span>
-      </div>
-      <div class="flags-grid">
-        ${healthy.map(c => `
-          <div class="flag-row hc-enter" style="border-left:3px solid var(--g20-green)" onclick="navTo('country/${c.iso3}')">
-            <div class="flag-country">
-              <span style="font-size:22px">${c.flag}</span>
-              <span class="flag-name">${A.escapeText(c.name)}</span>
-            </div>
-            <div class="flag-badges">
-              <span class="status-badge ok">Within thresholds</span>
-            </div>
+  ${healthy.length ? `
+  <div class="flags-section">
+    <div class="flags-section-title">On track — ${healthy.length} countries</div>
+    <div class="panel" style="overflow:hidden">
+      ${healthy.map(c => `
+        <div class="flag-item" onclick="navTo('country/${c.iso3}')">
+          <div class="flag-item__rank"></div>
+          <span class="flag-rect" style="background-image:url('https://flagcdn.com/${c.code.toLowerCase()}.svg');background-size:cover;background-position:center;"></span>
+          <div>
+            <div class="flag-item__name">${A.escapeText(c.name)}</div>
+            <div class="flag-item__desc">${A.escapeText(c.region)}</div>
           </div>
-        `).join('')}
-      </div>
-    ` : ''}
-  `;
+          <div><span class="flag-badge low">On track</span></div>
+          <div class="flag-item__val v-pos">—</div>
+        </div>`).join('')}
+    </div>
+  </div>` : ''}
+</div>`;
 }

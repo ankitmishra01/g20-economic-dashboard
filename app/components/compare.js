@@ -1,4 +1,4 @@
-// Compare view — multi-select countries, pick indicator, render side-by-side charts.
+// Compare view — Direction B design
 
 let _compareState = {
   selected: ['USA', 'CHN', 'IND', 'DEU'],
@@ -9,64 +9,77 @@ function renderCompare() {
   const { selected, indicator } = _compareState;
 
   return `
-    <div class="page-head hc-enter">
-      <div class="page-head__eyebrow">Cross-Country Analysis</div>
-      <h1 class="page-head__title">Compare Economies</h1>
-      <p class="page-head__lede">Select up to 6 countries and an indicator to compare trends side by side.</p>
-    </div>
+<div class="page-body">
+  <div class="sec-head">
+    <div class="sec-head__title">Compare economies<span class="sec-head__sub">up to 6 countries</span></div>
+  </div>
 
-    <div class="compare-controls hc-enter">
-      <h3>Select countries (up to 6)</h3>
-      <div class="country-picker">
-        ${G20.map(c => `
-          <button class="picker-pill ${selected.includes(c.iso3) ? 'selected' : ''}"
-            onclick="compareToggleCountry('${c.iso3}', this)">
-            <span class="pill-flag">${c.flag}</span>
-            <span>${A.escapeText(c.name)}</span>
-          </button>
-        `).join('')}
-      </div>
-
-      <h3 style="margin-top:16px">Select indicator</h3>
-      <div class="indicator-select">
-        ${Object.entries(INDICATORS).map(([key, meta]) => `
-          <button class="ind-pill ${indicator === key ? 'selected' : ''}"
-            onclick="compareSetIndicator('${key}', this)">
-            ${A.escapeText(meta.label)} ${meta.unit ? `(${meta.unit})` : ''}
-          </button>
-        `).join('')}
-      </div>
+  <div class="panel" style="margin-bottom:16px">
+    <div class="panel__head">
+      <span class="panel__title">Countries</span>
+      <span class="panel__meta">${selected.length} selected</span>
     </div>
-
-    <div id="compare-charts" class="hc-enter">
-      ${renderCompareCharts()}
+    <div class="panel__body" style="display:flex;flex-wrap:wrap;gap:6px">
+      ${G20.map(c => `
+        <button class="sec-head__tab ${selected.includes(c.iso3) ? 'active' : ''}"
+          onclick="compareToggleCountry('${c.iso3}', this)"
+          style="display:inline-flex;align-items:center;gap:6px">
+          <span style="display:inline-block;width:16px;height:11px;border-radius:2px;border:1px solid var(--rule);background-image:url('https://flagcdn.com/${c.code.toLowerCase()}.svg');background-size:cover;background-position:center;flex-shrink:0"></span>
+          ${A.escapeText(c.name)}
+        </button>
+      `).join('')}
     </div>
-  `;
+  </div>
+
+  <div class="panel" style="margin-bottom:24px">
+    <div class="panel__head">
+      <span class="panel__title">Indicator</span>
+      <span class="panel__meta">${INDICATORS[indicator]?.label || indicator}</span>
+    </div>
+    <div class="panel__body" style="display:flex;flex-wrap:wrap;gap:6px">
+      ${Object.entries(INDICATORS).map(([key, meta]) => `
+        <button class="sec-head__tab ${indicator === key ? 'active' : ''}"
+          onclick="compareSetIndicator('${key}', this)">
+          ${A.escapeText(meta.label)}${meta.unit ? ' (' + meta.unit + ')' : ''}
+        </button>
+      `).join('')}
+    </div>
+  </div>
+
+  <div id="compare-charts">
+    ${renderCompareChartHTML()}
+  </div>
+</div>`;
 }
 
-function renderCompareCharts() {
+function renderCompareChartHTML() {
   const { selected, indicator } = _compareState;
-  if (!selected.length) return '<div class="error-state">Select at least one country above.</div>';
+  if (!selected.length) return '<div class="loading-spinner"><span>Select at least one country above.</span></div>';
+
+  const countries = selected.map(iso3 => G20.find(c => c.iso3 === iso3)).filter(Boolean);
+  const meta = INDICATORS[indicator];
 
   return `
-    <div class="chart-card">
-      <div class="chart-card__title">${A.escapeText(INDICATORS[indicator]?.label || indicator)} — Trend Comparison</div>
-      <div class="chart-card__sub">
-        ${selected.map(iso3 => G20.find(c => c.iso3 === iso3)).filter(Boolean).map(c => `${c.flag} ${c.name}`).join(' · ')}
+    <div class="panel" style="margin-bottom:16px">
+      <div class="panel__head">
+        <div>
+          <span class="panel__title">${A.escapeText(meta?.label || indicator)} — Trend</span>
+          <span class="panel__sub">${countries.map(c => c.name).join(' · ')}</span>
+        </div>
       </div>
-      <div class="chart-wrap" style="height:340px">
+      <div class="panel__body" style="height:320px;position:relative">
         <canvas id="compare-line-chart"></canvas>
       </div>
     </div>
-
-    <div class="chart-card" style="margin-top:20px">
-      <div class="chart-card__title">Latest Value — ${A.escapeText(INDICATORS[indicator]?.label || indicator)}</div>
-      <div class="chart-card__sub">Most recent data point per country</div>
-      <div class="chart-wrap">
+    <div class="panel">
+      <div class="panel__head">
+        <span class="panel__title">Latest value — ${A.escapeText(meta?.label || indicator)}</span>
+        <span class="panel__meta">Most recent</span>
+      </div>
+      <div class="panel__body" style="height:220px;position:relative">
         <canvas id="compare-bar-chart"></canvas>
       </div>
-    </div>
-  `;
+    </div>`;
 }
 
 function mountCompareCharts() {
@@ -76,7 +89,6 @@ function mountCompareCharts() {
   const countries = selected.map(iso3 => G20.find(c => c.iso3 === iso3)).filter(Boolean);
   const meta = INDICATORS[indicator];
 
-  // Gather all years across selected countries
   const allYears = new Set();
   const seriesMap = {};
   for (const c of countries) {
@@ -87,11 +99,12 @@ function mountCompareCharts() {
   const years = Array.from(allYears).sort((a, b) => a - b);
 
   const COLORS = [
-    'rgba(37,99,235,1)', 'rgba(239,68,68,1)', 'rgba(34,197,94,1)',
-    'rgba(245,158,11,1)', 'rgba(168,85,247,1)', 'rgba(14,165,233,1)',
+    'rgba(10,10,10,1)', 'rgba(185,28,28,1)', 'rgba(4,120,87,1)',
+    'rgba(161,98,7,1)', 'rgba(30,64,175,1)', 'rgba(109,40,217,1)',
   ];
 
-  // Line chart
+  const TICK_OPTS = { font: { size: 10, family: "'Geist Mono', monospace" }, color: '#8A8A8A' };
+
   const lineEl = document.getElementById('compare-line-chart');
   if (lineEl) {
     new Chart(lineEl.getContext('2d'), {
@@ -99,39 +112,40 @@ function mountCompareCharts() {
       data: {
         labels: years,
         datasets: countries.map((c, i) => ({
-          label: `${c.flag} ${c.name}`,
+          label: c.name,
           data: years.map(yr => {
             const pt = seriesMap[c.iso3].find(d => d.year === yr);
             return pt ? pt.value : null;
           }),
           borderColor: COLORS[i],
-          backgroundColor: COLORS[i].replace('1)', '0.08)'),
-          borderWidth: 2, fill: false, tension: 0.3, pointRadius: 3,
+          backgroundColor: COLORS[i].replace('1)', '0.05)'),
+          borderWidth: 1.5,
+          fill: false,
+          tension: 0.3,
+          pointRadius: 2,
           spanGaps: true,
         })),
       },
       options: {
-        responsive: true, maintainAspectRatio: false,
+        responsive: true,
+        maintainAspectRatio: false,
         plugins: {
-          legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 14 } },
-          tooltip: { callbacks: {
-            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y?.toFixed(1)}${meta?.unit || ''}`,
-          }},
+          legend: { position: 'bottom', labels: { font: { size: 11, family: "'Geist Mono', monospace" }, padding: 14, color: '#525252' } },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y?.toFixed(1)}${meta?.unit || ''}` } },
         },
         scales: {
-          x: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 } } },
-          y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 } } },
+          x: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: TICK_OPTS },
+          y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: TICK_OPTS },
         },
       },
     });
   }
 
-  // Bar chart — latest values
   const barEl = document.getElementById('compare-bar-chart');
   if (barEl) {
-    const latest = countries.map(c => {
+    const latest = countries.map((c, i) => {
       const l = window.G20Data.getLatest(c.iso3, indicator);
-      return { name: `${c.flag} ${c.name}`, value: l?.value ?? null, year: l?.year };
+      return { name: c.name, value: l?.value ?? null, color: COLORS[i] };
     }).filter(d => d.value !== null);
 
     new Chart(barEl.getContext('2d'), {
@@ -140,18 +154,20 @@ function mountCompareCharts() {
         labels: latest.map(d => d.name),
         datasets: [{
           data: latest.map(d => d.value),
-          backgroundColor: COLORS.slice(0, latest.length).map(c => c.replace('1)', '0.8)')),
-          borderRadius: 6,
+          backgroundColor: latest.map(d => d.color.replace('1)', '0.85)')),
+          borderRadius: 4,
         }],
       },
       options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false }, tooltip: { callbacks: {
-          label: ctx => ` ${ctx.parsed.y?.toFixed(1)}${meta?.unit || ''}`,
-        }}},
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y?.toFixed(1)}${meta?.unit || ''}` } },
+        },
         scales: {
-          x: { grid: { display: false }, ticks: { font: { size: 11 } } },
-          y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 } } },
+          x: { grid: { display: false }, ticks: TICK_OPTS },
+          y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: TICK_OPTS },
         },
       },
     });
@@ -162,26 +178,26 @@ window.compareToggleCountry = function (iso3, btn) {
   const idx = _compareState.selected.indexOf(iso3);
   if (idx >= 0) {
     _compareState.selected.splice(idx, 1);
-    btn.classList.remove('selected');
+    btn.classList.remove('active');
   } else {
-    if (_compareState.selected.length >= 6) return; // max 6
+    if (_compareState.selected.length >= 6) return;
     _compareState.selected.push(iso3);
-    btn.classList.add('selected');
+    btn.classList.add('active');
   }
   const charts = document.getElementById('compare-charts');
   if (charts) {
-    charts.innerHTML = renderCompareCharts();
+    charts.innerHTML = renderCompareChartHTML();
     setTimeout(mountCompareCharts, 100);
   }
 };
 
 window.compareSetIndicator = function (key, btn) {
   _compareState.indicator = key;
-  document.querySelectorAll('.ind-pill').forEach(el => el.classList.remove('selected'));
-  btn.classList.add('selected');
+  document.querySelectorAll('[onclick^="compareSetIndicator"]').forEach(el => el.classList.remove('active'));
+  btn.classList.add('active');
   const charts = document.getElementById('compare-charts');
   if (charts) {
-    charts.innerHTML = renderCompareCharts();
+    charts.innerHTML = renderCompareChartHTML();
     setTimeout(mountCompareCharts, 100);
   }
 };
