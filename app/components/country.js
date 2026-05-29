@@ -1079,6 +1079,10 @@ window.mountCountryProfileCharts = function(iso3) {
               },
             },
           },
+          scales: {
+            ...OPTS.scales,
+            y: { ...OPTS.scales.y, ticks: { ...OPTS.scales.y.ticks, callback: fmtFn } },
+          },
         },
       });
     }
