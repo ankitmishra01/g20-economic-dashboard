@@ -1087,6 +1087,88 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   color: var(--text-2);
 }
 
+/* ── OECD-style country brief panel ─────────────────────────────────────────── */
+.country-brief {
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.country-brief__head {
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--bg-2);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.country-brief__headline {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.4;
+  margin-bottom: 5px;
+  letter-spacing: -0.01em;
+}
+.country-brief__vintage {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-4);
+}
+.country-brief__actions { display: flex; gap: 6px; flex-shrink: 0; align-items: flex-start; }
+.country-brief__foot {
+  padding: 10px 20px;
+  border-top: 1px solid var(--rule);
+  background: var(--bg-2);
+}
+.country-brief__source {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-4);
+}
+
+/* Section row: text left + chart right */
+.country-section-row {
+  display: grid;
+  grid-template-columns: 55fr 45fr;
+  border-bottom: 1px solid var(--rule);
+}
+.country-section-row:last-of-type { border-bottom: none; }
+.country-section__text {
+  padding: 20px 22px;
+  border-right: 1px solid var(--rule);
+}
+.country-section__chart {
+  padding: 14px 16px;
+  background: var(--bg-2);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Chart panels inside section rows */
+.chart-panel--mini .chart-panel__body { height: 110px; }
+
+/* Key facts strip inside brief */
+.country-brief .brief-kf {
+  margin: 16px 20px;
+  padding-bottom: 16px;
+}
+
+/* Section heading in brief rows */
+.country-section__text .brief-section__hd {
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+}
+
+/* Responsive: stack on narrow screens */
+@media (max-width: 800px) {
+  .country-section-row { grid-template-columns: 1fr; }
+  .country-section__text { border-right: none; border-bottom: 1px solid var(--rule); }
+}
+
 /* ── Compare page ────────────────────────────────────────────────────────────── */
 .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
 .compare-select-row { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }

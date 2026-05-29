@@ -470,7 +470,7 @@ DATA STYLE:
 - Use historical comparisons to show direction and momentum.
 
 FORMAT:
-- 3–5 sentences per section body. Each sentence carries one clear idea.
+- 5–7 sentences per section body. Each sentence carries one clear idea.
 - No bullet points, no markdown, no em-dashes used as list separators.
 - Flowing, readable prose — the style of a serious magazine feature, not a technical IMF report.
 
@@ -490,22 +490,22 @@ Generate commentary for all 19 G20 non-EU economies using the data table below. 
     "USA": {
       "headline": "max 12 words capturing this economy's defining challenge or opportunity",
       "sections": [
-        { "heading": "Economic Performance",        "body": "110-130 words" },
-        { "heading": "Labour Market & Prices",       "body": "110-130 words" },
-        { "heading": "Fiscal Position",              "body": "110-130 words" },
-        { "heading": "External Sector & Investment", "body": "110-130 words" },
-        { "heading": "Outlook & Key Risks",          "body": "110-130 words" }
+        { "heading": "Economic Performance",        "body": "160-200 words" },
+        { "heading": "Labour Market & Prices",       "body": "160-200 words" },
+        { "heading": "Fiscal Position",              "body": "160-200 words" },
+        { "heading": "External Sector & Investment", "body": "160-200 words" },
+        { "heading": "Outlook & Key Risks",          "body": "160-200 words" }
       ]
     }
   }
 }
 
-Section guidance (apply to every country):
-  "Economic Performance"         — Open with GDP size and growth rate vs G20 median. Cover sector drivers and productivity trajectory. Use "However" if growth masks a structural weakness.
-  "Labour Market & Prices"       — Open with unemployment and inflation levels. Contextualise youth unemployment and female labour participation vs peers. Use "However" to flag sticky inflation or labour market rigidities.
-  "Fiscal Position"              — Open with government debt as % of GDP vs the G20 median. Cover the fiscal balance, health, education, and R&D spending. Use "Unless" to frame the consolidation challenge.
-  "External Sector & Investment" — Open with the current account position and what drives it. Cover export orientation, FDI inflows, and capital formation trends. Contextualise against G20 peers.
-  "Outlook & Key Risks"          — Open with the near-term growth outlook. Name 2 structural priorities and 2 specific risks with data. Close with a prescriptive sentence: what the economy needs to do.
+Section guidance (apply to every country, 160-200 words each):
+  "Economic Performance"         — Open with GDP size and growth rate vs G20 median. Compare growth to 1-2 named regional peers. Cover sector drivers, investment, and productivity trajectory. Use "However" if growth masks a structural weakness. Name the economy's largest sector and its contribution.
+  "Labour Market & Prices"       — Open with unemployment and inflation levels vs G20 median. Reference the youth-to-adult unemployment ratio. Cite female labour force participation vs G20 average. Use "However" to flag sticky inflation or labour market rigidities. Comment on wage growth and real income trends.
+  "Fiscal Position"              — Open with government debt as % of GDP vs the G20 median and state whether debt is on a rising or falling trajectory. Cover the fiscal balance, the largest spending category, and revenue adequacy. Reference health, education, and R&D spending. Use "Unless" to frame the consolidation challenge.
+  "External Sector & Investment" — Open with the current account position and what drives it. Compare export orientation (exports as % of GDP) to the G20 median. Note whether FDI inflows are rising or falling. Cover capital formation and manufacturing competitiveness. Contextualise against G20 peers and name a comparable economy.
+  "Outlook & Key Risks"          — Open with the near-term growth outlook. Name 2 specific structural priorities with data. Name 2 specific downside risks. Cite a comparable country that has addressed a similar challenge. Close with a prescriptive sentence naming the single most urgent policy action.
 
 Additional rules:
 - Global paragraphs: ~130 words each, contextualise G20 aggregate trends with specific country examples
@@ -528,7 +528,7 @@ ${dataTable}`;
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 12000,
+        max_tokens: 16000,
         system: 'You are writing in the voice of Ankit Mishra, a Forbes contributor covering global economic policy. Your style: open with a strong data anchor, use "However" to pivot to complications, benchmark numbers against G20 averages or peer economies, frame risks as consequences of inaction ("Unless X, the economy will struggle to Y"), and close each Outlook section with a prescriptive forward-looking recommendation. Write flowing magazine prose — precise, analytical, and accessible. No markdown, no bullet points, no jargon-heavy IMF register.',
         messages: [{ role: 'user', content: prompt }],
       }),

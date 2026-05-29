@@ -118,95 +118,30 @@ function renderCountryProfile(iso3) {
         ${une?.value !== undefined ? `<div><div class="profile-hero__stat-lbl">Unemp.</div><div class="profile-hero__stat-val">${une.value.toFixed(1)}%</div></div>` : ''}
         ${dv !== undefined ? `<div><div class="profile-hero__stat-lbl">Debt/GDP</div><div class="profile-hero__stat-val" style="${dv > 100 ? 'color:#E8C063' : ''}">${dv.toFixed(0)}%</div></div>` : ''}
       </div>
-      ${vintage || commentaryDate ? `<div style="font-family:var(--font-mono);font-size:10px;color:rgba(245,245,242,0.4);margin-top:10px">${vintage ? `Data vintage ${vintage}` : ''}${vintage && commentaryDate ? ' · ' : ''}${commentaryDate ? `Analysis updated ${commentaryDate}` : ''}</div>` : ''}
+      ${vintage || commentaryDate ? `<div style="font-family:var(--font-mono);font-size:10px;color:rgba(245,245,242,0.4);margin-top:10px">${vintage ? `Data ${vintage}` : ''}${vintage && commentaryDate ? ' · ' : ''}${commentaryDate ? `Analysis ${commentaryDate}` : ''}</div>` : ''}
     </div>
   </div>
 </section>
 
-<div class="placement-bar">
-  <span class="lbl">Commentary</span>
-  <button class="placement-btn active" data-placement="lead" onclick="switchPlacement('lead', this)">Lead panel</button>
-  <button class="placement-btn" data-placement="side" onclick="switchPlacement('side', this)">Side rail</button>
-  <button class="placement-btn" data-placement="inline" onclick="switchPlacement('inline', this)">Inline notes</button>
-</div>
-
 <div class="page-body">
 
-  <div style="display:grid;grid-template-columns:1fr auto;gap:16px" id="profile-layout">
+  ${renderCountryBrief(iso3, country, vintage, commentaryDate)}
 
-    <div style="min-width:0">
+  <div class="sec-head" style="margin-top:4px">
+    <div class="sec-head__title">Key indicators</div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:20px">
+    ${renderMiniKPI('GDP per Capita', cap?.value ? '$' + (cap.value/1000).toFixed(0) + 'K' : '—', cap?.year, '', 'WB')}
+    ${renderMiniKPI('Current Acct', ca?.value !== undefined ? (ca.value >= 0 ? '+' : '') + ca.value.toFixed(1) + '% GDP' : '—', ca?.year, ca?.value < -2 ? 'v-warn' : '', 'WB')}
+    ${renderMiniKPI('Fiscal Balance', fiscal?.value !== undefined ? (fiscal.value >= 0 ? '+' : '') + fiscal.value.toFixed(1) + '% GDP' : '—', fiscal?.year, fiscal?.value < -6 ? 'v-warn' : '', 'IMF')}
+    ${renderMiniKPI('Tax Revenue', tax?.value !== undefined ? tax.value.toFixed(1) + '% GDP' : '—', tax?.year, '', 'WB')}
+    ${renderMiniKPI('Health Spending', health?.value !== undefined ? health.value.toFixed(1) + '% GDP' : '—', health?.year, '', 'WB')}
+    ${renderMiniKPI('R&D Spending', rd?.value !== undefined ? rd.value.toFixed(2) + '% GDP' : '—', rd?.year, '', 'OECD')}
+    ${renderMiniKPI('Youth Unemp.', youth?.value !== undefined ? youth.value.toFixed(1) + '%' : '—', youth?.year, youth?.value > 25 ? 'v-warn' : '', 'WB')}
+    ${renderMiniKPI('Education', educ?.value !== undefined ? educ.value.toFixed(1) + '% GDP' : '—', educ?.year, '', 'WB')}
+  </div>
 
-      <!-- Lead commentary (placement A) -->
-      <div id="analyst-lead" style="">
-        ${renderAnalystBlock(iso3, country.name, contextSnippet, 'Analyst note · Lead')}
-      </div>
-
-      <!-- KPI second strip -->
-      <div class="sec-head" style="margin-top:20px">
-        <div class="sec-head__title">Key indicators</div>
-        <div class="sec-head__actions">
-          <span style="font-family:var(--font-mono);font-size:10.5px;color:var(--text-3)">${gr?.year || ''}</span>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:20px">
-        ${renderMiniKPI('GDP per Capita', cap?.value ? '$' + (cap.value/1000).toFixed(0) + 'K' : '—', cap?.year, '', 'WB')}
-        ${renderMiniKPI('Current Acct', ca?.value !== undefined ? (ca.value >= 0 ? '+' : '') + ca.value.toFixed(1) + '% GDP' : '—', ca?.year, ca?.value < -2 ? 'v-warn' : '', 'WB')}
-        ${renderMiniKPI('Fiscal Balance', fiscal?.value !== undefined ? (fiscal.value >= 0 ? '+' : '') + fiscal.value.toFixed(1) + '% GDP' : '—', fiscal?.year, fiscal?.value < -6 ? 'v-warn' : '', 'IMF')}
-        ${renderMiniKPI('Tax Revenue', tax?.value !== undefined ? tax.value.toFixed(1) + '% GDP' : '—', tax?.year, '', 'WB')}
-        ${renderMiniKPI('Health Spending', health?.value !== undefined ? health.value.toFixed(1) + '% GDP' : '—', health?.year, '', 'WB')}
-        ${renderMiniKPI('R&D Spending', rd?.value !== undefined ? rd.value.toFixed(2) + '% GDP' : '—', rd?.year, '', 'OECD')}
-        ${renderMiniKPI('Youth Unemp.', youth?.value !== undefined ? youth.value.toFixed(1) + '%' : '—', youth?.year, youth?.value > 25 ? 'v-warn' : '', 'WB')}
-        ${renderMiniKPI('Education', educ?.value !== undefined ? educ.value.toFixed(1) + '% GDP' : '—', educ?.year, '', 'WB')}
-      </div>
-
-      <!-- Charts 2×2 -->
-      <div class="profile-charts" id="profile-charts">
-        <div class="chart-panel">
-          <div class="chart-panel__head">
-            <span class="chart-panel__title">GDP (USD)</span>
-            <span class="chart-panel__sub">2015–latest</span>
-          </div>
-          <div class="chart-panel__body"><canvas id="profile-gdp-chart"></canvas></div>
-        </div>
-        <div class="chart-panel">
-          <div class="chart-panel__head">
-            <span class="chart-panel__title">GDP Growth %</span>
-            <span class="chart-panel__sub">Annual YoY</span>
-          </div>
-          <div class="chart-panel__body"><canvas id="profile-growth-chart"></canvas></div>
-        </div>
-        <div class="chart-panel">
-          <div class="chart-panel__head">
-            <span class="chart-panel__title">CPI Inflation %</span>
-            <span class="chart-panel__sub">Annual</span>
-          </div>
-          <div class="chart-panel__body"><canvas id="profile-inflation-chart"></canvas></div>
-        </div>
-        <div class="chart-panel">
-          <div class="chart-panel__head">
-            <span class="chart-panel__title">Unemployment %</span>
-            <span class="chart-panel__sub">Annual</span>
-          </div>
-          <div class="chart-panel__body"><canvas id="profile-unemployment-chart"></canvas></div>
-        </div>
-
-        <!-- Inline notes (placement C) — one per chart, hidden by default -->
-        <div id="inline-note-gdp" class="analyst-block" style="display:none;grid-column:1/-1">
-          ${renderAnalystBlock(iso3, country.name, contextSnippet, 'GDP trend note', 'inline-gdp')}
-        </div>
-      </div>
-
-    </div><!-- /left col -->
-
-    <!-- Side rail commentary (placement B) — hidden by default -->
-    <div id="analyst-side" style="display:none;width:280px;flex-shrink:0">
-      ${renderAnalystBlock(iso3, country.name, contextSnippet, 'Analyst note · Rail', 'side')}
-    </div>
-
-  </div><!-- /profile-layout -->
-
-  <!-- vs G20 median comparison -->
-  <div class="sec-head" style="margin-top:20px">
+  <div class="sec-head" style="margin-top:4px">
     <div class="sec-head__title">vs G20 median</div>
   </div>
   <div class="panel" style="margin-bottom:20px">
@@ -320,6 +255,78 @@ function renderKeyFacts(iso3) {
       <span class="brief-kf__val" style="${it.cls || ''}">${it.val}</span>
       <span class="brief-kf__yr">${it.yr}</span>
     </div>`).join('')}</div>`;
+}
+
+// ── OECD-style country brief panel ───────────────────────────────────────────
+function renderCountryBrief(iso3, country, vintage, commentaryDate) {
+  const vintageStr = [
+    vintage ? `Data ${vintage}` : '',
+    commentaryDate ? `Analysis ${commentaryDate}` : '',
+  ].filter(Boolean).join(' · ');
+
+  const sections = [
+    { id: 0, heading: 'Economic Performance',        chartTitle: 'GDP (USD)',            chartSub: '2015–latest · WB',   canvasId: 'profile-gdp-chart',        dual: false },
+    { id: 1, heading: 'Labour Market & Prices',      chartTitle: 'Unemployment %',       chartSub: 'WB',                 canvasId: 'profile-unemp-chart',       dual: true,
+      chart2Title: 'CPI Inflation %',  chart2Sub: 'WB', canvas2Id: 'profile-inflation-chart' },
+    { id: 2, heading: 'Fiscal Position',             chartTitle: 'Govt Debt / GDP %',   chartSub: 'IMF',                canvasId: 'profile-debt-chart',        dual: false },
+    { id: 3, heading: 'External Sector & Investment',chartTitle: 'Current Account % GDP',chartSub: 'WB',                canvasId: 'profile-ca-chart',          dual: false },
+    { id: 4, heading: 'Outlook & Key Risks',         chartTitle: 'GDP Growth %',         chartSub: 'Annual · WB',        canvasId: 'profile-growth-chart',      dual: false },
+  ];
+
+  const sectionRows = sections.map(s => {
+    const chartPanel = s.dual ? `
+      <div class="chart-panel chart-panel--mini">
+        <div class="chart-panel__head">
+          <span class="chart-panel__title">${s.chartTitle}</span>
+          <span class="chart-panel__sub">${s.chartSub}</span>
+        </div>
+        <div class="chart-panel__body"><canvas id="${s.canvasId}"></canvas></div>
+      </div>
+      <div class="chart-panel chart-panel--mini" style="margin-top:8px">
+        <div class="chart-panel__head">
+          <span class="chart-panel__title">${s.chart2Title}</span>
+          <span class="chart-panel__sub">${s.chart2Sub}</span>
+        </div>
+        <div class="chart-panel__body"><canvas id="${s.canvas2Id}"></canvas></div>
+      </div>` : `
+      <div class="chart-panel">
+        <div class="chart-panel__head">
+          <span class="chart-panel__title">${s.chartTitle}</span>
+          <span class="chart-panel__sub">${s.chartSub}</span>
+        </div>
+        <div class="chart-panel__body"><canvas id="${s.canvasId}"></canvas></div>
+      </div>`;
+
+    return `
+    <div class="country-section-row" id="csrow-${s.id}">
+      <div class="country-section__text">
+        <div class="brief-section__hd">${s.heading}</div>
+        <p class="brief-section__body" id="brief-body-${s.id}">Loading…</p>
+      </div>
+      <div class="country-section__chart">${chartPanel}</div>
+    </div>`;
+  }).join('');
+
+  return `
+  <div class="country-brief" id="country-brief">
+    <div class="country-brief__head">
+      <div>
+        <div class="country-brief__headline" id="brief-headline">—</div>
+        <div class="country-brief__vintage">${A.escapeText(vintageStr)}</div>
+      </div>
+      <div class="country-brief__actions">
+        <button class="analyst-btn" onclick="saveBrief('${iso3}')">Save edits</button>
+      </div>
+    </div>
+
+    ${renderKeyFacts(iso3)}
+
+    ${sectionRows}
+
+    <div class="country-brief__foot">
+      <span class="country-brief__source">World Bank · IMF DataMapper · OECD</span>
+    </div>
+  </div>`;
 }
 
 // ── Analyst commentary block ──────────────────────────────────────────────────
@@ -439,52 +446,64 @@ function fallbackDraft(iso3, context) {
 
 // ── Load saved notes on mount ─────────────────────────────────────────────────
 function loadSavedNotes(iso3) {
-  ['main', 'side', 'inline-gdp'].forEach(blockId => {
-    const storageKey = `country:${iso3}:narrative:${blockId}`;
-    const body = document.getElementById(`analyst-body-${blockId}`);
-    const status = document.getElementById(`analyst-status-${blockId}`);
-    if (!body) return;
+  const headline = document.getElementById('brief-headline');
+  if (!headline) return;
 
-    // 1. localStorage takes priority (user edits)
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        body.innerHTML = `<div class="analyst-saved">${A.escapeText(saved)}</div>`;
-        if (status) status.textContent = 'Saved';
-        return;
-      }
-    } catch(e) {}
-
-    // 2. Pre-written commentary for the lead block
-    if (blockId === 'main') {
-      const cc = window.G20_COMMENTARY?.countries?.[iso3];
-      if (cc) {
-        let inner = '';
-        if (cc.sections && cc.sections.length) {
-          // New OECD-style sections schema (5 named sections with headings)
-          inner = renderKeyFacts(iso3) +
-            cc.sections.map(s => `
-              <div class="brief-section">
-                <div class="brief-section__hd">${A.escapeText(s.heading)}</div>
-                <p class="brief-section__body">${A.escapeText(s.body)}</p>
-              </div>`).join('');
-        } else if (cc.paragraphs) {
-          // Legacy plain-paragraph schema (backward-compatible)
-          inner = renderKeyFacts(iso3) +
-            cc.paragraphs.map(p => `<p style="margin:0 0 12px;line-height:1.75;font-size:13px;color:var(--text-2)">${A.escapeText(p)}</p>`).join('');
-        }
-        if (inner) {
-          body.innerHTML = `
-            <div class="analyst-draft" style="padding:0">
-              <div style="font-weight:600;font-size:13px;margin-bottom:16px;color:var(--ink);line-height:1.4;padding-bottom:12px;border-bottom:1px solid var(--rule)">${A.escapeText(cc.headline)}</div>
-              ${inner}
-            </div>`;
-          if (status) status.textContent = 'Research brief · edit or save to keep';
-        }
-      }
+  // 1. Check for user-saved edits in localStorage
+  try {
+    const savedJson = localStorage.getItem(`country:${iso3}:brief`);
+    if (savedJson) {
+      const saved = JSON.parse(savedJson);
+      if (saved.headline) headline.textContent = saved.headline;
+      (saved.sections || []).forEach((text, i) => {
+        const p = document.getElementById(`brief-body-${i}`);
+        if (p) p.textContent = text;
+      });
+      return;
     }
-  });
+  } catch(e) {}
+
+  // 2. Pre-generated commentary from commentary.js
+  const cc = window.G20_COMMENTARY?.countries?.[iso3];
+  if (cc?.sections && cc.sections.length) {
+    headline.textContent = cc.headline || '—';
+    cc.sections.forEach((s, i) => {
+      const p = document.getElementById(`brief-body-${i}`);
+      if (p) p.textContent = s.body;
+    });
+  } else if (cc?.paragraphs && cc.paragraphs.length) {
+    headline.textContent = cc.headline || '—';
+    cc.paragraphs.forEach((text, i) => {
+      const p = document.getElementById(`brief-body-${i}`);
+      if (p) p.textContent = text;
+    });
+  } else {
+    headline.textContent = '—';
+    for (let i = 0; i < 5; i++) {
+      const p = document.getElementById(`brief-body-${i}`);
+      if (p) p.textContent = 'Analysis will be available after the next data refresh.';
+    }
+  }
 }
+
+// ── Brief panel save ─────────────────────────────────────────────────────────
+window.saveBrief = function(iso3) {
+  const headline = document.getElementById('brief-headline');
+  const sections = [];
+  for (let i = 0; i < 5; i++) {
+    const p = document.getElementById(`brief-body-${i}`);
+    if (p) sections.push(p.textContent);
+  }
+  try {
+    localStorage.setItem(`country:${iso3}:brief`, JSON.stringify({
+      headline: headline?.textContent || '',
+      sections,
+      savedAt: new Date().toISOString(),
+    }));
+    const btn = document.querySelector('.country-brief__actions .analyst-btn');
+    if (btn) { btn.textContent = 'Saved ✓'; setTimeout(() => { btn.textContent = 'Save edits'; }, 2000); }
+  } catch(e) {}
+};
 
 // ── Chart.js trend charts ─────────────────────────────────────────────────────
 window.mountCountryProfileCharts = function(iso3) {
@@ -536,10 +555,12 @@ window.mountCountryProfileCharts = function(iso3) {
       });
     }
 
-    lineChart('profile-gdp-chart',         'GDP',         'rgba(10,10,10,0.8)',   v => '$' + (v/1e12).toFixed(2) + 'T');
-    lineChart('profile-growth-chart',      'GDP_GROWTH',  'rgba(4,120,87,1)',    v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%');
-    lineChart('profile-inflation-chart',   'INFLATION',   'rgba(185,28,28,1)',   v => v.toFixed(1) + '%');
-    lineChart('profile-unemployment-chart','UNEMPLOYMENT', 'rgba(161,98,7,1)',    v => v.toFixed(1) + '%');
+    lineChart('profile-gdp-chart',        'GDP',          'rgba(10,10,10,0.8)',  v => '$' + (v/1e12).toFixed(2) + 'T');
+    lineChart('profile-unemp-chart',      'UNEMPLOYMENT', 'rgba(161,98,7,1)',    v => v.toFixed(1) + '%');
+    lineChart('profile-inflation-chart',  'INFLATION',    'rgba(185,28,28,1)',   v => v.toFixed(1) + '%');
+    lineChart('profile-debt-chart',       'DEBT_GDP',     'rgba(91,33,182,1)',   v => v.toFixed(0) + '%');
+    lineChart('profile-ca-chart',         'CURRENT_ACC',  'rgba(30,64,175,1)',   v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%');
+    lineChart('profile-growth-chart',     'GDP_GROWTH',   'rgba(4,120,87,1)',    v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%');
   }
   tryMount();
 };
