@@ -193,9 +193,11 @@ function renderStanding(iso3) {
     const med = median(vals);
     const countryVal = window.G20Data.getLatest(iso3, key)?.value;
     if (countryVal === undefined || countryVal === null) return null;
+    const minVal = Math.min(...vals);
     const maxVal = Math.max(...vals);
-    const pctCountry = (countryVal / maxVal) * 100;
-    const pctMedian  = (med / maxVal) * 100;
+    const range  = maxVal - minVal || 1;
+    const pctCountry = ((countryVal - minVal) / range) * 100;
+    const pctMedian  = ((med - minVal) / range) * 100;
     return { label, unit, countryVal, med, pctCountry, pctMedian };
   }).filter(Boolean);
 
@@ -208,10 +210,10 @@ function renderStanding(iso3) {
           <div class="standing-lbl">${r.label}</div>
           <div class="standing-bars">
             <div class="standing-bar-wrap">
-              <div class="standing-bar-fill standing-bar-country" style="width:${Math.max(r.pctCountry, 2).toFixed(1)}%"></div>
+              <div class="standing-bar-fill standing-bar-country" style="width:${Math.min(Math.max(r.pctCountry, 2), 100).toFixed(1)}%"></div>
             </div>
             <div class="standing-bar-wrap">
-              <div class="standing-bar-fill standing-bar-median" style="width:${Math.max(r.pctMedian, 2).toFixed(1)}%"></div>
+              <div class="standing-bar-fill standing-bar-median" style="width:${Math.min(Math.max(r.pctMedian, 2), 100).toFixed(1)}%"></div>
             </div>
           </div>
           <div class="standing-val">${r.countryVal.toFixed(1)}${r.unit}</div>

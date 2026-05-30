@@ -198,9 +198,9 @@ function renderOverview() {
   <div class="sec-head">
     <div class="sec-head__title">All economies <span class="count">/ ${tableRows.length}</span><span class="sec-head__sub">click row → country profile</span></div>
     <div class="sec-head__actions">
-      <button class="sec-head__tab active">By GDP</button>
-      <button class="sec-head__tab">By growth</button>
-      <button class="sec-head__tab">By CPI</button>
+      <button class="sec-head__tab active" onclick="overviewSortTable('gdp',this)">By GDP</button>
+      <button class="sec-head__tab" onclick="overviewSortTable('growth',this)">By growth</button>
+      <button class="sec-head__tab" onclick="overviewSortTable('cpi',this)">By CPI</button>
     </div>
   </div>
 
@@ -221,7 +221,7 @@ function renderOverview() {
           <th class="col-spark">10y GDP</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody id="rank-tbody">
         ${renderRankingRows(tableRows)}
       </tbody>
     </table>
@@ -231,14 +231,14 @@ function renderOverview() {
   <div class="sec-head">
     <div class="sec-head__title">Risk register <span class="count" id="risk-total">/ ${cpiFlags.length + shrinkFlags.length + debtFlags.length}</span><span class="sec-head__sub">automated flags · latest data</span></div>
     <div class="sec-head__actions">
-      <button class="sec-head__tab active">All</button>
-      <button class="sec-head__tab">High</button>
-      <button class="sec-head__tab">Medium</button>
+      <button class="sec-head__tab active" onclick="overviewFilterRisk('all',this)">All</button>
+      <button class="sec-head__tab" onclick="overviewFilterRisk('high',this)">High</button>
+      <button class="sec-head__tab" onclick="overviewFilterRisk('medium',this)">Medium</button>
     </div>
   </div>
 
-  <div class="row-3">
-    <div class="panel">
+  <div class="row-3" id="risk-register-panels">
+    <div class="panel" data-severity="high" id="risk-panel-cpi">
       <div class="panel__head">
         <div><span class="panel__title">Inflation outliers</span><span class="panel__sub">CPI &gt; 8%</span></div>
         <div class="panel__meta">${cpiFlags.length} flagged</div>
@@ -246,7 +246,7 @@ function renderOverview() {
       ${renderRiskRows(cpiFlags, c => `CPI &gt; 8% · ${c.region}`,
          c => `<span class="v-neg">${c.value.toFixed(1)}%</span>`, '% YoY')}
     </div>
-    <div class="panel">
+    <div class="panel" data-severity="high" id="risk-panel-growth">
       <div class="panel__head">
         <div><span class="panel__title">Contracting</span><span class="panel__sub">real growth &lt; 0%</span></div>
         <div class="panel__meta">${shrinkFlags.length ? shrinkFlags.length + ' flagged' : 'clear'}</div>
@@ -256,7 +256,7 @@ function renderOverview() {
             c => `<span class="v-neg">${c.value.toFixed(1)}%</span>`, 'GROWTH')
         : `<div class="risk-row"><div class="risk-row__main"><span class="risk-row__desc v-mute">No G20 economy contracting this quarter.</span></div><div></div></div>`}
     </div>
-    <div class="panel">
+    <div class="panel" data-severity="medium" id="risk-panel-debt">
       <div class="panel__head">
         <div><span class="panel__title">Fiscal stress</span><span class="panel__sub">debt &gt; 100% GDP</span></div>
         <div class="panel__meta">${debtFlags.length} flagged</div>
@@ -556,3 +556,25 @@ function renderGlobalOutlook() {
 function mountOverviewCharts() {
   // No Chart.js charts on overview page — all CSS bars
 }
+
+// ── Ranking table sort ────────────────────────────────────────────────────────
+window.overviewSortTable = function(mode, btn) {
+  document.querySelectorAll('[onclick^="overviewSortTable"]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const nonEU = c => c.iso3 !== 'EUU';
+  const gdpRank    = window.G20Data.getRanking('GDP').filter(nonEU);
+  const growthRank = window.G20Data.getRanking('GDP_GROWTH').filter(nonEU);
+  const infRank    = window.G20Data.getRanking('INFLATION').filter(nonEU).sort((a,b) => b.value - a.value);
+  const rows = mode === 'growth' ? growthRank : mode === 'cpi' ? infRank : gdpRank;
+  const tbody = document.getElementById('rank-tbody');
+  if (tbody) tbody.innerHTML = renderRankingRows(rows);
+};
+
+// ── Risk register severity filter ─────────────────────────────────────────────
+window.overviewFilterRisk = function(severity, btn) {
+  document.querySelectorAll('[onclick^="overviewFilterRisk"]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#risk-register-panels .panel[data-severity]').forEach(el => {
+    el.style.display = (severity === 'all' || el.dataset.severity === severity) ? '' : 'none';
+  });
+};
