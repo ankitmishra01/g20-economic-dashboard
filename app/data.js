@@ -235,7 +235,7 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
     // Recession risk score
     if (window.computeRiskScore) {
       const risk = window.computeRiskScore(iso3);
-      lines.push(`  Recession risk score: ${risk.score}/100 (${risk.label}) — ${risk.signals.join(', ') || 'no flags'}`);
+      lines.push(`  Recession risk score: ${risk.score}/100 (${risk.label}), signals: ${risk.signals.join(', ') || 'none'}`);
     }
 
     // Recent news headlines for this country

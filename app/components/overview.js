@@ -98,7 +98,7 @@ function renderOverview() {
         </div>
         <h1 class="hero__title">
           G20 closed ${latestYear} with <span class="num-callout">${A.fmtSignedPct(medianGrowth)}</span> median real growth.<br>
-          <span class="accent">Disinflation continues — debt levels persist.</span>
+          <span class="accent">Disinflation continues, yet debt levels persist.</span>
         </h1>
       </div>
       <div class="hero__filters">
@@ -267,7 +267,7 @@ function renderOverview() {
   </div>
 
   <!-- Global Outlook editorial -->
-  ${renderGlobalOutlook()}
+  ${renderGlobalOutlookComputed()}
 
   <!-- Data sources table -->
   <div class="sec-head" style="margin-top:24px">
@@ -500,6 +500,93 @@ function renderRiskRows(items, descFn, valFn, sub) {
       </div>
       <div class="risk-row__val">${valFn(c)}<span class="sub">${sub}</span></div>
     </div>`).join('');
+}
+
+// ── Global Outlook — live-computed from G20_DATA (auto-updates with monthly data refresh) ──
+function renderGlobalOutlookComputed() {
+  if (!window.G20Data) return '';
+  const nonEU = c => c.iso3 !== 'EUU';
+
+  const growthRank = window.G20Data.getRanking('GDP_GROWTH').filter(nonEU);
+  const infRank    = window.G20Data.getRanking('INFLATION').filter(nonEU).sort((a,b) => b.value - a.value);
+  const debtRank   = window.G20Data.getRanking('DEBT_GDP').filter(nonEU).sort((a,b) => b.value - a.value);
+
+  if (!growthRank.length) return '';
+
+  const medGrowth       = median(growthRank.map(c => c.value));
+  const topGrowth       = growthRank[0];
+  const contractingN    = growthRank.filter(c => c.value < 0).length;
+  const medInf          = median(infRank.map(c => c.value));
+  const highInflation   = infRank.filter(c => c.value > 8);
+  const highDebtN       = debtRank.filter(c => c.value > 100).length;
+  const topDebt         = debtRank[0];
+  const latestYear      = growthRank[0]?.year || new Date().getFullYear() - 1;
+  const topRisers       = growthRank.slice(0, 3);
+
+  const sign = v => v >= 0 ? '+' : '';
+  const pct  = (v, d=1) => `${parseFloat(v.toFixed(d))}%`;
+
+  // Paragraph 1 — Economic Performance
+  const p1 = `G20 economies recorded a median real GDP growth rate of <strong>${pct(medGrowth)}</strong> in <strong>${latestYear}</strong>, with <strong>${A.escapeText(topGrowth.name)}</strong> leading the group at <strong>${pct(topGrowth.value)}</strong>. ${contractingN > 0 ? `${contractingN} member ${contractingN === 1 ? 'economy' : 'economies'} contracted in the same period, reflecting the uneven distribution of momentum across the group.` : 'All G20 members recorded positive growth in the same period, reflecting broadly supportive global conditions.'}`;
+
+  // Paragraph 2 — Inflation
+  const highInflNames = highInflation.slice(0, 3).map(c => A.escapeText(c.name)).join(', ');
+  const p2 = `Median consumer price inflation across the G20 stood at <strong>${pct(medInf)}</strong> in <strong>${latestYear}</strong>. ${highInflation.length > 0 ? `However, ${highInflNames} continue to face elevated price pressures well above the group average, complicating monetary policy normalisation and compressing real household incomes.` : 'Inflationary pressures are broadly contained across the group, supporting the case for a gradual easing of monetary policy in major economies.'}`;
+
+  // Paragraph 3 — Fiscal
+  const p3 = `Fiscal sustainability remains a structural concern across the G20. <strong>${highDebtN}</strong> member ${highDebtN === 1 ? 'economy' : 'economies'} carried government debt above 100% of GDP${topDebt ? `, led by <strong>${A.escapeText(topDebt.name)}</strong> at <strong>${parseFloat(topDebt.value.toFixed(0))}%</strong>` : ''}. Unless consolidation efforts accelerate, rising debt-service costs will progressively crowd out the discretionary investment needed in infrastructure, healthcare, and education.`;
+
+  // Paragraph 4 — Outlook (prescriptive close)
+  const p4 = `The near-term outlook is shaped by the interaction of three structural forces: the pace of disinflation, the trajectory of public debt, and the uneven diffusion of productivity-enhancing technology investment across member economies. The G20's strongest-growing economies in <strong>${latestYear}</strong>, including <strong>${topRisers.map(c => A.escapeText(c.name)).join(', ')}</strong>, need to sustain investment in physical and digital infrastructure to convert cyclical momentum into durable structural gains. Economies facing fiscal consolidation pressures should prioritise reforms that protect growth-enabling public spending while credibly narrowing deficits over the medium term.`;
+
+  // Key risks — derived from live threshold breaches
+  const keyRisks = [];
+  if (highInflation.length > 0) keyRisks.push(`Persistent inflation above 8% in ${highInflation.length} ${highInflation.length === 1 ? 'economy' : 'economies'}, limiting the scope for monetary policy easing`);
+  if (contractingN > 0) keyRisks.push(`Economic contraction in ${contractingN} G20 ${contractingN === 1 ? 'economy' : 'economies'}, signalling structural rather than cyclical weakness`);
+  if (highDebtN > 3) keyRisks.push(`Elevated sovereign debt above 100% of GDP in ${highDebtN} economies, constraining counter-cyclical fiscal capacity`);
+  keyRisks.push('Geopolitical economic fragmentation and tariff escalation weighing on global trade and investment flows');
+  keyRisks.push('Divergent monetary policy cycles creating exchange rate volatility and capital flow disruption for emerging-market members');
+
+  // Upside factors — top growers
+  const upsides = [
+    `${A.escapeText(topGrowth.name)}'s ${pct(topGrowth.value)} growth rate demonstrates that strong domestic demand and structural reform can sustain above-trend expansion`,
+    'Disinflation across most advanced G20 economies is creating space for gradual monetary easing, which should support investment and consumption',
+    'AI and digital infrastructure investment is generating productivity gains in leading economies that could broaden across the group over the 2026 to 2030 period',
+  ];
+
+  const listItem = (text, color) => `
+    <li style="display:flex;gap:8px;align-items:baseline;margin-bottom:8px;font-size:12px;line-height:1.5;color:var(--text-2)">
+      <span style="color:${color};flex-shrink:0;font-size:10px">▲</span>
+      ${text}
+    </li>`;
+
+  return `
+  <div class="sec-head">
+    <div class="sec-head__title">G20 Outlook<span class="sec-head__sub">${latestYear} · computed from live World Bank and IMF data</span></div>
+  </div>
+
+  <div class="panel" style="margin-bottom:24px">
+    <div class="panel__body" style="padding:20px 24px">
+      <div style="display:grid;grid-template-columns:1fr 260px;gap:32px;align-items:start">
+
+        <div>
+          ${[p1, p2, p3, p4].map(p => `<p style="margin:0 0 14px;line-height:1.7;font-size:13px;color:var(--text-2)">${p}</p>`).join('')}
+        </div>
+
+        <div style="border-left:1px solid var(--rule);padding-left:20px">
+          <div style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-4);margin-bottom:10px">Key risks</div>
+          <ul style="margin:0 0 20px;padding:0;list-style:none">
+            ${keyRisks.map(r => listItem(r, 'var(--neg)')).join('')}
+          </ul>
+          <div style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-4);margin-bottom:10px">Upside factors</div>
+          <ul style="margin:0;padding:0;list-style:none">
+            ${upsides.map(r => listItem(r, 'var(--pos)')).join('')}
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </div>`;
 }
 
 // ── Utility ────────────────────────────────────────────────────────────────────

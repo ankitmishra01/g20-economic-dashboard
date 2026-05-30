@@ -166,7 +166,7 @@
     }
 
     if (!rows.length) {
-      return wrap('Recession & Contraction Risk', `<p class="ins-p">No G20 economies are currently in contraction. All 19 non-EU members show positive GDP growth in the latest available data. The G20 median growth rate is ${pct(median(growthRank.map(c => c.value)))} — a broadly resilient backdrop, though several advanced economies are growing below long-run trend.</p>`, 'World Bank, IMF DataMapper');
+      return wrap('Recession & Contraction Risk', `<p class="ins-p">No G20 economies are currently in contraction. All 19 non-EU members show positive GDP growth in the latest available data. The G20 median growth rate is ${pct(median(growthRank.map(c => c.value)))}, a broadly resilient backdrop, though several advanced economies are growing below long-run trend.</p>`, 'World Bank, IMF DataMapper');
     }
 
     const p = `${atrisk.length > 0 ? `${atrisk.length} G20 economy/economies are currently in contraction. ` : ''}${slowing.length} economies are growing below 1.5%, a common watch threshold. Economies with high debt loads face compounded risk when growth slows.`;
@@ -320,7 +320,7 @@
     if (fiscal && debt) {
       const balDesc = fiscal.value > 0 ? `a surplus of ${pct(fiscal.value)}` : `a deficit of ${pct(Math.abs(fiscal.value))}`;
       const debtDesc = debt.value > g20MedianDebt ? 'above' : 'below';
-      sentences.push(`The fiscal position shows ${balDesc} of GDP (${fiscal.year}) with government debt at ${pct(debt.value, 0)} of GDP — ${debtDesc} the G20 median of ${pct(g20MedianDebt, 0)}.`);
+      sentences.push(`The fiscal position shows ${balDesc} of GDP (${fiscal.year}) with government debt at ${pct(debt.value, 0)} of GDP, ${debtDesc} the G20 median of ${pct(g20MedianDebt, 0)}.`);
     }
     if (youth && g20MedianYouth != null) {
       const yDesc = youth.value > 25 ? `elevated at ${pct(youth.value)}` : youth.value > g20MedianYouth ? `${pct(youth.value)}, above the G20 median` : `${pct(youth.value)}, below the G20 median`;
@@ -332,7 +332,7 @@
       : '';
 
     return wrap(
-      `${country.flag} ${country.name} — Economic Profile`,
+      `${country.flag} ${country.name}: Economic Profile`,
       tbl + narrative,
       'World Bank, IMF DataMapper, OECD'
     );
@@ -410,7 +410,7 @@
     const p = `${region} G20 members average ${sign(avgGrowth)}${pct(avgGrowth)} GDP growth. ${countries.length} economies shown.`;
 
     return wrap(
-      `${region} — G20 Economic Snapshot`,
+      `${region}: G20 Economic Snapshot`,
       `<p class="ins-p">${p}</p>` + table(['Economy', ...keys.map(k => k.label)], rows),
       'World Bank, IMF DataMapper'
     );
@@ -448,7 +448,7 @@
     });
 
     const p = `G20 median GDP growth: ${sign(growthMed)}${pct(growthMed)} · Median CPI: ${pct(inflMed)} · Median debt/GDP: ${pct(debtMed, 0)}. ${contracting} economies are contracting, ${highInfl} have above-8% inflation, ${heavyDebt} carry debt above 100% of GDP, and ${deficits} are running fiscal deficits.`;
-    return wrap('G20 Economic Snapshot — All Economies', `<p class="ins-p">${p}</p>` + table(['Economy', 'Growth', 'CPI', 'Debt/GDP', 'Fiscal Bal.'], rows), 'World Bank, IMF DataMapper');
+    return wrap('G20 Economic Snapshot: All Economies', `<p class="ins-p">${p}</p>` + table(['Economy', 'Growth', 'CPI', 'Debt/GDP', 'Fiscal Bal.'], rows), 'World Bank, IMF DataMapper');
   }
 
   // ── Country name / alias map ──────────────────────────────────────────────────

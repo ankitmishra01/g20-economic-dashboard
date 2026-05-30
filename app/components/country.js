@@ -329,7 +329,11 @@ function renderCountryBrief(iso3, country, vintage, commentaryDate) {
 
     <div class="country-brief__foot">
       <div class="brief-methodology">
-        <div class="brief-method__title">Data vintage — IMF World Economic Outlook April 2026</div>
+        <div class="brief-method__title">Data vintage: latest available reads, ${(() => {
+          const yrs = ['GDP','GDP_GROWTH','INFLATION','UNEMPLOYMENT','DEBT_GDP','FISCAL_BAL','CURRENT_ACC']
+            .map(k => window.G20Data.getLatest(iso3, k)?.year).filter(Boolean);
+          return yrs.length ? Math.max(...yrs) : new Date().getFullYear() - 1;
+        })()}</div>
         <div class="brief-method__grid">
           ${[
             ['GDP',         'World Bank'],
@@ -351,7 +355,7 @@ function renderCountryBrief(iso3, country, vintage, commentaryDate) {
             return `<span class="m-ind">${key.replace('_',' ')}</span><span class="m-src">${src}</span><span class="m-yr">${label}</span>`;
           }).filter(Boolean).join('')}
         </div>
-        <div class="brief-method__note">Sources: IMF WEO Apr 2026 · World Bank Open Data CC BY 4.0 · OECD MSTI · Refreshed monthly via automated pipeline.</div>
+        <div class="brief-method__note">Sources: IMF World Economic Outlook · World Bank Open Data CC BY 4.0 · OECD MSTI · Refreshed monthly via automated pipeline.</div>
       </div>
     </div>
   </div>`;
@@ -469,7 +473,7 @@ window.draftAnalysis = async function(iso3, blockId, context) {
 
 function fallbackDraft(iso3, context) {
   const country = G20.find(c => c.iso3 === iso3);
-  return `${country?.name || iso3} — ${context}. The economy shows mixed signals consistent with broader G20 trends. Further monitoring of fiscal trajectory and external balance is warranted.`;
+  return `${country?.name || iso3}: ${context}. The economy shows mixed signals consistent with broader G20 trends. Further monitoring of fiscal trajectory and external balance is warranted.`;
 }
 
 // ── Data-driven commentary generator ─────────────────────────────────────────
@@ -477,13 +481,13 @@ function generateBriefContent(iso3) {
   // EUU is a 27-member aggregate, not a single sovereign — provide bloc-level framing
   if (iso3 === 'EUU') {
     return {
-      headline: 'European Union — aggregate economic profile of 27 member states',
+      headline: 'European Union: aggregate economic profile of 27 member states',
       sections: [
         'The European Union represents the combined economic output of 27 member states, functioning as a single-market aggregate within G20 frameworks. GDP and growth figures reflect euro area-wide averages and should be interpreted as bloc-level indicators rather than a single sovereign\'s performance.',
-        'Inflation and labour market conditions in the EU aggregate mask substantial divergence across member states — from near-full employment in Germany and the Netherlands to structurally elevated unemployment across southern member economies. The ECB\'s single monetary policy must navigate this heterogeneity.',
-        'EU fiscal data aggregates 27 sovereign governments operating under the Stability and Growth Pact framework, which targets deficits below 3% of GDP and debt below 60% — thresholds that multiple member states have exceeded and that are subject to ongoing reform.',
+        'Inflation and labour market conditions in the EU aggregate mask substantial divergence across member states, from near-full employment in Germany and the Netherlands to structurally elevated unemployment across southern member economies. The ECB\'s single monetary policy must navigate this heterogeneity.',
+        'EU fiscal data aggregates 27 sovereign governments operating under the Stability and Growth Pact framework, which targets deficits below 3% of GDP and debt below 60%, thresholds that multiple member states have exceeded and that are subject to ongoing reform.',
         'As the world\'s largest trading bloc, the EU\'s external position is shaped by Germany\'s manufacturing export surplus, the energy import dependency of southern and eastern member states, and the ongoing reorientation of supply chains away from Russia following the 2022 energy crisis.',
-        'The EU\'s medium-term outlook centres on the twin transitions — digital and green — under the European Green Deal and industrial competitiveness agenda. Structural headwinds include demographic ageing, energy security costs, and competitive pressure from US and Chinese industrial policy in strategic technology sectors.',
+        'The EU\'s medium-term outlook centres on the twin transitions, digital and green, under the European Green Deal and industrial competitiveness agenda. Structural headwinds include demographic ageing, energy security costs, and competitive pressure from US and Chinese industrial policy in strategic technology sectors.',
       ],
     };
   }
@@ -568,7 +572,7 @@ function generateBriefContent(iso3) {
   if (inf?.value != null && inf.value > 50) {
     headline = trendDir('INFLATION') === 'falling'
       ? `${name}: stabilisation underway as inflation decelerates from ${inf.value.toFixed(0)}%`
-      : `${name}: macroeconomic emergency — inflation at ${inf.value.toFixed(0)}% demands urgent policy response`;
+      : `${name}: macroeconomic emergency. Inflation at ${inf.value.toFixed(0)}% demands an urgent policy response.`;
   } else if (gv != null && gv < 0 && trendDir('GDP_GROWTH') === 'falling') {
     headline = `${name}: contraction deepens as structural headwinds outweigh policy support`;
   } else if (gv != null && gv < 0) {
@@ -576,7 +580,7 @@ function generateBriefContent(iso3) {
   } else if (gv != null && gv >= 5) {
     const grRank = g20Rank('GDP_GROWTH');
     headline = grRank?.rank <= 3
-      ? `${name} leads the G20 with ${gv.toFixed(1)}% growth — but structural development gaps require attention`
+      ? `${name} leads the G20 with ${gv.toFixed(1)}% growth, though structural development gaps require sustained attention`
       : `${name}'s ${gv.toFixed(1)}% expansion outpaces G20 peers as investment and reform dividends materialise`;
   } else if (debt?.value != null && debt.value > 100 && gv != null && gv < 2) {
     headline = `${name}: below-trend growth and elevated debt constrain the government's fiscal manoeuvre room`;
@@ -587,7 +591,7 @@ function generateBriefContent(iso3) {
     const rel  = Math.abs(diff) < 0.4 ? 'broadly in line with G20 peers'
                : diff > 0 ? `outperforming the G20 average of ${g20GrAvg.toFixed(1)}%`
                            : `below the G20 average of ${g20GrAvg.toFixed(1)}%`;
-    headline = `${name}: ${gv >= 0 ? '+' : ''}${gv.toFixed(1)}% growth — ${rel}${gdp?.value ? `, $${(gdp.value/1e12).toFixed(2)}T economy` : ''}`;
+    headline = `${name}: ${gv >= 0 ? '+' : ''}${gv.toFixed(1)}% growth, ${rel}${gdp?.value ? `, $${(gdp.value/1e12).toFixed(2)}T economy` : ''}`;
   } else if (gdp?.value) {
     headline = `${name}: $${(gdp.value/1e12).toFixed(2)}T economy`;
   }
@@ -604,14 +608,14 @@ function generateBriefContent(iso3) {
         grDiff > 0 ? `, above the G20 average of <strong>${g20GrAvg.toFixed(1)}%</strong>` :
                      `, below the G20 average of <strong>${g20GrAvg.toFixed(1)}%</strong>`;
       let lead = `<strong>${name}</strong>'s <strong>$${(gdp.value/1e12).toFixed(2)}T</strong> economy`;
-      if (gdpRank) lead += ` — the G20's <strong>${ordinal(gdpRank.rank)}-largest</strong> —`;
+      if (gdpRank) lead += `, the G20's <strong>${ordinal(gdpRank.rank)}-largest</strong>,`;
       lead += gv < 0
         ? ` contracted <strong>${Math.abs(gv).toFixed(1)}%</strong> in <strong>${periodLabel(gr)}</strong>${grRel}.`
         : ` expanded <strong>${gv.toFixed(1)}%</strong> in <strong>${periodLabel(gr)}</strong>${grRel}.`;
       // Transparency note when driving data is quarterly (flash estimate)
       if (gr.isQuarterly) {
         const annual = window.G20Data.getLatest ? null : null; // annual fallback shown separately
-        lead += ` <span style="font-size:0.92em;opacity:0.7">(${periodLabel(gr)} preliminary estimate — year-on-year, seasonally adjusted; source: OECD QNA)</span>`;
+        lead += ` <span style="font-size:0.92em;opacity:0.7">(${periodLabel(gr)} preliminary estimate, year-on-year, seasonally adjusted; source: OECD QNA)</span>`;
       }
       sec0.push(lead);
     } else {
@@ -625,7 +629,7 @@ function generateBriefContent(iso3) {
     const grTrend = trendDir('GDP_GROWTH');
     const a5 = avg5('GDP_GROWTH');
     if (a5 != null && grTrend === 'falling' && gv > a5 + 0.5) {
-      sec0.push(`However, the 5-year average growth rate of <strong>${a5.toFixed(1)}%</strong> signals a <strong>decelerating trajectory</strong> — the current pace may not reflect the underlying structural trend.`);
+      sec0.push(`However, the 5-year average growth rate of <strong>${a5.toFixed(1)}%</strong> signals a <strong>decelerating trajectory</strong>. The current pace may not reflect the underlying structural trend.`);
     } else if (a5 != null && grTrend === 'rising' && gv < a5 - 0.5) {
       sec0.push(`However, with a 5-year growth average of <strong>${a5.toFixed(1)}%</strong>, the underlying trajectory is <strong>accelerating</strong>, suggesting the headline figure understates the economy's structural momentum.`);
     } else if (grTrend === 'falling' && gv < 0) {
@@ -682,23 +686,23 @@ function generateBriefContent(iso3) {
       Math.abs(infDiff) < 0.5 ? ', broadly in line with the G20 median' :
       infDiff > 0 ? `, above the G20 median of <strong>${infMed.toFixed(1)}%</strong>` :
                     `, below the G20 median of <strong>${infMed.toFixed(1)}%</strong>`;
-    const infClassify = inf.value > 15 ? '<strong>severe</strong> — well beyond price stability parameters' :
+    const infClassify = inf.value > 15 ? '<strong>severe</strong>, well beyond price stability parameters' :
                         inf.value > 8  ? '<strong>elevated</strong>, complicating monetary policy normalisation' :
                         inf.value > 4  ? '<strong>above-target</strong>, warranting sustained policy vigilance' :
                         inf.value >= 2 ? '<strong>broadly on-target</strong>, consistent with price stability' :
                                           '<strong>below target</strong>, raising disinflationary risk';
-    sec1.push(`Consumer price inflation of <strong>${inf.value.toFixed(1)}%</strong> in <strong>${periodLabel(inf)}</strong>${relToMed} — a price environment that is ${infClassify}.`);
+    sec1.push(`Consumer price inflation of <strong>${inf.value.toFixed(1)}%</strong> in <strong>${periodLabel(inf)}</strong>${relToMed}, a price environment that is ${infClassify}.`);
 
     const pk       = peakOf('INFLATION', 8);
     const infTrend = trendDir('INFLATION');
     if (pk && pk.year !== inf.year && pk.value > inf.value + 3) {
-      sec1.push(`However, inflation has retreated from a peak of <strong>${pk.value.toFixed(1)}%</strong> in <strong>${pk.year}</strong>, and the disinflation trajectory is clearly established — though services-sector price stickiness warrants continued monitoring before declaring victory.`);
+      sec1.push(`However, inflation has retreated from a peak of <strong>${pk.value.toFixed(1)}%</strong> in <strong>${pk.year}</strong>, and the disinflation trajectory is clearly established, though services-sector price stickiness warrants continued monitoring before declaring victory.`);
     } else if (infTrend === 'rising' && inf.value > 3) {
       const oldS   = S('INFLATION', 4);
       const baseVal = oldS.length >= 2 ? oldS[0] : null;
       sec1.push(`However, the upward inflation trend${baseVal ? ` from <strong>${baseVal.value.toFixed(1)}%</strong> in <strong>${baseVal.year}</strong>` : ''} signals that price pressures are <strong>building</strong>, which may constrain the scope for monetary policy easing and compress real household incomes.`);
     } else if (inf.value < 1 && infTrend !== 'rising') {
-      sec1.push(`However, near-zero inflation raises the risk of a <strong>deflationary dynamic</strong> — a persistent decline in price expectations that depresses investment and consumption and is difficult to reverse once entrenched.`);
+      sec1.push(`However, near-zero inflation raises the risk of a <strong>deflationary dynamic</strong>, meaning a persistent decline in price expectations that depresses investment and consumption and is difficult to reverse once entrenched.`);
     }
   }
 
@@ -715,9 +719,9 @@ function generateBriefContent(iso3) {
                                           'sits within the <strong>normal cyclical range</strong>, suggesting a broadly balanced labour market';
     let uneS = `The labour market`;
     if (uneRel) {
-      uneS += `${uneTrend === 'falling' ? ', with unemployment improving to' : uneTrend === 'rising' ? ', with unemployment deteriorating to' : ' records'} <strong>${une.value.toFixed(1)}%</strong> — ${uneRel} —`;
+      uneS += `${uneTrend === 'falling' ? ', with unemployment improving to' : uneTrend === 'rising' ? ', with unemployment deteriorating to' : ' records'} <strong>${une.value.toFixed(1)}%</strong>, ${uneRel},`;
     } else {
-      uneS += ` records unemployment of <strong>${une.value.toFixed(1)}%</strong> —`;
+      uneS += ` records unemployment of <strong>${une.value.toFixed(1)}%</strong>, which`;
     }
     uneS += ` ${uneClassify}.`;
     sec1.push(uneS);
@@ -726,7 +730,7 @@ function generateBriefContent(iso3) {
   if (youth?.value != null && une?.value != null) {
     const ratio = youth.value / une.value;
     if (ratio > 2) {
-      sec1.push(`Moreover, youth unemployment at <strong>${youth.value.toFixed(1)}%</strong> — <strong>${ratio.toFixed(1)} times</strong> the headline rate — exposes structural barriers to entry-level employment that the aggregate figure masks, pointing to mismatches between educational outputs and labour market demand.`);
+      sec1.push(`Moreover, youth unemployment at <strong>${youth.value.toFixed(1)}%</strong>, which is <strong>${ratio.toFixed(1)} times</strong> the headline rate, exposes structural barriers to entry-level employment that the aggregate figure masks, pointing to mismatches between educational outputs and labour market demand.`);
     } else {
       sec1.push(`Youth unemployment at <strong>${youth.value.toFixed(1)}%</strong> tracks broadly in line with the headline rate, suggesting that labour market conditions are relatively equitable across age cohorts.`);
     }
@@ -736,12 +740,12 @@ function generateBriefContent(iso3) {
     const flfRank = g20Rank('FEMALE_LFP');
     const flfAvg  = g20Avg('FEMALE_LFP');
     let s = `Female labour force participation at <strong>${flf.value.toFixed(1)}%</strong>`;
-    if (flfRank?.rank <= 5)  s += ` — among the highest in the G20 —`;
-    else if (flfRank?.rank > 15) s += ` — among the lowest in the G20 —`;
+    if (flfRank?.rank <= 5)  s += `, among the highest in the G20,`;
+    else if (flfRank?.rank > 15) s += `, among the lowest in the G20,`;
     if (flfAvg != null) s += ` compares with a G20 average of <strong>${flfAvg.toFixed(1)}%</strong>`;
     s += flf.value >= (flfAvg || 60)
       ? ', reflecting an inclusive labour market that draws on the full productive capacity of the working-age population.'
-      : ', representing a significant <strong>untapped productivity reservoir</strong> — closing this gap would meaningfully expand the economy\'s supply-side potential.';
+      : ', representing a significant <strong>untapped productivity reservoir</strong>. Closing this gap would meaningfully expand the economy\'s supply-side potential.';
     sec1.push(s);
   }
 
@@ -756,7 +760,7 @@ function generateBriefContent(iso3) {
     const debtOld   = debtOldS.length >= 2 ? debtOldS[0] : null;
 
     let debtLead = `Government debt stood at <strong>${debt.value.toFixed(0)}% of GDP</strong> in <strong>${periodLabel(debt)}</strong>`;
-    if (debtAvg != null) debtLead += ` — against a G20 average of <strong>${debtAvg.toFixed(0)}%</strong> —`;
+    if (debtAvg != null) debtLead += `, against a G20 average of <strong>${debtAvg.toFixed(0)}%</strong>,`;
     if (debtRank)         debtLead += ` ranking <strong>${ordinal(debtRank.rank)}-highest</strong> in the G20`;
     sec2.push(debtLead + '.');
 
@@ -769,7 +773,7 @@ function generateBriefContent(iso3) {
     }
 
     sec2.push(
-      debt.value > 120 ? `At this level, debt <strong>significantly constrains fiscal space</strong> — high debt-service costs limit the government's capacity for counter-cyclical investment and leave little buffer for unforeseen shocks.` :
+      debt.value > 120 ? `At this level, debt <strong>significantly constrains fiscal space</strong>. High debt-service costs limit the government's capacity for counter-cyclical investment and leave little buffer for unforeseen shocks.` :
       debt.value > 80  ? `Elevated debt in the 80–120% range <strong>requires sustained fiscal discipline</strong> to prevent crowding-out of private investment and avoid a structural deterioration in sovereign creditworthiness.` :
                           `With debt below 80% of GDP, the sovereign retains <strong>adequate fiscal headroom</strong> to respond to cyclical downturns or invest in structural priorities without placing debt sustainability at risk.`
     );
@@ -778,7 +782,7 @@ function generateBriefContent(iso3) {
   if (fbal?.value != null) {
     const fbalClassify = fbal.value > -3 ? '<strong>within prudent bounds</strong>, consistent with a stable medium-term fiscal trajectory' :
                          fbal.value > -6 ? '<strong>manageable</strong>, though the deficit trajectory warrants monitoring to prevent sustained debt accumulation' :
-                                            '<strong>concerning</strong> — at this level, the deficit risks becoming self-reinforcing as debt-service costs rise';
+                                            '<strong>concerning</strong>. At this level, the deficit risks becoming self-reinforcing as debt-service costs rise';
     sec2.push(`The fiscal balance of <strong>${A.fmtSignedPct(fbal.value).replace('%', '% of GDP')}</strong> is ${fbalClassify}.`);
   }
 
@@ -828,7 +832,7 @@ function generateBriefContent(iso3) {
 
   if (exports_gdp?.value != null && trade?.value != null) {
     const exportShare = (exports_gdp.value / trade.value * 100).toFixed(0);
-    sec3.push(`Exports represent <strong>${exports_gdp.value.toFixed(1)}% of GDP</strong>, accounting for roughly <strong>${exportShare}%</strong> of total trade flows — ${exports_gdp.value > 30 ? 'a high export dependency that amplifies exposure to external demand conditions and trading-partner policy changes' : 'a balanced trade structure that limits vulnerability to any single external market'}.`);
+    sec3.push(`Exports represent <strong>${exports_gdp.value.toFixed(1)}% of GDP</strong>, accounting for roughly <strong>${exportShare}%</strong> of total trade flows, ${exports_gdp.value > 30 ? 'a high export dependency that amplifies exposure to external demand conditions and trading-partner policy changes' : 'a balanced trade structure that limits vulnerability to any single external market'}.`);
   }
 
   if (ca?.value != null) {
@@ -856,9 +860,9 @@ function generateBriefContent(iso3) {
   }
 
   if (ca?.value != null && ca.value < -4) {
-    sec3.push(`Moreover, the sustained current account deficit creates a structural dependency on capital inflows that exposes ${name} to the risk of <strong>sudden stop events</strong> — periods of rapid capital outflow that can trigger sharp currency depreciation and financial instability.`);
+    sec3.push(`Moreover, the sustained current account deficit creates a structural dependency on capital inflows that exposes ${name} to the risk of <strong>sudden stop events</strong>, meaning periods of rapid capital outflow that can trigger sharp currency depreciation and financial instability.`);
   } else if (trade?.value != null && trade.value > 80) {
-    sec3.push(`Moreover, high trade openness amplifies ${name}'s exposure to external demand shocks, tariff escalation, and global supply chain disruption — risks that have become increasingly material in the current environment of geopolitical economic fragmentation.`);
+    sec3.push(`Moreover, high trade openness amplifies ${name}'s exposure to external demand shocks, tariff escalation, and global supply chain disruption, risks that have become increasingly material in the current environment of geopolitical economic fragmentation.`);
   }
 
   // ── Section 4 — Outlook & Key Risks ─────────────────────────────────────────
@@ -886,7 +890,7 @@ function generateBriefContent(iso3) {
   if (inf?.value  != null && inf.value  > 15)  risks.push({ tier: 3, label: 'hyperinflationary conditions',      detail: `inflation at <strong>${inf.value.toFixed(1)}%</strong>` });
   if (gv          != null && gv          < -2)  risks.push({ tier: 3, label: 'severe economic contraction',       detail: `GDP declining <strong>${Math.abs(gv).toFixed(1)}%</strong>` });
   if (une?.value  != null && une.value   > 20)  risks.push({ tier: 3, label: 'structural unemployment crisis',    detail: `<strong>${une.value.toFixed(1)}%</strong> unemployed` });
-  if (inf?.value  != null && inf.value   > 5 && inf.value <= 15) risks.push({ tier: 2, label: 'elevated inflation',          detail: `<strong>${inf.value.toFixed(1)}%</strong> — above price stability threshold` });
+  if (inf?.value  != null && inf.value   > 5 && inf.value <= 15) risks.push({ tier: 2, label: 'elevated inflation',          detail: `<strong>${inf.value.toFixed(1)}%</strong>, above the price stability threshold` });
   if (debt?.value != null && debt.value  > 100) risks.push({ tier: 2, label: 'high sovereign debt',              detail: `<strong>${debt.value.toFixed(0)}% of GDP</strong>` });
   if (fbal?.value != null && fbal.value  < -5)  risks.push({ tier: 2, label: 'a wide fiscal deficit',             detail: `<strong>${fbal.value.toFixed(1)}% of GDP</strong>` });
   if (ca?.value   != null && ca.value    < -4)  risks.push({ tier: 2, label: 'a persistent current account deficit', detail: `<strong>${ca.value.toFixed(1)}% of GDP</strong>` });
@@ -900,7 +904,7 @@ function generateBriefContent(iso3) {
     if (topRisks[2]) riskS += ` ${topRisks[2].label.charAt(0).toUpperCase() + topRisks[2].label.slice(1)} (${topRisks[2].detail}) adds a further layer of structural concern.`;
     sec4.push(riskS);
   } else if (topRisks.length === 1) {
-    sec4.push(`The primary near-term risk is ${topRisks[0].label} — ${topRisks[0].detail} — which, if unaddressed, could weigh on investment confidence and medium-term growth prospects.`);
+    sec4.push(`The primary near-term risk is ${topRisks[0].label}, ${topRisks[0].detail}, which, if unaddressed, could weigh on investment confidence and medium-term growth prospects.`);
   }
 
   if (rd?.value != null) {
@@ -922,12 +926,12 @@ function generateBriefContent(iso3) {
 
   if (gini?.value != null) {
     const giniAvg = g20Avg('GINI');
-    const giniPos = gini.value > 45 ? '<strong>severe income inequality</strong> — a structural challenge that constrains domestic consumption breadth, limits intergenerational mobility, and can undermine long-term social cohesion' :
+    const giniPos = gini.value > 45 ? '<strong>severe income inequality</strong>, a structural challenge that constrains domestic consumption breadth, limits intergenerational mobility, and can undermine long-term social cohesion' :
                     gini.value > 35 ? '<strong>moderate inequality</strong> that warrants sustained policy attention to ensure the benefits of growth are broadly shared' :
                                        'a <strong>relatively equitable income distribution</strong> that supports durable consumption-led growth';
-    let giniS = `Income inequality — a Gini coefficient of <strong>${gini.value.toFixed(1)}</strong>`;
+    let giniS = `Income inequality, measured by a Gini coefficient of <strong>${gini.value.toFixed(1)}</strong>`;
     if (giniAvg != null) giniS += ` against a G20 average of <strong>${giniAvg.toFixed(1)}</strong>`;
-    giniS += ` — reflects ${giniPos}.`;
+    giniS += `, reflects ${giniPos}.`;
     if (gini.value > 40) giniS += ` Unless ${name} actively addresses distributional imbalances through progressive fiscal policy and targeted social investment, high inequality will continue to limit the breadth and durability of economic expansion.`;
     sec4.push(giniS);
   }
@@ -935,9 +939,9 @@ function generateBriefContent(iso3) {
   if (life?.value != null) {
     const lifeRank = g20Rank('LIFE_EXPECT');
     let s = `Life expectancy of <strong>${life.value.toFixed(1)} years</strong>`;
-    if (lifeRank?.rank <= 5)  s += ' — among the highest in the G20 —';
-    else if (lifeRank?.rank > 15) s += ' — among the lowest in the G20 —';
-    s += ' reflects the cumulative outcomes of healthcare access, nutrition, and living standards — a key indicator of the quality of growth alongside its quantity.';
+    if (lifeRank?.rank <= 5)  s += ', among the highest in the G20,';
+    else if (lifeRank?.rank > 15) s += ', among the lowest in the G20,';
+    s += ' reflects the cumulative outcomes of healthcare access, nutrition, and living standards, a key indicator of the quality of growth alongside its quantity.';
     sec4.push(s);
   }
 
