@@ -774,6 +774,40 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
 .ai-risk-insulated     { background: rgba(59,130,246,.12);  color: #3b82f6; }
 .ai-risk-transitioning { background: rgba(245,158,11,.12);  color: #F59E0B; }
 
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.ai-editorial-placeholder { margin-bottom: 20px; }
+.ai-editorial-p { margin: 0 0 14px; line-height: 1.7; font-size: 13px; color: var(--text-2); }
+.ai-editorial-p:last-child { margin-bottom: 0; }
+.ai-editorial-sidebar { border-left: 1px solid var(--rule); padding-left: 20px; }
+.ai-editorial-sidebar__hd { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--text-4); margin-bottom: 10px; }
+.ai-editorial-sidebar__row { display: flex; justify-content: space-between; align-items: baseline;
+  padding: 5px 0; border-bottom: 1px solid rgba(0,0,0,.04); font-size: 12px; color: var(--text-2); }
+.ai-editorial-sidebar__score { font-family: var(--font-mono); font-size: 11px; color: var(--text-3); }
+
+.ai-driver-block, .ai-risk-block {
+  padding: 10px 12px; border-radius: 6px; font-size: 12.5px; line-height: 1.55; margin-bottom: 2px;
+}
+.ai-driver-block { background: rgba(4,120,87,0.06); border: 1px solid rgba(4,120,87,0.15); }
+.ai-risk-block   { background: rgba(161,98,7,0.06);  border: 1px solid rgba(161,98,7,0.15);  }
+.ai-driver-block__label { font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .06em; color: var(--pos); margin-bottom: 5px; }
+.ai-risk-block__label   { font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .06em; color: var(--warn); margin-bottom: 5px; }
+.ai-driver-block__text, .ai-risk-block__text { color: var(--text-2); line-height: 1.55; font-size: 12.5px; }
+
+.ai-reasons-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 5px; }
+.ai-reasons-list li { font-size: 12px; color: var(--text-2); line-height: 1.5;
+  padding-left: 14px; position: relative; }
+.ai-reasons-list li::before { content: '·'; position: absolute; left: 2px;
+  color: var(--text-4); font-weight: 700; }
+.ai-reasons-list--pos li::before { color: var(--pos); }
+.ai-reasons-label { font-family: var(--font-mono); font-size: 10px; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; margin-top: 14px; }
+
 .country-cell {
   display: flex;
   align-items: baseline;

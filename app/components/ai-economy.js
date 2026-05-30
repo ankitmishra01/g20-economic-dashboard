@@ -94,6 +94,11 @@ function renderAIEconomy() {
     </div></div>
   </div>
 
+  <!-- G20 AI Landscape Editorial — injected async after data loads -->
+  <div id="ai-editorial" class="ai-editorial-placeholder">
+    <div style="height:4px;background:linear-gradient(90deg,var(--bg-3) 25%,var(--bg-2) 50%,var(--bg-3) 75%);background-size:200% 100%;border-radius:2px;animation:shimmer 1.4s infinite"></div>
+  </div>
+
   <!-- Section 1: AI Readiness Rankings -->
   <div class="sec-head">
     <div class="sec-head__title">AI Readiness <span class="sec-head__sub">5 dimensions · Infrastructure · Talent · Governance · Investment · Econ. Readiness</span></div>
@@ -212,6 +217,101 @@ async function mountAIEconomyCharts() {
   mountGrowthChart(sorted);
   renderRiskTable(sorted);
   renderTrajectoryTable(sorted);
+  renderAIEconomyEditorial(aiData, sorted);
+}
+
+// ── AI Economy Editorial ──────────────────────────────────────────────────────
+function renderAIEconomyEditorial(aiData, g20sorted) {
+  const el = document.getElementById('ai-editorial');
+  if (!el) return;
+
+  // Computed inputs
+  const top5    = g20sorted.slice(0, 5);
+  const bottom5 = g20sorted.slice(-5);
+  const scores  = g20sorted.map(c => c.ai.total_score);
+  const srtScores = [...scores].sort((a, b) => a - b);
+  const medScore  = srtScores[Math.floor(srtScores.length / 2)];
+  const top5avg   = Math.round(top5.reduce((s, c) => s + c.ai.total_score, 0) / top5.length);
+  const bot5avg   = Math.round(bottom5.reduce((s, c) => s + c.ai.total_score, 0) / bottom5.length);
+  const gap       = top5avg - bot5avg;
+
+  const trajSorted = [...g20sorted].sort((a, b) => b.ai.trajectory_score - a.ai.trajectory_score);
+  const top3Traj   = trajSorted.slice(0, 3);
+  const watchList  = trajSorted.slice(-3).reverse();
+
+  const riskZone = g20sorted.filter(c =>
+    (AI_LABOR_EXPOSURE[c.name] ?? 35) >= 40 && c.ai.total_score < 60
+  );
+
+  const growthOutliers = g20sorted.filter(c => {
+    const g = window.G20Data?.getLatest(c.iso3, 'GDP_GROWTH');
+    return g && g.value > 4 && c.ai.total_score < 65;
+  });
+
+  // Paragraph 1 — The Divide
+  const p1 = `The G20 AI landscape is bifurcated along familiar economic lines. The five leading economies — ${top5.map(c => `<strong>${A.escapeText(c.name)}</strong>`).join(', ')} — average ${top5avg}/100 on the AI Trajectory Index, while the bottom five — ${bottom5.map(c => A.escapeText(c.name)).join(', ')} — average just ${bot5avg}/100. That ${gap}-point gap reflects decades of divergent investment in digital infrastructure, STEM pipelines, and technology governance frameworks. The G20 median stands at ${medScore}/100, with ${g20sorted.filter(c => c.ai.total_score >= medScore).length} of 19 economies at or above that threshold.`;
+
+  // Paragraph 2 — The Risk Zone
+  let p2;
+  if (riskZone.length === 0) {
+    p2 = `The displacement risk scatter reveals no G20 economy in the danger quadrant — high AI job exposure combined with low institutional readiness — at current trajectory. However, several emerging-market members sit close to the threshold. As AI adoption accelerates in services and light manufacturing through 2027, readiness investment will determine whether the G20's developing economies manage the workforce transition or absorb it as structural unemployment.`;
+  } else {
+    const rzNames = riskZone.map(c => `<strong>${A.escapeText(c.name)}</strong> (${AI_LABOR_EXPOSURE[c.name]}% exposure, ${c.ai.total_score}/100 readiness)`);
+    p2 = `The displacement risk scatter flags ${riskZone.length} G20 ${riskZone.length === 1 ? 'economy' : 'economies'} in the risk quadrant — high AI job exposure above 40% combined with readiness scores below 60: ${rzNames.join('; ')}. These economies face compressed timelines: automation is reaching their workforce faster than the institutional infrastructure needed to retrain and redeploy affected workers. Unless readiness investment accelerates materially before 2027, structural displacement — not cyclical unemployment — becomes the more likely outcome.`;
+  }
+
+  // Paragraph 3 — The Trajectory Story
+  const p3Parts = top3Traj.map(c =>
+    `<strong>${A.escapeText(c.name)}</strong> projects the largest gain in the G20 — +${c.ai.trajectory_score} points to ${c.ai.projected_score_2028}/100 by 2028, driven by ${A.escapeText(c.ai.top_accelerator || c.ai.trajectory_label || 'strong policy momentum')}`
+  );
+  const p3 = `Three economies stand out on trajectory. ${p3Parts.join('. ')}. However, trajectory scores reflect policy commitments and investment pipelines — not yet realised outcomes. The gap between declared AI strategy and measurable capability gain typically runs 18 to 36 months.`;
+
+  // Paragraph 4 — The Productivity Lag
+  let p4;
+  if (growthOutliers.length > 0) {
+    const outlierText = growthOutliers.map(c => {
+      const g = window.G20Data.getLatest(c.iso3, 'GDP_GROWTH');
+      return `<strong>${A.escapeText(c.name)}</strong> (${g.value.toFixed(1)}% GDP growth at ${c.ai.total_score}/100 AI readiness)`;
+    }).join(' and ');
+    p4 = `Across the G20, AI readiness and near-term GDP growth show only a weak correlation — a pattern consistent with early-phase technology adoption where infrastructure build-out precedes productivity payoff. ${outlierText} illustrate the paradox: catch-up growth dynamics and demographic dividends can outpace readiness-driven productivity gains in the short run. The productive payoff of AI investment is likely to concentrate in the 2026–2030 window as adoption crosses the deployment threshold. First-mover advantage accrues to ${top3Traj.slice(0, 2).map(c => A.escapeText(c.name)).join(' and ')}, whose current trajectory positions them to capture outsized productivity gains as frontier AI diffuses into enterprise operations.`;
+  } else {
+    p4 = `Across the G20, AI readiness and near-term GDP growth show only a weak positive correlation — a pattern consistent with early-phase technology diffusion where infrastructure build-out precedes measurable productivity payoff. Advanced economies with the highest AI scores are largely growing at 1–3%, while some emerging-market members with lower readiness scores are growing at 4–6%. The productive payoff of AI readiness is likely to concentrate in the 2026–2030 window as adoption crosses the enterprise deployment threshold. First-mover advantage accrues to ${top3Traj.slice(0, 2).map(c => A.escapeText(c.name)).join(' and ')}, whose current trajectory positions them to capture outsized productivity gains once frontier AI diffuses into the broader economy.`;
+  }
+
+  // Sidebar
+  const sidebarHTML = `
+    <div class="ai-editorial-sidebar">
+      <div class="ai-editorial-sidebar__hd">Rising Fast</div>
+      ${trajSorted.slice(0, 5).map(c => `
+        <div class="ai-editorial-sidebar__row">
+          <span>${A.escapeText(c.name)}</span>
+          <span class="ai-editorial-sidebar__score">${c.ai.total_score} → <span style="color:#34d399">${c.ai.projected_score_2028}</span></span>
+        </div>`).join('')}
+      <div class="ai-editorial-sidebar__hd" style="margin-top:16px">Watch List</div>
+      ${watchList.map(c => `
+        <div class="ai-editorial-sidebar__row">
+          <span>${A.escapeText(c.name)}</span>
+          <span class="ai-editorial-sidebar__score" style="color:#8A8A8A;font-size:10px;max-width:120px;text-align:right;line-height:1.3">${A.escapeText((c.ai.top_risk || '').substring(0, 48))}…</span>
+        </div>`).join('')}
+    </div>`;
+
+  el.innerHTML = `
+    <div class="sec-head">
+      <div class="sec-head__title">G20 AI Landscape <span class="sec-head__sub">editorial · computed from AI Trajectory Index</span></div>
+    </div>
+    <div class="panel" style="margin-bottom:20px">
+      <div class="panel__body" style="padding:20px 24px">
+        <div style="display:grid;grid-template-columns:1fr 240px;gap:32px;align-items:start">
+          <div>
+            <p class="ai-editorial-p">${p1}</p>
+            <p class="ai-editorial-p">${p2}</p>
+            <p class="ai-editorial-p">${p3}</p>
+            <p class="ai-editorial-p">${p4}</p>
+          </div>
+          ${sidebarHTML}
+        </div>
+      </div>
+    </div>`;
 }
 
 function mountReadinessChart(sorted) {

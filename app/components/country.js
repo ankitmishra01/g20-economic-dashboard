@@ -1150,67 +1150,127 @@ window.mountCountryProfileCharts = function(iso3) {
 };
 
 // ── AI Outlook card (powered by AI Trajectory Index) ─────────────────────────
+// Emits placeholder shell; content injected async by mountAIOutlookCard()
 function renderAIOutlookCard(countryName) {
-  const ai = window._aiTrajectoryData?.[countryName];
-  if (!ai) return ''; // not yet loaded or not a G20 country
-
-  const dims = ['infrastructure','talent','governance','investment','economic_readiness'];
-  const dimLabels = { infrastructure:'Infra', talent:'Talent', governance:'Gov', investment:'Invest', economic_readiness:'Econ' };
-  const scores = dims.map(d => ai.scores[d]?.score ?? 0);
-  const maxDim = dims[scores.indexOf(Math.max(...scores))];
-  const minDim = dims[scores.indexOf(Math.min(...scores))];
-  const gain = ai.projected_score_2028 - ai.total_score;
-  const trajArrow = gain > 3 ? '↑' : gain < -1 ? '↓' : '→';
-  const trajCls   = gain > 3 ? 'v-pos' : gain < -1 ? 'v-neg' : '';
-  const maxScore = 20;
-
+  const iso3 = window.G20?.find(c => c.name === countryName)?.iso3 || 'XX';
   return `
   <div class="sec-head" style="margin-top:4px">
     <div class="sec-head__title">AI Outlook
       <span class="sec-head__sub">AI Trajectory Index · 5 dimensions</span>
     </div>
     <div class="sec-head__actions">
-      <a href="https://ai-trajectory-index.vercel.app/countries/${ai.slug}" target="_blank" rel="noopener"
-         class="sec-head__tab" style="text-decoration:none;font-size:11px">Full report ↗</a>
+      <a href="https://ai-trajectory-index.vercel.app" target="_blank" rel="noopener"
+         class="sec-head__tab" style="text-decoration:none;font-size:11px" id="ai-outlook-link-${iso3}">Full Index ↗</a>
     </div>
   </div>
-  <div class="panel" style="margin-bottom:20px">
-    <div class="panel__body" style="padding:16px 20px">
-      <div style="display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:start">
-
-        <div style="min-width:140px">
-          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-3);margin-bottom:6px">TOTAL SCORE</div>
-          <div style="font-size:2.4rem;font-weight:700;line-height:1;color:var(--ink)">${ai.total_score}</div>
-          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-4)">/100</div>
-          <div style="margin-top:10px;font-size:11px;color:var(--text-2)">
-            <span class="${trajCls}" style="font-size:1.1em">${trajArrow}</span>
-            <span style="font-family:var(--font-mono)">${ai.projected_score_2028}</span>
-            <span style="color:var(--text-4)"> by 2028</span>
-          </div>
-          <div style="margin-top:8px;font-size:11px;color:var(--text-3)">
-            Strength: <span style="color:var(--text-2)">${dimLabels[maxDim]}</span>
-          </div>
-          <div style="font-size:11px;color:var(--text-3)">
-            Gap: <span style="color:var(--text-2)">${dimLabels[minDim]}</span>
-          </div>
-        </div>
-
-        <div>
-          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-3);margin-bottom:10px">DIMENSION BREAKDOWN</div>
-          ${dims.map((d, i) => `
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:7px">
-            <div style="width:80px;font-family:var(--font-mono);font-size:10px;color:var(--text-3);flex-shrink:0">${dimLabels[d]}</div>
-            <div style="flex:1;height:6px;background:var(--bg-2);border-radius:3px;overflow:hidden">
-              <div style="height:100%;width:${(scores[i]/maxScore*100).toFixed(0)}%;background:var(--ink);border-radius:3px;opacity:.8"></div>
-            </div>
-            <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-2);width:28px;text-align:right">${scores[i]}/20</div>
-          </div>`).join('')}
-        </div>
-
-      </div>
+  <div id="ai-outlook-${iso3}" class="panel" style="margin-bottom:20px">
+    <div class="panel__body" style="padding:16px 20px;display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:11px;color:var(--text-4)">
+      <div class="spinner" style="width:14px;height:14px;flex-shrink:0"></div>
+      Loading AI Outlook…
     </div>
   </div>`;
 }
+
+// ── Async AI Outlook content ──────────────────────────────────────────────────
+function buildAIOutlookHTML(ai) {
+  const dims = ['infrastructure','talent','governance','investment','economic_readiness'];
+  const dimLabels = { infrastructure:'Infra', talent:'Talent', governance:'Gov', investment:'Invest', economic_readiness:'Econ' };
+  const dimFull   = { infrastructure:'Infrastructure', talent:'Talent', governance:'Governance', investment:'Investment', economic_readiness:'Economic Readiness' };
+  const scores    = dims.map(d => ai.scores[d]?.score ?? 0);
+  const maxIdx    = scores.indexOf(Math.max(...scores));
+  const minIdx    = scores.indexOf(Math.min(...scores));
+  const maxDim    = dims[maxIdx];
+  const minDim    = dims[minIdx];
+  const gain      = ai.projected_score_2028 - ai.total_score;
+  const trajArrow = gain > 3 ? '↑' : gain < -1 ? '↓' : '→';
+  const trajCls   = gain > 3 ? 'v-pos' : gain < -1 ? 'v-neg' : '';
+
+  const barsHTML = dims.map((d, i) => `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:7px">
+      <div style="width:80px;font-family:var(--font-mono);font-size:10px;color:var(--text-3);flex-shrink:0">${dimLabels[d]}</div>
+      <div style="flex:1;height:6px;background:var(--bg-2);border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${(scores[i]/20*100).toFixed(0)}%;background:var(--ink);border-radius:3px;opacity:.8"></div>
+      </div>
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-2);width:28px;text-align:right">${scores[i]}/20</div>
+    </div>`).join('');
+
+  const maxReasons = (ai.scores[maxDim]?.reasons || []).map(r => `<li>${A.escapeText(r)}</li>`).join('');
+  const minReasons = (ai.scores[minDim]?.reasons || []).map(r => `<li>${A.escapeText(r)}</li>`).join('');
+
+  return `<div class="panel__body" style="padding:16px 20px">
+    <!-- Scoreboard -->
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:start;margin-bottom:16px">
+      <div style="min-width:140px">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-3);margin-bottom:6px">TOTAL SCORE</div>
+        <div style="font-size:2.4rem;font-weight:700;line-height:1;color:var(--ink)">${ai.total_score}</div>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-4)">/100</div>
+        <div style="margin-top:10px;font-size:11px;color:var(--text-2)">
+          <span class="${trajCls}" style="font-size:1.1em">${trajArrow}</span>
+          <span style="font-family:var(--font-mono)">${ai.projected_score_2028}</span>
+          <span style="color:var(--text-4)"> by 2028</span>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--text-3)">
+          Strength: <span style="color:var(--text-2)">${dimLabels[maxDim]}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-3)">
+          Gap: <span style="color:var(--text-2)">${dimLabels[minDim]}</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-3);margin-bottom:10px">DIMENSION BREAKDOWN</div>
+        ${barsHTML}
+      </div>
+    </div>
+
+    <!-- Narrative section -->
+    <div style="border-top:1px solid var(--rule);padding-top:16px;display:flex;flex-direction:column;gap:12px">
+
+      <div class="ai-driver-block">
+        <div class="ai-driver-block__label">&#x2B06; Key driver</div>
+        <div class="ai-driver-block__text">${A.escapeText(ai.top_accelerator || '—')}</div>
+      </div>
+
+      <div class="ai-risk-block">
+        <div class="ai-risk-block__label">&#x26A0; Key risk</div>
+        <div class="ai-risk-block__text">${A.escapeText(ai.top_risk || '—')}</div>
+      </div>
+
+      ${maxReasons ? `
+      <div>
+        <div class="ai-reasons-label">Why ${A.escapeText(dimFull[maxDim])} leads</div>
+        <ul class="ai-reasons-list ai-reasons-list--pos">${maxReasons}</ul>
+      </div>` : ''}
+
+      ${minReasons ? `
+      <div>
+        <div class="ai-reasons-label">Why ${A.escapeText(dimFull[minDim])} is the gap</div>
+        <ul class="ai-reasons-list">${minReasons}</ul>
+      </div>` : ''}
+
+    </div>
+  </div>`;
+}
+
+async function mountAIOutlookCard(iso3) {
+  const el = document.getElementById('ai-outlook-' + iso3);
+  if (!el) return;
+  try {
+    const aiData = await loadAITrajectoryData();
+    const country = window.G20?.find(c => c.iso3 === iso3);
+    const ai = country ? aiData[country.name] : null;
+    if (!ai) {
+      el.innerHTML = '<div class="panel__body" style="padding:16px 20px;font-size:12px;color:var(--text-4)">AI Trajectory data not available for this economy.</div>';
+      return;
+    }
+    // Upgrade the header link to the per-country page
+    const linkEl = document.getElementById('ai-outlook-link-' + iso3);
+    if (linkEl && ai.slug) linkEl.href = `https://ai-trajectory-index.vercel.app/countries/${ai.slug}`;
+    el.innerHTML = buildAIOutlookHTML(ai);
+  } catch (e) {
+    el.innerHTML = '<div class="panel__body" style="padding:16px 20px;font-size:12px;color:var(--text-4)">Could not load AI Trajectory data.</div>';
+  }
+}
+window.mountAIOutlookCard = mountAIOutlookCard;
 
 // ── Utility ───────────────────────────────────────────────────────────────────
 function median(arr) {

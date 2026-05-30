@@ -269,6 +269,10 @@
     if (page === 'prosperity')  mountProsperityChart();
     if (page === 'ai-economy')  mountAIEconomyCharts();
     if (page === 'compare')     mountCompareCharts();
-    if (page.startsWith('country/')) window.mountCountryProfileCharts(page.split('/')[1]);
+    if (page.startsWith('country/')) {
+      const iso3 = page.split('/')[1];
+      window.mountCountryProfileCharts(iso3);
+      if (window.mountAIOutlookCard) window.mountAIOutlookCard(iso3);
+    }
   }
 })();
