@@ -148,6 +148,8 @@ function renderCountryProfile(iso3) {
     ${renderStanding(iso3)}
   </div>
 
+  ${renderAIOutlookCard(country.name)}
+
   <button class="back-btn" onclick="navTo('countries')" style="margin-bottom:24px">
     ← Back to all countries
   </button>
@@ -1146,6 +1148,69 @@ window.mountCountryProfileCharts = function(iso3) {
   }
   tryMount();
 };
+
+// ── AI Outlook card (powered by AI Trajectory Index) ─────────────────────────
+function renderAIOutlookCard(countryName) {
+  const ai = window._aiTrajectoryData?.[countryName];
+  if (!ai) return ''; // not yet loaded or not a G20 country
+
+  const dims = ['infrastructure','talent','governance','investment','economic_readiness'];
+  const dimLabels = { infrastructure:'Infra', talent:'Talent', governance:'Gov', investment:'Invest', economic_readiness:'Econ' };
+  const scores = dims.map(d => ai.scores[d]?.score ?? 0);
+  const maxDim = dims[scores.indexOf(Math.max(...scores))];
+  const minDim = dims[scores.indexOf(Math.min(...scores))];
+  const gain = ai.projected_score_2028 - ai.total_score;
+  const trajArrow = gain > 3 ? '↑' : gain < -1 ? '↓' : '→';
+  const trajCls   = gain > 3 ? 'v-pos' : gain < -1 ? 'v-neg' : '';
+  const maxScore = 20;
+
+  return `
+  <div class="sec-head" style="margin-top:4px">
+    <div class="sec-head__title">AI Outlook
+      <span class="sec-head__sub">AI Trajectory Index · 5 dimensions</span>
+    </div>
+    <div class="sec-head__actions">
+      <a href="https://ai-trajectory-index.vercel.app/countries/${ai.slug}" target="_blank" rel="noopener"
+         class="sec-head__tab" style="text-decoration:none;font-size:11px">Full report ↗</a>
+    </div>
+  </div>
+  <div class="panel" style="margin-bottom:20px">
+    <div class="panel__body" style="padding:16px 20px">
+      <div style="display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:start">
+
+        <div style="min-width:140px">
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-3);margin-bottom:6px">TOTAL SCORE</div>
+          <div style="font-size:2.4rem;font-weight:700;line-height:1;color:var(--ink)">${ai.total_score}</div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-4)">/100</div>
+          <div style="margin-top:10px;font-size:11px;color:var(--text-2)">
+            <span class="${trajCls}" style="font-size:1.1em">${trajArrow}</span>
+            <span style="font-family:var(--font-mono)">${ai.projected_score_2028}</span>
+            <span style="color:var(--text-4)"> by 2028</span>
+          </div>
+          <div style="margin-top:8px;font-size:11px;color:var(--text-3)">
+            Strength: <span style="color:var(--text-2)">${dimLabels[maxDim]}</span>
+          </div>
+          <div style="font-size:11px;color:var(--text-3)">
+            Gap: <span style="color:var(--text-2)">${dimLabels[minDim]}</span>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-3);margin-bottom:10px">DIMENSION BREAKDOWN</div>
+          ${dims.map((d, i) => `
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:7px">
+            <div style="width:80px;font-family:var(--font-mono);font-size:10px;color:var(--text-3);flex-shrink:0">${dimLabels[d]}</div>
+            <div style="flex:1;height:6px;background:var(--bg-2);border-radius:3px;overflow:hidden">
+              <div style="height:100%;width:${(scores[i]/maxScore*100).toFixed(0)}%;background:var(--ink);border-radius:3px;opacity:.8"></div>
+            </div>
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-2);width:28px;text-align:right">${scores[i]}/20</div>
+          </div>`).join('')}
+        </div>
+
+      </div>
+    </div>
+  </div>`;
+}
 
 // ── Utility ───────────────────────────────────────────────────────────────────
 function median(arr) {

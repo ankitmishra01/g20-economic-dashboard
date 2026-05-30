@@ -44,7 +44,7 @@
         return;
       }
       if (e.metaKey || e.ctrlKey || e.altKey) return;
-      const shortcuts = { 'o': 'overview', 'c': 'countries', 'r': 'prosperity', 'p': 'compare', 'f': 'flags', 'n': 'news' };
+      const shortcuts = { 'o': 'overview', 'c': 'countries', 'r': 'prosperity', 'a': 'ai-economy', 'p': 'compare', 'f': 'flags', 'n': 'news' };
       const target = shortcuts[e.key.toLowerCase()];
       if (target) navTo(target);
     });
@@ -78,11 +78,13 @@
 
   function navIcon(icon) {
     const icons = {
-      home:   '<rect x="2" y="2" width="5" height="6" rx="0.6"/><rect x="9" y="2" width="5" height="9" rx="0.6"/><rect x="2" y="10" width="5" height="4" rx="0.6"/><rect x="9" y="13" width="5" height="1" rx="0.5"/>',
-      users:  '<circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c2 2 2 10 0 12M8 2c-2 2-2 10 0 12"/>',
-      chart:  '<path d="M3 13V5l3-2v10M9 13V3l3 2v8M2 13h12"/>',
-      flag:   '<path d="M3 14V3l8 2v5l-8-2"/>',
-      inbox:  '<rect x="2" y="3" width="12" height="10" rx="1"/><path d="M2 6h12M5 9h6M5 11h4"/>',
+      home:     '<rect x="2" y="2" width="5" height="6" rx="0.6"/><rect x="9" y="2" width="5" height="9" rx="0.6"/><rect x="2" y="10" width="5" height="4" rx="0.6"/><rect x="9" y="13" width="5" height="1" rx="0.5"/>',
+      users:    '<circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c2 2 2 10 0 12M8 2c-2 2-2 10 0 12"/>',
+      chart:    '<path d="M3 13V5l3-2v10M9 13V3l3 2v8M2 13h12"/>',
+      flag:     '<path d="M3 14V3l8 2v5l-8-2"/>',
+      inbox:    '<rect x="2" y="3" width="12" height="10" rx="1"/><path d="M2 6h12M5 9h6M5 11h4"/>',
+      globe:    '<circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c0 4 2 6 0 12M8 2c0 4-2 6 0 12"/>',
+      sparkles: '<path d="M8 1l1.5 4L14 6.5 9.5 8 8 12 6.5 8 2 6.5 6.5 5z"/><path d="M13 1l.8 2 2 .8-2 .8L13 7l-.8-2.4-2-.8 2-.8z"/>',
     };
     return icons[icon] || icons.home;
   }
@@ -120,6 +122,7 @@
         case 'overview':    root.innerHTML = renderOverview();     break;
         case 'countries':   root.innerHTML = renderCountries();   break;
         case 'prosperity':  root.innerHTML = renderProsperity();  break;
+        case 'ai-economy':  root.innerHTML = renderAIEconomy();   break;
         case 'compare':     root.innerHTML = renderCompare();     break;
         case 'flags':       root.innerHTML = renderFlags();       break;
         case 'news':        renderNewsPage(root);                 break;
@@ -264,6 +267,7 @@
   function mountPageCharts(page) {
     if (page === 'overview')    mountOverviewCharts();
     if (page === 'prosperity')  mountProsperityChart();
+    if (page === 'ai-economy')  mountAIEconomyCharts();
     if (page === 'compare')     mountCompareCharts();
     if (page.startsWith('country/')) window.mountCountryProfileCharts(page.split('/')[1]);
   }

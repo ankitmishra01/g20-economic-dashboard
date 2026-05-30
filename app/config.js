@@ -68,8 +68,9 @@ const FLAGS_CONFIG = {
 const NAV_ITEMS = [
   { id: 'overview',   label: 'Overview',         icon: 'home',   key: 'O' },
   { id: 'countries',  label: 'Countries',        icon: 'users',  key: 'C' },
-  { id: 'prosperity', label: 'Prosperity',       icon: 'globe',  key: 'R' },
-  { id: 'compare',    label: 'Compare',          icon: 'chart',  key: 'P' },
+  { id: 'prosperity', label: 'Prosperity',       icon: 'globe',     key: 'R' },
+  { id: 'ai-economy', label: 'AI Economy',       icon: 'sparkles', key: 'A' },
+  { id: 'compare',    label: 'Compare',          icon: 'chart',     key: 'P' },
   { id: 'flags',      label: 'Risk flags',       icon: 'flag',   key: 'F' },
   { id: 'news',       label: 'News',             icon: 'inbox',  key: 'N' },
 ];
