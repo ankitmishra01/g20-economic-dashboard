@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" id="html-root">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,6 +12,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="styles/main.css">
+
+  <!-- Apply saved theme before paint to avoid flash -->
+  <script>if(localStorage.getItem('g20-theme')==='dark')document.getElementById('html-root').setAttribute('data-theme','dark');</script>
 
   <!-- Config must load before everything -->
   <script src="config.js"></script>
@@ -46,6 +49,17 @@
     <div class="rail__spacer"></div>
 
     <div class="rail__foot">
+      <button class="dark-toggle" id="dark-toggle" onclick="toggleDarkMode()" title="Toggle dark mode" aria-label="Toggle dark mode">
+        <!-- Sun (shown in light mode) -->
+        <svg class="dark-toggle__icon dark-toggle__icon--sun" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
+          <circle cx="8" cy="8" r="3.2"/>
+          <path d="M8 1.5V3M8 13v1.5M1.5 8H3M13 8h1.5M3.5 3.5l1 1M11.5 11.5l1 1M11.5 3.5l1-1M3.5 11.5l-1 1"/>
+        </svg>
+        <!-- Moon (shown in dark mode) -->
+        <svg class="dark-toggle__icon dark-toggle__icon--moon" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
+          <path d="M13 9.5A6 6 0 016.5 3 6 6 0 100 13a6 6 0 006.5-3.5z"/>
+        </svg>
+      </button>
       <div class="rail__userbox">
         <div class="rail__avatar">G20</div>
         <div>
@@ -56,11 +70,19 @@
     </div>
   </aside>
 
+  <!-- Mobile rail backdrop -->
+  <div class="rail-backdrop" id="rail-backdrop" onclick="toggleMobileMenu()"></div>
+
   <!-- ── Main column ────────────────────────────────────────────────────────── -->
   <div class="main-col" id="main-col">
 
     <!-- Command bar -->
     <header class="cmdbar" id="cmdbar">
+      <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Open menu">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M2 4h12M2 8h12M2 12h12"/>
+        </svg>
+      </button>
       <div class="crumbs" id="crumbs">
         <span>Monitor</span>
         <span class="sep">/</span>

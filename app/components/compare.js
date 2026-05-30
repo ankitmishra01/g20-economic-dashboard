@@ -123,10 +123,21 @@ function mountCompareCharts() {
     const container = document.getElementById('compare-charts');
     if (container) container.innerHTML = `
       <div class="panel" style="margin-top:16px">
-        <div class="panel__body" style="padding:40px;text-align:center;font-family:var(--font-mono);font-size:12px;color:var(--text-4)">
-          No data available for <strong style="color:var(--text-2)">${A.escapeText(meta?.label || indicator)}</strong>
-          across the selected economies.<br>
-          <span style="font-size:11px;margin-top:6px;display:inline-block">Try GDP Growth, Inflation, Unemployment, or GDP.</span>
+        <div class="panel__body" style="padding:52px 24px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-4)" stroke-width="1.2" stroke-linecap="round">
+            <path d="M3 20V14l4-4 4 4 4-6 4 4v8H3z"/>
+            <circle cx="19" cy="5" r="2.5" stroke="var(--neg)" stroke-width="1.4"/>
+            <path d="M17.5 5h3M19 3.5v3" stroke="var(--neg)" stroke-width="1.4"/>
+          </svg>
+          <div>
+            <div style="font-family:var(--font-mono);font-size:12px;color:var(--text-2);font-weight:600;margin-bottom:6px">
+              No data for ${A.escapeText(meta?.label || indicator)}
+            </div>
+            <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-4);line-height:1.6">
+              Coverage is limited for this indicator across the selected economies.<br>
+              Try <strong style="color:var(--text-3)">GDP Growth</strong>, <strong style="color:var(--text-3)">Inflation</strong>, or <strong style="color:var(--text-3)">Unemployment</strong> for full G20 data.
+            </div>
+          </div>
         </div>
       </div>`;
     return;

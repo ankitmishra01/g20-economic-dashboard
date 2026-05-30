@@ -381,8 +381,9 @@ function renderKPITiles(totalGDP, medianGrowth, medianInf, expanding, total, deb
     const sparkHtml = t.series && t.series.length > 1
       ? tileSpark(t.series, 200, 30, t.cls)
       : '';
+    const accentCls = t.cls === 'pos' ? 'kpi-pos' : t.cls === 'neg' ? 'kpi-neg' : '';
     return `
-    <div class="kpi-tile">
+    <div class="kpi-tile${accentCls ? ' ' + accentCls : ''}">
       <div class="kpi-tile__head">
         <span class="kpi-tile__lbl">${t.lbl}</span>
       </div>

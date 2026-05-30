@@ -4,11 +4,48 @@
   let _currentPage = 'overview';
   let _dataLoaded = false;
 
+  // ── Dark mode ──────────────────────────────────────────────────────────────
+  window.toggleDarkMode = function () {
+    const html = document.getElementById('html-root');
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    if (isDark) {
+      html.removeAttribute('data-theme');
+      localStorage.removeItem('g20-theme');
+    } else {
+      html.setAttribute('data-theme', 'dark');
+      localStorage.setItem('g20-theme', 'dark');
+    }
+  };
+
+  // ── Mobile menu ────────────────────────────────────────────────────────────
+  window.toggleMobileMenu = function () {
+    const rail = document.getElementById('rail');
+    const backdrop = document.getElementById('rail-backdrop');
+    const isOpen = rail.classList.toggle('open');
+    backdrop.classList.toggle('open', isOpen);
+  };
+
   // ── Boot ──────────────────────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', async () => {
     renderRail();
     updateLiveClock();
     setInterval(updateLiveClock, 60000);
+
+    // Show skeleton while data loads
+    const root = document.getElementById('page-root');
+    root.innerHTML = `
+      <div style="padding:24px">
+        <div class="skel skel-hero"></div>
+        <div class="skel-row">
+          <div class="skel skel-tile"></div>
+          <div class="skel skel-tile"></div>
+          <div class="skel skel-tile"></div>
+          <div class="skel skel-tile"></div>
+          <div class="skel skel-tile"></div>
+        </div>
+        <div class="skel skel-panel"></div>
+        <div class="skel skel-panel" style="height:200px"></div>
+      </div>`;
 
     try {
       await window.G20Data.loadAllData();
@@ -93,6 +130,14 @@
   window.navTo = function navTo(page) {
     const isCountry = page.startsWith('country/');
     const navPage = isCountry ? null : page;
+
+    // Close mobile rail on navigation
+    const rail = document.getElementById('rail');
+    const backdrop = document.getElementById('rail-backdrop');
+    if (rail && rail.classList.contains('open')) {
+      rail.classList.remove('open');
+      backdrop && backdrop.classList.remove('open');
+    }
 
     // Update rail active state
     document.querySelectorAll('.rail__item').forEach(el => {
