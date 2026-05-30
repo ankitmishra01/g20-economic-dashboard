@@ -5,6 +5,10 @@ let _compareState = {
   indicator: 'GDP_GROWTH',
 };
 
+// Track active chart instances so we can destroy them before re-creating
+let _lineChartInst = null;
+let _barChartInst  = null;
+
 // Indicators with sparse or no data in Supabase — shown dimmed in the selector
 const SPARSE_INDICATORS = new Set(['GINI','RESEARCHERS','FISCAL_BAL','TAX_REVENUE','EDUC_EXP']);
 
@@ -89,6 +93,18 @@ function renderCompareChartHTML() {
 function mountCompareCharts() {
   if (!window.Chart) { setTimeout(mountCompareCharts, 200); return; }
 
+  // Register datalabels plugin once, before any chart is created this call.
+  // ChartDataLabels 2.x + Chart.js 4.x: global registration must happen before
+  // chart construction so beforeInit runs and initialises chart.$datalabels.
+  // Without this, the plugin's beforeUpdate fires on uninitialised charts and
+  // silently prevents bar animation, leaving bars stuck at the baseline.
+  if (window.ChartDataLabels) Chart.register(window.ChartDataLabels);
+
+  // Destroy previous instances so Chart.js doesn't throw "Canvas already in use"
+  // when filter changes re-create canvases with the same IDs.
+  if (_lineChartInst) { try { _lineChartInst.destroy(); } catch(_) {} _lineChartInst = null; }
+  if (_barChartInst)  { try { _barChartInst.destroy();  } catch(_) {} _barChartInst  = null; }
+
   const { selected, indicator } = _compareState;
   const countries = selected.map(iso3 => G20.find(c => c.iso3 === iso3)).filter(Boolean);
   const meta = INDICATORS[indicator];
@@ -135,7 +151,7 @@ function mountCompareCharts() {
 
   const lineEl = document.getElementById('compare-line-chart');
   if (lineEl) {
-    new Chart(lineEl.getContext('2d'), {
+    _lineChartInst = new Chart(lineEl.getContext('2d'), {
       type: 'line',
       data: {
         labels: years,
@@ -219,10 +235,7 @@ function mountCompareCharts() {
       });
     }
 
-    // Register datalabels plugin if available
-    if (window.ChartDataLabels) Chart.register(window.ChartDataLabels);
-
-    new Chart(barEl.getContext('2d'), {
+    _barChartInst = new Chart(barEl.getContext('2d'), {
       type: 'bar',
       data: {
         labels: latest.map(d => d.name),
@@ -231,6 +244,7 @@ function mountCompareCharts() {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        animation: false,
         layout: { padding: { top: 24 } },
         plugins: {
           legend: {
@@ -289,6 +303,9 @@ window.compareSetIndicator = function (key, btn) {
   _compareState.indicator = key;
   document.querySelectorAll('[onclick^="compareSetIndicator"]').forEach(el => el.classList.remove('active'));
   btn.classList.add('active');
+  // Keep the panel meta label in sync with the selected indicator
+  const metaEl = document.querySelector('.panel__head .panel__meta');
+  if (metaEl) metaEl.textContent = INDICATORS[key]?.label || key;
   const charts = document.getElementById('compare-charts');
   if (charts) {
     charts.innerHTML = renderCompareChartHTML();
