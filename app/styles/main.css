@@ -742,6 +742,21 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
 .col-name { text-align: left !important; font-family: var(--font-sans) !important; }
 .col-spark { text-align: left !important; width: 96px; }
 
+.risk-pill {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  padding: 2px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.risk-stable   { background: rgba(52,211,153,.12); color: #34d399; }
+.risk-watch    { background: rgba(251,191,36,.12);  color: #FBBF24; }
+.risk-elevated { background: rgba(251,146,60,.12);  color: #FB923C; }
+.risk-high     { background: rgba(248,113,113,.15); color: #F87171; }
+
 .country-cell {
   display: flex;
   align-items: baseline;

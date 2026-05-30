@@ -217,6 +217,7 @@ function renderOverview() {
           <th>Unemp.</th>
           <th>Debt / GDP</th>
           <th>C/A · % GDP</th>
+          <th>Risk</th>
           <th class="col-spark">10y GDP</th>
         </tr>
       </thead>
@@ -474,6 +475,7 @@ function renderRankingRows(rows) {
       <td>${unemp?.value !== undefined ? unemp.value.toFixed(1) + '%' : '—'}</td>
       <td class="${debtCls}">${dv !== undefined ? dv.toFixed(0) + '%' : '—'}</td>
       <td class="${caCls}">${cav !== undefined ? A.fmtSignedPct(cav).slice(0, -1) : '—'}</td>
+      <td>${window.computeRiskScore ? (() => { const r = window.computeRiskScore(c.iso3); return `<span class="risk-pill ${r.labelCls}" title="${r.signals.join(', ')}">${r.label}</span>`; })() : '—'}</td>
       <td class="col-spark">${sparkSVG(gdpSeries, 86, 22)}</td>
     </tr>`;
   }).join('');

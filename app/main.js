@@ -44,7 +44,7 @@
         return;
       }
       if (e.metaKey || e.ctrlKey || e.altKey) return;
-      const shortcuts = { 'o': 'overview', 'c': 'countries', 'p': 'compare', 'f': 'flags', 'n': 'news' };
+      const shortcuts = { 'o': 'overview', 'c': 'countries', 'r': 'prosperity', 'p': 'compare', 'f': 'flags', 'n': 'news' };
       const target = shortcuts[e.key.toLowerCase()];
       if (target) navTo(target);
     });
@@ -117,12 +117,13 @@
       root.innerHTML = renderCountryProfile(iso3);
     } else {
       switch (page) {
-        case 'overview':  root.innerHTML = renderOverview();  break;
-        case 'countries': root.innerHTML = renderCountries(); break;
-        case 'compare':   root.innerHTML = renderCompare();   break;
-        case 'flags':     root.innerHTML = renderFlags();     break;
-        case 'news':      renderNewsPage(root);               break;
-        default:          root.innerHTML = renderOverview();
+        case 'overview':    root.innerHTML = renderOverview();     break;
+        case 'countries':   root.innerHTML = renderCountries();   break;
+        case 'prosperity':  root.innerHTML = renderProsperity();  break;
+        case 'compare':     root.innerHTML = renderCompare();     break;
+        case 'flags':       root.innerHTML = renderFlags();       break;
+        case 'news':        renderNewsPage(root);                 break;
+        default:            root.innerHTML = renderOverview();
       }
     }
 
@@ -138,6 +139,8 @@
     try {
       const r = await fetch('/api/news');
       const { articles = [] } = await r.json();
+      // Cache globally so country profiles can filter headlines by country name
+      window._cachedNews = articles;
       const track = document.getElementById('news-strip-track');
       if (!articles.length) return;
 
@@ -214,7 +217,12 @@
 
     // Fall back to Claude API
     try {
-      const context = window.G20Data ? window.G20Data.buildAgentContext() : '';
+      // Use country-enriched context (with news + projections) when on a country page
+      const hash = location.hash.replace('#', '');
+      const activeIso3 = hash.startsWith('country/') ? hash.split('/')[1] : null;
+      const context = window.G20Data
+        ? (activeIso3 ? window.G20Data.buildCountryContext(activeIso3) : window.G20Data.buildAgentContext())
+        : '';
       const r = await fetch('/api/agent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -254,8 +262,9 @@
 
   // ── Chart mounting (deferred so canvas is in DOM) ─────────────────────────
   function mountPageCharts(page) {
-    if (page === 'overview') mountOverviewCharts();
-    if (page === 'compare')  mountCompareCharts();
+    if (page === 'overview')    mountOverviewCharts();
+    if (page === 'prosperity')  mountProsperityChart();
+    if (page === 'compare')     mountCompareCharts();
     if (page.startsWith('country/')) window.mountCountryProfileCharts(page.split('/')[1]);
   }
 })();

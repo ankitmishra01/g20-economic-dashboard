@@ -146,6 +146,16 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
     const raw = window.G20_DATA?.[iso3]?.[key] || {};
     return Object.entries(raw)
       .map(([y, v]) => ({ year: parseInt(y, 10), value: v }))
+      .filter(d => d.value !== null && !isNaN(d.value) && (!fromYear || d.year >= fromYear) && d.year <= 2025)
+      .sort((a, b) => a.year - b.year);
+  }
+
+  // Get historical + IMF forecast series [{year, value, isProjection}].
+  // Historical years ≤ 2025 are flagged isProjection: false; 2026+ are IMF forecasts.
+  function getSeriesWithProjections(iso3, key, fromYear) {
+    const raw = window.G20_DATA?.[iso3]?.[key] || {};
+    return Object.entries(raw)
+      .map(([y, v]) => ({ year: parseInt(y, 10), value: v, isProjection: parseInt(y, 10) > 2025 }))
       .filter(d => d.value !== null && !isNaN(d.value) && (!fromYear || d.year >= fromYear))
       .sort((a, b) => a.year - b.year);
   }
@@ -198,5 +208,48 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
     return window.G20_INDICATOR_META?.find(m => m.key === key) || null;
   }
 
-  window.G20Data = { loadAllData, getLatest, getSeries, getRanking, buildAgentContext, getIndicatorMeta, getQuarterlySeries };
+  // Build enriched context for a single country AI query, including relevant news headlines.
+  function buildCountryContext(iso3) {
+    const country = window.G20?.find(c => c.iso3 === iso3);
+    if (!country) return '';
+
+    const indicators = ['GDP', 'GDP_GROWTH', 'INFLATION', 'UNEMPLOYMENT', 'DEBT_GDP',
+                        'FISCAL_BAL', 'CURRENT_ACC', 'GDP_CAPITA_PPP', 'YOUTH_UNEMP'];
+    const lines = [`${country.name} Economic Snapshot:`];
+    for (const key of indicators) {
+      const d = getLatest(iso3, key);
+      if (!d) continue;
+      const label = window.INDICATORS?.[key]?.label || key;
+      const unit  = window.INDICATORS?.[key]?.unit || '';
+      lines.push(`  ${label}: ${d.value.toFixed(2)} ${unit} (${d.year})`);
+    }
+
+    // IMF projections for GDP growth
+    const projSeries = getSeriesWithProjections(iso3, 'GDP_GROWTH', 2023)
+      .filter(d => d.isProjection).slice(0, 3);
+    if (projSeries.length) {
+      lines.push('  IMF Forecast (GDP growth):');
+      projSeries.forEach(d => lines.push(`    ${d.year}: ${d.value.toFixed(1)}%`));
+    }
+
+    // Recession risk score
+    if (window.computeRiskScore) {
+      const risk = window.computeRiskScore(iso3);
+      lines.push(`  Recession risk score: ${risk.score}/100 (${risk.label}) — ${risk.signals.join(', ') || 'no flags'}`);
+    }
+
+    // Recent news headlines for this country
+    const allNews = window._cachedNews || [];
+    const countryNews = allNews
+      .filter(a => a.title && a.title.toLowerCase().includes(country.name.toLowerCase()))
+      .slice(0, 3);
+    if (countryNews.length) {
+      lines.push('  Recent headlines:');
+      countryNews.forEach(a => lines.push(`    - ${a.title} (${a.source})`));
+    }
+
+    return lines.join('\n');
+  }
+
+  window.G20Data = { loadAllData, getLatest, getSeries, getSeriesWithProjections, getRanking, buildAgentContext, buildCountryContext, getIndicatorMeta, getQuarterlySeries };
 })();

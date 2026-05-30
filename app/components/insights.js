@@ -516,4 +516,63 @@
 
     return null; // no pattern match — caller tries API
   };
+
+  // ── Recession Risk Score ──────────────────────────────────────────────────────
+  // Returns { score, label, labelCls, signals } for a given country ISO3.
+  // Score is 0–100 (higher = more risk).
+  window.computeRiskScore = function (iso3) {
+    let score = 0;
+    const signals = [];
+
+    const growth  = getLatest(iso3, 'GDP_GROWTH');
+    const fiscal  = getLatest(iso3, 'FISCAL_BAL');
+    const debt    = getLatest(iso3, 'DEBT_GDP');
+    const ca      = getLatest(iso3, 'CURRENT_ACC');
+    const unemp   = getLatest(iso3, 'UNEMPLOYMENT');
+    const inf     = getLatest(iso3, 'INFLATION');
+
+    const gv = growth?.value;
+    const fv = fiscal?.value;
+    const dv = debt?.value;
+    const cav = ca?.value;
+    const uv = unemp?.value;
+    const iv = inf?.value;
+
+    if (gv != null) {
+      if (gv < 0)        { score += 25; signals.push('Contraction'); }
+      else if (gv < 1)   { score += 15; signals.push('Near-zero growth'); }
+      else if (gv < 2)   { score += 7;  signals.push('Below-trend growth'); }
+
+      // Check if growth is declining (compare to 2 years prior)
+      const series = window.G20Data?.getSeries(iso3, 'GDP_GROWTH', 2020) || [];
+      if (series.length >= 3) {
+        const prev2 = series[series.length - 3]?.value;
+        if (prev2 != null && gv < prev2 - 2) { score += 8; signals.push('Declining trend'); }
+      }
+    }
+
+    if (fv != null) {
+      if (fv < -6)   { score += 20; signals.push('Large fiscal deficit'); }
+      else if (fv < -3) { score += 10; signals.push('Fiscal deficit'); }
+    }
+
+    if (dv != null) {
+      if (dv > 120)  { score += 15; signals.push('Debt >120% GDP'); }
+      else if (dv > 100) { score += 8; signals.push('Debt >100% GDP'); }
+    }
+
+    if (cav != null && cav < -4) { score += 10; signals.push('Current account deficit'); }
+    if (uv  != null && uv > 8)   { score += 8;  signals.push('High unemployment'); }
+    if (iv  != null && iv > 6)   { score += 7;  signals.push('Elevated inflation'); }
+
+    score = Math.min(score, 100);
+
+    let label, labelCls;
+    if (score >= 50)      { label = 'High Risk';  labelCls = 'risk-high'; }
+    else if (score >= 30) { label = 'Elevated';   labelCls = 'risk-elevated'; }
+    else if (score >= 15) { label = 'Watch';      labelCls = 'risk-watch'; }
+    else                  { label = 'Stable';     labelCls = 'risk-stable'; }
+
+    return { score, label, labelCls, signals };
+  };
 })();

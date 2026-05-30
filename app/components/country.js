@@ -1051,22 +1051,64 @@ window.mountCountryProfileCharts = function(iso3) {
       elements: { point: { radius: 2, hoverRadius: 4 }, line: { tension: 0.3, borderWidth: 1.5 } },
     };
 
+    // Indicators that have IMF forward projections in the DB
+    const PROJECTED_KEYS = new Set(['GDP_GROWTH', 'INFLATION', 'DEBT_GDP', 'UNEMPLOYMENT', 'FISCAL_BAL']);
+
     function lineChart(canvasId, key, color, fmtFn) {
       const canvas = document.getElementById(canvasId);
       if (!canvas) return;
-      const series = window.G20Data.getSeries(iso3, key, 2015);
-      if (!series.length) { canvas.parentNode.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-4);font-family:var(--font-mono);font-size:11px">No data</div>'; return; }
+
+      const hasProjections = PROJECTED_KEYS.has(key);
+      const fullSeries = hasProjections
+        ? window.G20Data.getSeriesWithProjections(iso3, key, 2015)
+        : window.G20Data.getSeries(iso3, key, 2015);
+
+      if (!fullSeries.length) {
+        canvas.parentNode.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-4);font-family:var(--font-mono);font-size:11px">No data</div>';
+        return;
+      }
+
+      const labels = fullSeries.map(d => d.year);
+      const histData = fullSeries.map(d => d.isProjection ? null : d.value);
+      const projData = fullSeries.map((d, i) => {
+        if (!d.isProjection) return null;
+        // Include the last historical point as the join so the dashed line connects
+        if (i > 0 && !fullSeries[i - 1].isProjection) return fullSeries[i - 1].value;
+        return d.value;
+      });
+      // Fill projection values forward
+      const projFull = fullSeries.map((d, i) => {
+        if (d.isProjection) return d.value;
+        if (i < fullSeries.length - 1 && fullSeries[i + 1]?.isProjection) return d.value;
+        return null;
+      });
+
+      const datasets = [{
+        label: 'Historical',
+        data: histData,
+        borderColor: color,
+        backgroundColor: color.replace(/[\d.]+\)$/, '0.06)'),
+        fill: true,
+        borderWidth: 1.5,
+      }];
+
+      if (hasProjections && fullSeries.some(d => d.isProjection)) {
+        datasets.push({
+          label: 'IMF Forecast',
+          data: projFull,
+          borderColor: color.replace(/[\d.]+\)$/, '0.5)'),
+          backgroundColor: 'transparent',
+          fill: false,
+          borderWidth: 1.5,
+          borderDash: [5, 4],
+          pointRadius: 2,
+          pointStyle: 'circle',
+        });
+      }
+
       new Chart(canvas.getContext('2d'), {
         type: 'line',
-        data: {
-          labels: series.map(d => d.year),
-          datasets: [{
-            data: series.map(d => d.value),
-            borderColor: color,
-            backgroundColor: color.replace('1)', '0.06)'),
-            fill: true,
-          }],
-        },
+        data: { labels, datasets },
         options: {
           ...OPTS,
           plugins: {
@@ -1074,9 +1116,17 @@ window.mountCountryProfileCharts = function(iso3) {
             tooltip: {
               ...TOOLTIP_BASE,
               callbacks: {
-                title: ctx => `${ctx[0]?.label}`,
+                title: ctx => {
+                  const yr = ctx[0]?.label;
+                  const isProj = fullSeries.find(d => d.year === parseInt(yr))?.isProjection;
+                  return `${yr}${isProj ? ' (IMF forecast)' : ''}`;
+                },
                 label: ctx => `  ${fmtFn ? fmtFn(ctx.parsed.y) : ctx.parsed.y.toFixed(2)}`,
               },
+            },
+            legend: {
+              display: hasProjections && fullSeries.some(d => d.isProjection),
+              labels: { color: '#8A8A8A', font: { size: 10 }, boxWidth: 20, padding: 8 },
             },
           },
           scales: {
