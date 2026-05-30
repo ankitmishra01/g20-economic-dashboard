@@ -5,6 +5,9 @@ let _compareState = {
   indicator: 'GDP_GROWTH',
 };
 
+// Indicators with sparse or no data in Supabase — shown dimmed in the selector
+const SPARSE_INDICATORS = new Set(['GINI','RESEARCHERS','FISCAL_BAL','TAX_REVENUE','EDUC_EXP']);
+
 function renderCompare() {
   const { selected, indicator } = _compareState;
 
@@ -38,8 +41,9 @@ function renderCompare() {
     </div>
     <div class="panel__body" style="display:flex;flex-wrap:wrap;gap:6px">
       ${Object.entries(INDICATORS).map(([key, meta]) => `
-        <button class="sec-head__tab ${indicator === key ? 'active' : ''}"
-          onclick="compareSetIndicator('${key}', this)">
+        <button class="sec-head__tab ${indicator === key ? 'active' : ''}${SPARSE_INDICATORS.has(key) ? ' tab-sparse' : ''}"
+          onclick="compareSetIndicator('${key}', this)"
+          title="${SPARSE_INDICATORS.has(key) ? 'Limited G20 coverage' : ''}">
           ${A.escapeText(meta.label)}${meta.unit ? ' (' + meta.unit + ')' : ''}
         </button>
       `).join('')}
@@ -97,6 +101,20 @@ function mountCompareCharts() {
     s.forEach(d => allYears.add(d.year));
   }
   const years = Array.from(allYears).sort((a, b) => a - b);
+
+  // No data for any selected country with this indicator
+  if (years.length === 0) {
+    const container = document.getElementById('compare-charts');
+    if (container) container.innerHTML = `
+      <div class="panel" style="margin-top:16px">
+        <div class="panel__body" style="padding:40px;text-align:center;font-family:var(--font-mono);font-size:12px;color:var(--text-4)">
+          No data available for <strong style="color:var(--text-2)">${A.escapeText(meta?.label || indicator)}</strong>
+          across the selected economies.<br>
+          <span style="font-size:11px;margin-top:6px;display:inline-block">Try GDP Growth, Inflation, Unemployment, or GDP.</span>
+        </div>
+      </div>`;
+    return;
+  }
 
   const COLORS = [
     'rgba(10,10,10,1)', 'rgba(185,28,28,1)', 'rgba(4,120,87,1)',

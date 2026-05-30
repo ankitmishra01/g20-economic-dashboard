@@ -532,6 +532,9 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
 }
 .sec-head__tab:hover { color: var(--text-1); border-color: var(--rule-2); }
 .sec-head__tab.active { background: var(--ink); color: var(--text-on-ink); border-color: var(--ink); }
+.sec-head__tab.tab-sparse { opacity: 0.45; }
+.sec-head__tab.tab-sparse:hover { opacity: 0.75; }
+.sec-head__tab.tab-sparse.active { opacity: 1; }
 
 /* Panel */
 .panel {

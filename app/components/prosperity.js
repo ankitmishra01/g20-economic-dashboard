@@ -49,6 +49,7 @@ function renderProsperity() {
 }
 
 function mountProsperityChart() {
+  if (!window.Chart) { setTimeout(mountProsperityChart, 200); return; }
   const nonEU = c => c.iso3 !== 'EUU';
 
   // Build bubble data
@@ -196,8 +197,8 @@ function mountProsperityChart() {
 }
 
 window.prosperityToggleX = function (btn, mode) {
+  if (!window.Chart) return;
   document.querySelectorAll('.sec-head__tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  // Re-render — could swap to GDP_CAPITA (nominal) if desired; for now just re-mount
   mountProsperityChart();
 };
