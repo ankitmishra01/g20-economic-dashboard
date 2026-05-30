@@ -1402,7 +1402,7 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   gap: 36px;
   white-space: nowrap;
   padding-left: 16px;
-  animation: ticker-scroll 100s linear infinite;
+  animation: ticker-scroll 120s linear infinite;
   font-family: var(--font-mono);
   font-size: 11.5px;
 }

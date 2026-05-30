@@ -396,10 +396,15 @@ function renderKPITiles(totalGDP, medianGrowth, medianInf, expanding, total, deb
 // ── Growth bar chart ───────────────────────────────────────────────────────────
 function renderGrowthBars(rows) {
   const sorted = [...rows].sort((a, b) => b.value - a.value);
-  const maxAbs = Math.max(...sorted.map(c => Math.abs(c.value)));
-  const zeroPct = 50;
+  const minVal = Math.min(...sorted.map(c => c.value));
+  const maxVal = Math.max(...sorted.map(c => c.value));
+  // Place zero proportionally: if all positive, zeroPct=0 (left edge = Y-axis).
+  // If some negative, zeroPct = abs(min) / total_range * 100.
+  const totalRange = maxVal - Math.min(0, minVal);
+  const zeroPct = minVal < 0 ? (Math.abs(minVal) / (maxVal - minVal)) * 100 : 0;
+
   return `<div class="bar-chart">${sorted.map(c => {
-    const pct = (Math.abs(c.value) / (maxAbs * 2)) * 100;
+    const pct = (Math.abs(c.value) / totalRange) * 100;
     const isNeg = c.value < 0;
     const left = isNeg ? (zeroPct - pct) : zeroPct;
     const cls = isNeg ? 'bar-neg' : (c.value >= 4 ? 'bar-pos' : '');
@@ -413,8 +418,8 @@ function renderGrowthBars(rows) {
         ${A.escapeText(c.name)}
       </div>
       <div class="bar-row__track">
-        <div class="bar-row__zero" style="left:${zeroPct}%"></div>
-        <div class="bar-row__bar ${cls}" style="left:${left}%;width:${pct}%"></div>
+        ${zeroPct > 0 ? `<div class="bar-row__zero" style="left:${zeroPct.toFixed(1)}%"></div>` : ''}
+        <div class="bar-row__bar ${cls}" style="left:${left.toFixed(1)}%;width:${pct.toFixed(1)}%"></div>
       </div>
       <div class="bar-row__val ${valCls}">${sign}${display.toFixed(1)}%</div>
     </div>`;
