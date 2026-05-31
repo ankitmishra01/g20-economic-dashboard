@@ -269,6 +269,11 @@ function renderOverview() {
   <!-- Global Outlook editorial -->
   ${renderGlobalOutlookComputed()}
 
+  <div class="sec-head" style="margin-top:24px">
+    <div class="sec-head__title">Forecast track record <span class="sec-head__sub">model accuracy · out-of-sample backtest</span></div>
+  </div>
+  <div class="panel" id="track-record" style="margin-bottom:20px"></div>
+
   <!-- Data sources table -->
   <div class="sec-head" style="margin-top:24px">
     <div class="sec-head__title">Data sources</div>
@@ -571,7 +576,7 @@ function renderGlobalOutlookComputed() {
       <div class="outlook-grid" style="display:grid;grid-template-columns:1fr 260px;gap:32px;align-items:start">
 
         <div>
-          ${[p1, p2, p3, p4].map(p => `<p style="margin:0 0 14px;line-height:1.7;font-size:13px;color:var(--text-2)">${p}</p>`).join('')}
+          ${[p1, p2, p3, p4, p5].filter(Boolean).map(p => `<p style="margin:0 0 14px;line-height:1.7;font-size:13px;color:var(--text-2)">${p}</p>`).join('')}
         </div>
 
         <div style="border-left:1px solid var(--rule);padding-left:20px">
@@ -643,6 +648,7 @@ function renderGlobalOutlook() {
 // mountOverviewCharts is called by main.js after render — no chart.js needed now (pure CSS bars)
 function mountOverviewCharts() {
   // No Chart.js charts on overview page — all CSS bars
+  if (window.renderTrackRecord) window.renderTrackRecord('track-record');
 }
 
 // ── Ranking table sort ────────────────────────────────────────────────────────

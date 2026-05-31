@@ -1925,4 +1925,7 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   /* News rows: stack source above headline */
   .news-item { flex-direction: column; gap: 4px; }
   .news-item__source { min-width: 0; }
+
+  /* Scenario simulator: stack steppers above the readout */
+  .scenario-grid { grid-template-columns: 1fr !important; }
 }

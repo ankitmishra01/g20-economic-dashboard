@@ -2,3 +2,8 @@
 .DS_Store
 node_modules/
 .env*
+.gstack/
+
+# forecast outputs are committed (read by the static frontend)
+!app/forecast-model.js
+!app/forecast-history.json
