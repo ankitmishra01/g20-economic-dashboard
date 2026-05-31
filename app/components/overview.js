@@ -155,9 +155,9 @@ function renderOverview() {
   <div class="sec-head">
     <div class="sec-head__title">Key indicators <span class="count">/ 5</span><span class="sec-head__sub">latest reads, 10y trend</span></div>
     <div class="sec-head__actions">
-      <button class="sec-head__tab active">All G20</button>
-      <button class="sec-head__tab">AE</button>
-      <button class="sec-head__tab">EM</button>
+      <button class="sec-head__tab active" onclick="overviewFilterClass('all',this)" title="All G20 economies">All G20</button>
+      <button class="sec-head__tab" onclick="overviewFilterClass('ae',this)" title="Advanced economies">AE</button>
+      <button class="sec-head__tab" onclick="overviewFilterClass('em',this)" title="Emerging markets">EM</button>
     </div>
   </div>
 
@@ -656,6 +656,32 @@ window.overviewSortTable = function(mode, btn) {
   const rows = mode === 'growth' ? growthRank : mode === 'cpi' ? infRank : gdpRank;
   const tbody = document.getElementById('rank-tbody');
   if (tbody) tbody.innerHTML = renderRankingRows(rows);
+};
+
+// ── KPI group filter: All G20 / Advanced / Emerging ───────────────────────────
+// Advanced economies within the G20 (IMF classification); the rest are emerging.
+const AE_SET = new Set(['USA','GBR','CAN','DEU','FRA','ITA','JPN','AUS','KOR']);
+window.overviewFilterClass = function(group, btn) {
+  document.querySelectorAll('[onclick^="overviewFilterClass"]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const nonEU = c => c.iso3 !== 'EUU';
+  const inGroup = c => group === 'all' ? true : group === 'ae' ? AE_SET.has(c.iso3) : !AE_SET.has(c.iso3);
+  const filt = arr => arr.filter(nonEU).filter(inGroup);
+
+  const gdpRank    = filt(window.G20Data.getRanking('GDP'));
+  const growthRank = filt(window.G20Data.getRanking('GDP_GROWTH'));
+  const infRank    = filt(window.G20Data.getRanking('INFLATION'));
+  const debtRank   = filt(window.G20Data.getRanking('DEBT_GDP')).sort((a, b) => b.value - a.value);
+
+  const totalGDP     = gdpRank.reduce((s, c) => s + (c.value || 0), 0);
+  const growthVals   = growthRank.map(c => c.value);
+  const medianGrowth = median(growthVals);
+  const medianInf    = median(infRank.map(c => c.value));
+  const expandingN   = growthVals.filter(v => v > 0).length;
+  const latestYear   = gdpRank[0]?.year || '2024';
+
+  const grid = document.getElementById('kpi-grid');
+  if (grid) grid.innerHTML = renderKPITiles(totalGDP, medianGrowth, medianInf, expandingN, growthVals.length, debtRank, latestYear);
 };
 
 // ── Risk register severity filter ─────────────────────────────────────────────
