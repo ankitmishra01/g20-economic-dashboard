@@ -1900,7 +1900,7 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   .profile-charts { grid-template-columns: 1fr; }
 
   /* AI Economy: 4-up KPI strip → 2-up; editorials stack */
-  .ai-kpi-strip { grid-template-columns: repeat(2, 1fr) !important; }
+  .ai-kpi-strip, .flags-kpi-strip { grid-template-columns: repeat(2, 1fr) !important; }
   .ai-editorial-grid { grid-template-columns: 1fr !important; gap: 18px !important; }
   .ai-editorial-grid > .ai-editorial-sidebar {
     border-left: none; padding-left: 0;

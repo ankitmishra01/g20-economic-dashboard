@@ -568,7 +568,7 @@ function renderGlobalOutlookComputed() {
 
   <div class="panel" style="margin-bottom:24px">
     <div class="panel__body" style="padding:20px 24px">
-      <div style="display:grid;grid-template-columns:1fr 260px;gap:32px;align-items:start">
+      <div class="outlook-grid" style="display:grid;grid-template-columns:1fr 260px;gap:32px;align-items:start">
 
         <div>
           ${[p1, p2, p3, p4].map(p => `<p style="margin:0 0 14px;line-height:1.7;font-size:13px;color:var(--text-2)">${p}</p>`).join('')}
@@ -610,7 +610,7 @@ function renderGlobalOutlook() {
 
   <div class="panel" style="margin-bottom:24px">
     <div class="panel__body" style="padding:20px 24px">
-      <div style="display:grid;grid-template-columns:1fr 260px;gap:32px;align-items:start">
+      <div class="outlook-grid" style="display:grid;grid-template-columns:1fr 260px;gap:32px;align-items:start">
 
         <div>
           ${g.paragraphs.map(p => `<p style="margin:0 0 14px;line-height:1.7;font-size:13px;color:var(--text-2)">${A.escapeText(p)}</p>`).join('')}

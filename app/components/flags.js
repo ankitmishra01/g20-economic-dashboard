@@ -37,7 +37,7 @@ function renderFlags() {
     </div>
   </div>
 
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px">
+  <div class="flags-kpi-strip" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px">
     <div class="panel">
       <div class="panel__body">
         <div class="kpi-tile__lbl">Flagged countries</div>
