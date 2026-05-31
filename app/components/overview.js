@@ -275,7 +275,7 @@ function renderOverview() {
   </div>
   <div class="panel" style="margin-bottom:20px">
     <div class="panel__body" style="padding:0">
-      <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <div class="table-scroll"><table style="width:100%;border-collapse:collapse;font-size:12px">
         <thead>
           <tr style="border-bottom:1px solid var(--rule)">
             <th style="padding:8px 14px;text-align:left;color:var(--text-3);font-weight:600;font-size:11px;letter-spacing:.03em">Indicator</th>
@@ -311,7 +311,7 @@ function renderOverview() {
             </tr>
           `).join('')}
         </tbody>
-      </table>
+      </table></div>
     </div>
   </div>
 

@@ -1893,4 +1893,36 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
 
   .profile-hero { padding: 20px 16px 16px; }
   .profile-hero__stats { gap: 20px; }
+  .profile-hero__name { font-size: 22px; }
+  .profile-hero__flag { width: 48px; height: 32px; }
+
+  /* Country profile: stack the two trend charts */
+  .profile-charts { grid-template-columns: 1fr; }
+
+  /* AI Economy: 4-up KPI strip → 2-up; editorials stack */
+  .ai-kpi-strip { grid-template-columns: repeat(2, 1fr) !important; }
+  .ai-editorial-grid { grid-template-columns: 1fr !important; gap: 18px !important; }
+  .ai-editorial-grid > .ai-editorial-sidebar {
+    border-left: none; padding-left: 0;
+    border-top: 1px solid var(--rule); padding-top: 16px;
+  }
+
+  /* Overview global outlook: stack body + sidebar */
+  .outlook-grid { grid-template-columns: 1fr !important; gap: 18px !important; }
+  .outlook-grid > div:last-child {
+    border-left: none !important; padding-left: 0 !important;
+    border-top: 1px solid var(--rule); padding-top: 16px;
+  }
+
+  /* Wide data tables scroll horizontally instead of overflowing */
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table-scroll table { min-width: 520px; }
+
+  /* Risk flags rows: drop the mono description, tighten columns */
+  .flag-item { grid-template-columns: 22px 18px 1fr auto; gap: 8px; padding: 10px 12px; }
+  .flag-item__desc { display: none; }
+
+  /* News rows: stack source above headline */
+  .news-item { flex-direction: column; gap: 4px; }
+  .news-item__source { min-width: 0; }
 }

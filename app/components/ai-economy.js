@@ -71,7 +71,7 @@ function renderAIEconomy() {
   </div>
 
   <!-- Hero KPI strip -->
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px">
+  <div class="ai-kpi-strip" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px">
     <div class="panel"><div class="panel__body" style="padding:14px 16px">
       <div class="kpi-tile__lbl">Top AI Score</div>
       <div class="kpi-tile__val" id="hero-top-score">—<span class="unit">/100</span></div>
@@ -129,7 +129,7 @@ function renderAIEconomy() {
 
   <!-- Section 3: Displacement vs Readiness (money shot) -->
   <div class="sec-head">
-    <div class="sec-head__title">Displacement Risk vs AI Readiness <span class="sec-head__sub">bubble = GDP per capita PPP · x = AI job exposure (IMF 2024) · y = AI readiness score</span></div>
+    <div class="sec-head__title">Displacement Risk vs AI Readiness <span class="sec-head__sub">flag size = GDP per capita PPP · x = AI job exposure (IMF 2024) · y = AI readiness score</span></div>
   </div>
   <div class="panel" style="margin-bottom:20px">
     <div class="panel__body" style="padding:16px 20px">
@@ -301,7 +301,7 @@ function renderAIEconomyEditorial(aiData, g20sorted) {
     </div>
     <div class="panel" style="margin-bottom:20px">
       <div class="panel__body" style="padding:20px 24px">
-        <div style="display:grid;grid-template-columns:1fr 240px;gap:32px;align-items:start">
+        <div class="ai-editorial-grid" style="display:grid;grid-template-columns:1fr 240px;gap:32px;align-items:start">
           <div>
             <p class="ai-editorial-p">${p1}</p>
             <p class="ai-editorial-p">${p2}</p>
@@ -410,6 +410,10 @@ function mountScatterChart(sorted) {
     'Africa':      { bg: 'rgba(239,68,68,0.75)',   border: '#ef4444' },
   };
 
+  // Preload flag images (PNG raster — reliable in canvas, unlike SVG) so we can
+  // draw country flags instead of plain bubbles. Cached on window across renders.
+  preloadFlags(sorted);
+
   const regions = [...new Set(sorted.map(c => c.region))];
   const datasets = regions.map(region => {
     const col = REGION_COLORS_LOCAL[region] || { bg: 'rgba(148,163,184,0.7)', border: '#94a3b8' };
@@ -418,17 +422,21 @@ function mountScatterChart(sorted) {
       label: region,
       data: countries.map(c => {
         const ppp = window.G20Data.getLatest(c.iso3, 'GDP_CAPITA_PPP');
-        const r = ppp?.value ? Math.max(5, Math.min(26, Math.sqrt(ppp.value / 1000) * 0.9)) : 8;
+        // Flag width scales with PPP (keeps the "bubble = PPP" encoding); r is the
+        // hover hit-radius, kept in step with the drawn flag so tooltips line up.
+        const flagW = ppp?.value ? Math.max(22, Math.min(40, Math.sqrt(ppp.value / 1000) * 4.2)) : 24;
         return {
           x: AI_LABOR_EXPOSURE[c.name] ?? 35,
           y: c.ai.total_score,
-          r,
-          _meta: { name: c.name, iso3: c.iso3, score: c.ai.total_score, exposure: AI_LABOR_EXPOSURE[c.name], ppp: ppp?.value },
+          r: flagW / 2,
+          _meta: { name: c.name, iso3: c.iso3, code: c.code, score: c.ai.total_score, exposure: AI_LABOR_EXPOSURE[c.name], ppp: ppp?.value, flagW },
         };
       }),
-      backgroundColor: col.bg,
+      // Bubble itself is invisible — the flag is drawn on top in afterDatasetsDraw.
+      // Region colour is kept for the legend and the flag's border.
+      backgroundColor: 'transparent',
       borderColor: col.border,
-      borderWidth: 1.5,
+      borderWidth: 0,
     };
   });
 
@@ -436,7 +444,7 @@ function mountScatterChart(sorted) {
   const medExposure = 40;
   const medScore = 60;
 
-  new Chart(canvas.getContext('2d'), {
+  const scatterChart = new Chart(canvas.getContext('2d'), {
     type: 'bubble',
     data: { datasets },
     options: {
@@ -512,21 +520,69 @@ function mountScatterChart(sorted) {
       },
       afterDatasetsDraw(chart) {
         const ctx2 = chart.ctx;
+        const cache = window._flagImgCache || {};
+        const txtColor = getComputedStyle(document.documentElement)
+          .getPropertyValue('--text-2').trim() || '#383838';
         ctx2.save();
-        ctx2.font = 'bold 9px JetBrains Mono, monospace';
-        ctx2.fillStyle = '#F5F5F2';
-        ctx2.textAlign = 'center';
-        ctx2.textBaseline = 'middle';
         chart.data.datasets.forEach((ds, di) => {
           ds.data.forEach((pt, pi) => {
             const meta = chart.getDatasetMeta(di).data[pi];
             if (!meta) return;
-            ctx2.fillText(pt._meta?.iso3 || '', meta.x, meta.y);
+            const m = pt._meta || {};
+            const w = m.flagW || 26;
+            const h = w * 0.67;
+            const x = meta.x - w / 2;
+            const y = meta.y - h / 2;
+            const img = cache[(m.code || '').toLowerCase()];
+
+            if (img && img.complete && img.naturalWidth) {
+              // Subtle shadow + flag + thin border for definition on any background
+              ctx2.save();
+              ctx2.shadowColor = 'rgba(0,0,0,0.25)';
+              ctx2.shadowBlur = 3;
+              ctx2.shadowOffsetY = 1;
+              ctx2.drawImage(img, x, y, w, h);
+              ctx2.restore();
+              ctx2.strokeStyle = ds.borderColor || 'rgba(0,0,0,0.3)';
+              ctx2.lineWidth = 1;
+              ctx2.strokeRect(x, y, w, h);
+            } else {
+              // Fallback while image loads: small region-coloured dot
+              ctx2.fillStyle = ds.borderColor || '#94a3b8';
+              ctx2.beginPath();
+              ctx2.arc(meta.x, meta.y, 5, 0, Math.PI * 2);
+              ctx2.fill();
+            }
+
+            // ISO3 label beneath the flag
+            ctx2.fillStyle = txtColor;
+            ctx2.font = 'bold 9px JetBrains Mono, monospace';
+            ctx2.textAlign = 'center';
+            ctx2.textBaseline = 'top';
+            ctx2.fillText(m.iso3 || '', meta.x, y + h + 2);
           });
         });
         ctx2.restore();
       },
     }],
+  });
+
+  // Flags load async — redraw once each lands so they pop in without a full remount.
+  Object.values(window._flagImgCache || {}).forEach(img => {
+    if (!img.complete) img.addEventListener('load', () => scatterChart.draw(), { once: true });
+  });
+}
+
+// Preload G20 flag PNGs into a window-level cache, keyed by lowercase ISO2 code.
+function preloadFlags(countries) {
+  window._flagImgCache = window._flagImgCache || {};
+  countries.forEach(c => {
+    const code = (c.code || '').toLowerCase();
+    if (code && !window._flagImgCache[code]) {
+      const img = new Image();
+      img.src = `https://flagcdn.com/w80/${code}.png`;
+      window._flagImgCache[code] = img;
+    }
   });
 }
 
