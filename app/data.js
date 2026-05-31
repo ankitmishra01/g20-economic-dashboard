@@ -232,10 +232,20 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
       projSeries.forEach(d => lines.push(`    ${d.year}: ${d.value.toFixed(1)}%`));
     }
 
-    // Recession risk score
+    // Fundamentals fragility score (descriptive vulnerability, not a recession forecast)
     if (window.computeRiskScore) {
       const risk = window.computeRiskScore(iso3);
-      lines.push(`  Recession risk score: ${risk.score}/100 (${risk.label}), signals: ${risk.signals.join(', ') || 'none'}`);
+      lines.push(`  Fundamentals fragility score: ${risk.score}/100 (${risk.label}; descriptive exposure, not a recession forecast), signals: ${risk.signals.join(', ') || 'none'}`);
+    }
+
+    // Model growth forecast (1-year-ahead) alongside the IMF projection
+    if (window.computeGrowthForecast) {
+      const fc = window.computeGrowthForecast(iso3);
+      if (fc) {
+        lines.push(`  Model growth forecast (${fc.targetYear}): ${fc.modelForecast >= 0 ? '+' : ''}${fc.modelForecast.toFixed(1)}%` +
+          (fc.imfForecast != null ? ` vs IMF ${fc.imfForecast >= 0 ? '+' : ''}${fc.imfForecast.toFixed(1)}% (${fc.imfYear})` : '') +
+          ` [ridge model, RMSE ±${fc.rmse}pp; cite both, do not present as certainty]`);
+      }
     }
 
     // Recent news headlines for this country

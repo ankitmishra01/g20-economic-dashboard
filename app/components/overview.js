@@ -217,7 +217,7 @@ function renderOverview() {
           <th>Unemp.</th>
           <th>Debt / GDP</th>
           <th>C/A · % GDP</th>
-          <th>Risk</th>
+          <th>Fragility</th>
           <th class="col-spark">10y GDP</th>
         </tr>
       </thead>

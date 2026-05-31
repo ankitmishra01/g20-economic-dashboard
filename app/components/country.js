@@ -127,6 +127,8 @@ function renderCountryProfile(iso3) {
 
   ${renderCountryBrief(iso3, country, vintage, commentaryDate)}
 
+  ${window.renderForecastStrip ? window.renderForecastStrip(iso3) : ''}
+
   <div class="sec-head" style="margin-top:4px">
     <div class="sec-head__title">Key indicators</div>
   </div>
