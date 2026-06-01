@@ -870,6 +870,31 @@ function generateBriefContent(iso3) {
   // ── Section 4 — Outlook & Key Risks ─────────────────────────────────────────
   const sec4 = [];
 
+  // House view — model-driven, opinionated (data-anchored lead → "However" pivot →
+  // conditional risk → prescriptive close). Numbers come from the forecast model / data;
+  // the yield curve is framed descriptively (no probability claim).
+  if (window.computeGrowthForecast) {
+    const fc  = window.computeGrowthForecast(iso3);
+    const yc  = window.computeYieldCurve ? window.computeYieldCurve(iso3) : { covered: false };
+    const frag = window.computeRiskScore ? window.computeRiskScore(iso3) : null;
+    const med = (typeof g20Median === 'function') ? g20Median('GDP_GROWTH') : null;
+    if (fc) {
+      const peer = med != null
+        ? (fc.modelForecast >= med ? `above the G20 median of <strong>${med.toFixed(1)}%</strong>` : `below the G20 median of <strong>${med.toFixed(1)}%</strong>`)
+        : '';
+      sec4.push(`Our model projects real GDP growth of <strong>${fc.modelForecast >= 0 ? '+' : ''}${fc.modelForecast.toFixed(1)}%</strong> in <strong>${fc.targetYear}</strong>${peer ? ', ' + peer : ''}, against <strong>${fc.latestActual >= 0 ? '+' : ''}${fc.latestActual.toFixed(1)}%</strong> in ${fc.baseYear}; the forecast beats a naive persistence rule out of sample, so the direction carries information even where the level is uncertain.`);
+      if (yc.covered) {
+        const inv = yc.spread <= -0.25;
+        sec4.push(`However, the yield curve is <strong>${yc.label} at ${yc.spread >= 0 ? '+' : ''}${yc.spread.toFixed(2)}pp</strong> (10y minus 3m). ${inv ? 'An inverted curve has preceded past downturns, so this warrants attention' : 'That slope signals little market stress for now'}; on annual data we make no calibrated recession-probability claim, so fundamentals fragility${frag ? ` (<strong>${frag.score}/100, ${frag.label}</strong>)` : ''} remains the operative gauge.`);
+        sec4.push(inv
+          ? `Unless the curve re-steepens decisively, policy needs to ready countercyclical capacity now, ahead of any downturn rather than into it.`
+          : `Unless external demand or financial conditions deteriorate sharply, the central case remains continued expansion; even so, policymakers should keep fiscal space in reserve, because the curve can re-price quickly.`);
+      } else if (frag) {
+        sec4.push(`However, with no forward market signal available, fundamentals fragility (<strong>${frag.score}/100, ${frag.label}</strong>)${frag.signals.length ? `, flagged by ${frag.signals.slice(0, 2).join(' and ').toLowerCase()},` : ''} is the operative gauge. Unless these fundamentals deteriorate materially, the economy is not on a recessionary footing, but the absence of a yield-curve read argues for closer monitoring of external balances and credit conditions, where emerging-market downturns typically originate.`);
+      }
+    }
+  }
+
   if (gv != null) {
     const grTrend   = trendDir('GDP_GROWTH');
     const a5        = avg5('GDP_GROWTH');

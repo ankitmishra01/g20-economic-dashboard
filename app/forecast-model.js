@@ -50,20 +50,60 @@ window.G20_MODEL = {
     ]
   },
   "recession": {
-    "coef": [],
-    "intercept": 0,
-    "mu": [],
-    "sigma": [],
-    "covered": [],
-    "auc": null,
-    "aucCyclical": null,
+    "coef": [
+      -0.48761974970833716,
+      0.03290570068379216,
+      0.5970700344427927,
+      0.519663722226752,
+      -0.06403906801480319,
+      0.040906029309429555,
+      0.1536121876549271,
+      -0.4809423277876384
+    ],
+    "intercept": -2.1935412293471024,
+    "mu": [
+      1.8303703703703704,
+      -0.1977777777777777,
+      -2.972592592592593,
+      76.11777777777777,
+      0.1618518518518519,
+      7.679629629629631,
+      3.0874074074074085,
+      0.9831851851851852
+    ],
+    "sigma": [
+      2.7549490571098096,
+      3.9135087347908075,
+      3.343161724401124,
+      48.26624825887809,
+      3.5861859829041287,
+      6.352887346758445,
+      2.7369875202256697,
+      1.3235628526691534
+    ],
+    "covered": [
+      "AUS",
+      "CAN",
+      "DEU",
+      "FRA",
+      "GBR",
+      "ITA",
+      "JPN",
+      "KOR",
+      "MEX",
+      "RUS",
+      "USA",
+      "ZAF"
+    ],
+    "auc": 0.527,
+    "aucCyclical": 0.578,
     "gate": 0.65
   },
   "backtest": [
     {
       "forecastYear": 2003,
       "growthRMSE": 3.24,
-      "recessions": 0,
+      "recessions": 1,
       "recHits": 0
     },
     {
@@ -93,13 +133,13 @@ window.G20_MODEL = {
     {
       "forecastYear": 2008,
       "growthRMSE": 1.74,
-      "recessions": 0,
+      "recessions": 2,
       "recHits": 0
     },
     {
       "forecastYear": 2009,
       "growthRMSE": 6.09,
-      "recessions": 0,
+      "recessions": 10,
       "recHits": 0
     },
     {
@@ -111,19 +151,19 @@ window.G20_MODEL = {
     {
       "forecastYear": 2011,
       "growthRMSE": 2.72,
-      "recessions": 0,
+      "recessions": 1,
       "recHits": 0
     },
     {
       "forecastYear": 2012,
       "growthRMSE": 1.7,
-      "recessions": 0,
+      "recessions": 1,
       "recHits": 0
     },
     {
       "forecastYear": 2013,
       "growthRMSE": 1.86,
-      "recessions": 0,
+      "recessions": 1,
       "recHits": 0
     },
     {
@@ -135,7 +175,7 @@ window.G20_MODEL = {
     {
       "forecastYear": 2015,
       "growthRMSE": 2.18,
-      "recessions": 0,
+      "recessions": 1,
       "recHits": 0
     },
     {
@@ -159,13 +199,13 @@ window.G20_MODEL = {
     {
       "forecastYear": 2019,
       "growthRMSE": 1.59,
-      "recessions": 0,
+      "recessions": 2,
       "recHits": 0
     },
     {
       "forecastYear": 2020,
       "growthRMSE": 7.76,
-      "recessions": 0,
+      "recessions": 11,
       "recHits": 0
     },
     {
@@ -183,13 +223,13 @@ window.G20_MODEL = {
     {
       "forecastYear": 2023,
       "growthRMSE": 2.27,
-      "recessions": 0,
+      "recessions": 1,
       "recHits": 0
     },
     {
       "forecastYear": 2024,
       "growthRMSE": 2.16,
-      "recessions": 0,
+      "recessions": 2,
       "recHits": 0
     },
     {
@@ -202,13 +242,15 @@ window.G20_MODEL = {
   "meta": {
     "trainedAt": "2026-06-01",
     "nGrowth": 434,
-    "nRecession": 0,
+    "nRecession": 270,
     "growthRMSE": 3.42,
+    "growthMAE": 2.35,
     "growthPersistenceRMSE": 4.16,
     "growthBeatsPersistence": 0.74,
-    "recAUC": null,
-    "recAUCCyclical": null,
+    "recAUC": 0.527,
+    "recAUCCyclical": 0.578,
+    "recAUCFundamentalsOnly": 0.494,
     "horizonYears": 1,
-    "notes": "Growth: ridge, pooled G20 (beats persistence). Recession model disabled — no yield-curve term spread available in the data."
+    "notes": "Growth: ridge, pooled G20. Recession: logistic on yield-curve-covered economies (term spread 10y-3m, keyless FRED). LOYO-CV. Recession probability framed as cyclical (AUC 0.58); all-period 0.53 reflects the unpredictable 2020 pandemic."
   }
 };

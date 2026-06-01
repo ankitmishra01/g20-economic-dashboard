@@ -545,6 +545,24 @@ function renderGlobalOutlookComputed() {
   // Paragraph 4 — Outlook (prescriptive close)
   const p4 = `The near-term outlook is shaped by the interaction of three structural forces: the pace of disinflation, the trajectory of public debt, and the uneven diffusion of productivity-enhancing technology investment across member economies. The G20's strongest-growing economies in <strong>${latestYear}</strong>, including <strong>${topRisers.map(c => A.escapeText(c.name)).join(', ')}</strong>, need to sustain investment in physical and digital infrastructure to convert cyclical momentum into durable structural gains. Economies facing fiscal consolidation pressures should prioritise reforms that protect growth-enabling public spending while credibly narrowing deficits over the medium term.`;
 
+  // Paragraph 5 — House view (model-driven, descriptive yield curve; no probability)
+  let p5 = '';
+  if (window.computeGrowthForecast) {
+    const list = window.G20.filter(c => c.iso3 !== 'EUU');
+    const fcs = list.map(c => window.computeGrowthForecast(c.iso3)).filter(Boolean).map(f => f.modelForecast).sort((a, b) => a - b);
+    const medFc = fcs.length ? fcs[Math.floor(fcs.length / 2)] : null;
+    const inv = window.computeYieldCurve
+      ? list.map(c => ({ c, yc: window.computeYieldCurve(c.iso3) })).filter(x => x.yc.covered && x.yc.spread <= -0.25)
+      : [];
+    if (medFc != null) {
+      p5 = `Turning from the record to the forecast, our models put median G20 growth at <strong>${pct(medFc)}</strong> next year, a step ${medFc < medGrowth ? 'down from' : 'up from'} the <strong>${pct(medGrowth)}</strong> just recorded. `;
+      p5 += inv.length
+        ? `The clearest warning sits in the bond market: the yield curve is inverted in ${inv.length} of the covered advanced economies (${inv.map(x => A.escapeText(x.c.name)).join(', ')}), a configuration that has preceded past downturns. `
+        : `No covered advanced economy currently runs an inverted yield curve, the configuration that has typically preceded past downturns. `;
+      p5 += `On annual data we make no calibrated recession-probability call, so the operative gauge remains fundamentals fragility. Unless the curve re-steepens where it has inverted, the advanced G20 needs to ready countercyclical capacity now, while the large emerging markets should rebuild fiscal and external buffers while growth still affords the room.`;
+    }
+  }
+
   // Key risks — derived from live threshold breaches
   const keyRisks = [];
   if (highInflation.length > 0) keyRisks.push(`Persistent inflation above 8% in ${highInflation.length} ${highInflation.length === 1 ? 'economy' : 'economies'}, limiting the scope for monetary policy easing`);

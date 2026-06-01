@@ -22,15 +22,23 @@ jobs:
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 
-      - name: Commit updated commentary
+      - name: Refresh yield-curve term spread + retrain forecast model
+        run: |
+          node sync/fetch-term-spread.js   # keyless FRED -> app/term-spread.js (committed static asset)
+          node sync/train-forecast.js      # -> app/forecast-model.js (+ app/forecast-history.json)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+
+      - name: Commit updated commentary + forecast artifacts
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add app/components/commentary.js
+          git add app/components/commentary.js app/term-spread.js app/forecast-model.js app/forecast-history.json
           if git diff --staged --quiet; then
-            echo "No commentary changes to commit."
+            echo "No changes to commit."
           else
-            git commit -m "chore: auto-update commentary.js $(date -u +'%Y-%m') [skip ci]"
+            git commit -m "chore: auto-update commentary + forecast $(date -u +'%Y-%m') [skip ci]"
             git push
           fi
 

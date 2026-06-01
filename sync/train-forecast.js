@@ -42,7 +42,17 @@ async function loadPanel() {
 }
 const num = v => (v != null && !Number.isNaN(v)) ? v : null;
 
-function buildSamples(idx) {
+// Term spread comes from the committed static asset app/term-spread.js (keyless FRED),
+// NOT Supabase — Supabase rows don't survive the monthly reseed.
+async function loadTermSpread() {
+  const path = await import('node:path'); const url = await import('node:url');
+  globalThis.window = globalThis.window || {};
+  const p = path.resolve(import.meta.dirname ?? process.cwd(), '../app/term-spread.js');
+  try { await import(url.pathToFileURL(p).href); } catch (e) { console.log('term-spread.js not loaded:', e.message); }
+  return globalThis.window.G20_TERM_SPREAD || {};
+}
+
+function buildSamples(idx, TS) {
   const out = [];
   for (const c of G20_ISO3) {
     const d = idx[c]; if (!d) continue;
@@ -50,7 +60,7 @@ function buildSamples(idx) {
       const g = num(d.GDP_GROWTH?.[t]), g2 = num(d.GDP_GROWTH?.[t - 2]),
         f = num(d.FISCAL_BAL?.[t]), db = num(d.DEBT_GDP?.[t]), ca = num(d.CURRENT_ACC?.[t]),
         u = num(d.UNEMPLOYMENT?.[t]), inf = num(d.INFLATION?.[t]),
-        ts = num(d.TERM_SPREAD?.[t]), next = num(d.GDP_GROWTH?.[t + 1]);
+        ts = num(TS?.[c]?.[t]), next = num(d.GDP_GROWTH?.[t + 1]);
       if ([g, g2, f, db, ca, u, inf, next].some(v => v == null)) continue;
       out.push({ iso3: c, year: t, fund: [g, g - g2, f, db, ca, u, inf], termSpread: ts, yRec: next < 0 ? 1 : 0, yGrowth: next });
     }
@@ -118,7 +128,8 @@ function loyo(samples, extract, fit) {
 (async () => {
   console.log('Loading panel from Supabase…');
   const idx = await loadPanel();
-  const samples = buildSamples(idx);
+  const TS = await loadTermSpread();
+  const samples = buildSamples(idx, TS);
   const covered = [...new Set(samples.filter(s => s.termSpread != null).map(s => s.iso3))].sort();
   const recSamples = samples.filter(s => s.termSpread != null);
   console.log(`Growth samples: ${samples.length}  | recession (covered): ${recSamples.length}  | covered: ${covered.join(', ')}`);
