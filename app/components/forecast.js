@@ -227,13 +227,11 @@
   };
 
   // ── Track record (historical backtest) ─────────────────────────────────────────
-  window.renderTrackRecord = async function (mountId) {
+  window.renderTrackRecord = function (mountId) {
     const el = document.getElementById(mountId); if (!el) return;
-    let hist;
-    try { hist = await (await fetch('forecast-history.json?v=' + Date.now())).json(); }
-    catch (_) { el.innerHTML = '<div class="panel__body" style="color:var(--text-4);font-size:12px">Track record unavailable.</div>'; return; }
-    const bt = (hist.backtest || []).filter(b => b.growthRMSE != null);
     const M = window.G20_MODEL;
+    const bt = ((M && M.backtest) || []).filter(b => b.growthRMSE != null);
+    if (!bt.length) { el.innerHTML = '<div class="panel__body" style="color:var(--text-4);font-size:12px">Track record unavailable.</div>'; return; }
     const avgRMSE = bt.length ? (bt.reduce((s, b) => s + b.growthRMSE, 0) / bt.length) : null;
     const totalRec = bt.reduce((s, b) => s + (b.recessions || 0), 0);
     const totalHit = bt.reduce((s, b) => s + (b.recHits || 0), 0);
