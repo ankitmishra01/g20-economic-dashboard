@@ -8,13 +8,18 @@ const REGION_COLORS = {
   'Africa':      { bg: 'rgba(239,68,68,0.75)',   border: '#ef4444' },
 };
 
+// Current x-axis metric: 'ppp' (GDP_CAPITA_PPP) or 'nominal' (GDP_CAPITA)
+let _prosperityMode = 'ppp';
+// Tracked chart instance so we can destroy before re-creating on toggle
+let _prosperityChartInst = null;
+
 function renderProsperity() {
   return `
 <div class="page-body">
   <div class="sec-head">
     <div class="sec-head__title">Prosperity Map <span class="count">G20</span><span class="sec-head__sub">GDP per capita (PPP) vs growth rate · bubble size = population</span></div>
     <div class="sec-head__actions">
-      <button class="sec-head__tab active">PPP</button>
+      <button class="sec-head__tab active" onclick="prosperityToggleX(this,'ppp')">PPP</button>
       <button class="sec-head__tab" onclick="prosperityToggleX(this,'nominal')">Nominal</button>
     </div>
   </div>
@@ -34,7 +39,7 @@ function renderProsperity() {
   <div class="row-2" style="margin-bottom:20px">
     <div class="panel">
       <div class="panel__head">
-        <div><span class="panel__title">GDP per Capita PPP</span><span class="panel__sub">Int'l $ · highest first</span></div>
+        <div><span class="panel__title" id="pcap-title">GDP per Capita PPP</span><span class="panel__sub" id="pcap-sub">Int'l $ · highest first</span></div>
       </div>
       <div class="panel__body" id="ppp-bars"></div>
     </div>
@@ -48,22 +53,31 @@ function renderProsperity() {
 </div>`;
 }
 
-function mountProsperityChart() {
-  if (!window.Chart) { setTimeout(mountProsperityChart, 200); return; }
+function mountProsperityChart(mode) {
+  if (!window.Chart) { setTimeout(() => mountProsperityChart(mode), 200); return; }
+  if (mode) _prosperityMode = mode;
+  const isNominal = _prosperityMode === 'nominal';
+  const metricKey = isNominal ? 'GDP_CAPITA' : 'GDP_CAPITA_PPP';
+  const axisLabel = isNominal ? 'GDP per Capita (Nominal US$)' : "GDP per Capita PPP (Int'l $)";
+  const tipLabel  = isNominal ? 'GDP/capita' : 'PPP';
+
+  // Destroy previous chart so Chart.js doesn't throw "Canvas already in use" on toggle
+  if (_prosperityChartInst) { try { _prosperityChartInst.destroy(); } catch (_) {} _prosperityChartInst = null; }
+
   const nonEU = c => c.iso3 !== 'EUU';
 
   // Build bubble data
   const data = window.G20.filter(nonEU).map(c => {
-    const ppp    = window.G20Data.getLatest(c.iso3, 'GDP_CAPITA_PPP');
+    const inc    = window.G20Data.getLatest(c.iso3, metricKey);
     const growth = window.G20Data.getLatest(c.iso3, 'GDP_GROWTH');
     const pop    = window.G20Data.getLatest(c.iso3, 'POPULATION');
-    if (!ppp || !growth) return null;
+    if (!inc || !growth) return null;
     return {
       iso3: c.iso3, name: c.name, code: c.code, region: c.region,
-      x: ppp.value,
+      x: inc.value,
       y: growth.value,
       r: pop?.value ? Math.max(5, Math.min(30, Math.sqrt(pop.value / 1e6) * 1.8)) : 8,
-      ppp: ppp.value, growth: growth.value, pop: pop?.value, pppYear: ppp.year, growthYear: growth.year,
+      ppp: inc.value, growth: growth.value, pop: pop?.value, pppYear: inc.year, growthYear: growth.year,
     };
   }).filter(Boolean);
 
@@ -86,12 +100,14 @@ function mountProsperityChart() {
   const MONO = { family: 'JetBrains Mono, monospace' };
   const TICK  = { font: { ...MONO, size: 10 }, color: '#8A8A8A' };
 
-  // Compute median growth for quadrant lines
+  // Compute median growth + median income for quadrant lines (median adapts to the
+  // active metric so quadrants stay meaningful whether PPP or nominal is selected)
   const allGrowth = data.map(d => d.y).sort((a, b) => a - b);
   const medGrowth = allGrowth[Math.floor(allGrowth.length / 2)];
-  const medPPP    = 25000; // rough G20 PPP midpoint
+  const allInc    = data.map(d => d.x).sort((a, b) => a - b);
+  const medPPP    = allInc[Math.floor(allInc.length / 2)];
 
-  new Chart(canvas.getContext('2d'), {
+  _prosperityChartInst = new Chart(canvas.getContext('2d'), {
     type: 'bubble',
     data: { datasets },
     options: {
@@ -115,7 +131,7 @@ function mountProsperityChart() {
             label: ctx => {
               const m = ctx.raw._meta;
               const lines = [
-                `  PPP: $${Math.round(m.ppp / 1000)}K (${m.pppYear})`,
+                `  ${tipLabel}: $${Math.round(m.ppp / 1000)}K (${m.pppYear})`,
                 `  Growth: ${A.fmtSignedPct(m.growth)} (${m.growthYear})`,
               ];
               if (m.pop) lines.push(`  Pop: ${(m.pop / 1e6).toFixed(0)}M`);
@@ -127,7 +143,7 @@ function mountProsperityChart() {
       },
       scales: {
         x: {
-          title: { display: true, text: 'GDP per Capita PPP (Int\'l $)', color: '#64748b', font: { ...MONO, size: 10 } },
+          title: { display: true, text: axisLabel, color: '#64748b', font: { ...MONO, size: 10 } },
           grid: { color: 'rgba(0,0,0,0.04)' },
           ticks: { ...TICK, callback: v => '$' + (v / 1000).toFixed(0) + 'K' },
         },
@@ -160,7 +176,12 @@ function mountProsperityChart() {
     }],
   });
 
-  // PPP bars
+  // Per-capita bars (reflect active metric)
+  const titleEl = document.getElementById('pcap-title');
+  const subEl   = document.getElementById('pcap-sub');
+  if (titleEl) titleEl.textContent = isNominal ? 'GDP per Capita (Nominal)' : 'GDP per Capita PPP';
+  if (subEl)   subEl.textContent   = isNominal ? 'US$ · highest first' : "Int'l $ · highest first";
+
   const pppRanked = [...data].sort((a, b) => b.ppp - a.ppp);
   const maxPPP = pppRanked[0].ppp;
   document.getElementById('ppp-bars').innerHTML = `<div class="bar-chart">${pppRanked.map(d => {
@@ -198,7 +219,9 @@ function mountProsperityChart() {
 
 window.prosperityToggleX = function (btn, mode) {
   if (!window.Chart) return;
-  document.querySelectorAll('.sec-head__tab').forEach(b => b.classList.remove('active'));
+  // Scope the active-state reset to this toggle group only
+  const group = btn.closest('.sec-head__actions') || document;
+  group.querySelectorAll('.sec-head__tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  mountProsperityChart();
+  mountProsperityChart(mode);
 };
