@@ -137,6 +137,144 @@
           "recessionProb": null
         }
       ]
+    },
+    {
+      "date": "2026-07-24",
+      "forecasts": [
+        {
+          "iso3": "USA",
+          "baseYear": 2024,
+          "growthForecast": 2.42,
+          "termSpread": -0.843,
+          "recessionProb": 0.116
+        },
+        {
+          "iso3": "GBR",
+          "baseYear": 2024,
+          "growthForecast": 2.33,
+          "termSpread": -0.857,
+          "recessionProb": 0.151
+        },
+        {
+          "iso3": "CAN",
+          "baseYear": 2024,
+          "growthForecast": 1.75,
+          "termSpread": -1.027,
+          "recessionProb": 0.263
+        },
+        {
+          "iso3": "DEU",
+          "baseYear": 2024,
+          "growthForecast": 2.56,
+          "termSpread": -1.25,
+          "recessionProb": 0.223
+        },
+        {
+          "iso3": "FRA",
+          "baseYear": 2024,
+          "growthForecast": 2.42,
+          "termSpread": -0.602,
+          "recessionProb": 0.161
+        },
+        {
+          "iso3": "ITA",
+          "baseYear": 2024,
+          "growthForecast": 1.79,
+          "termSpread": 0.136,
+          "recessionProb": 0.211
+        },
+        {
+          "iso3": "JPN",
+          "baseYear": 2024,
+          "growthForecast": -0.25,
+          "termSpread": 0.733,
+          "recessionProb": 0.458
+        },
+        {
+          "iso3": "AUS",
+          "baseYear": 2024,
+          "growthForecast": 1.8,
+          "termSpread": -0.181,
+          "recessionProb": 0.144
+        },
+        {
+          "iso3": "KOR",
+          "baseYear": 2024,
+          "growthForecast": 2.96,
+          "termSpread": -0.332,
+          "recessionProb": 0.14
+        },
+        {
+          "iso3": "CHN",
+          "baseYear": 2024,
+          "growthForecast": 4.8,
+          "termSpread": null,
+          "recessionProb": null
+        },
+        {
+          "iso3": "IND",
+          "baseYear": 2024,
+          "growthForecast": 6.02,
+          "termSpread": null,
+          "recessionProb": null
+        },
+        {
+          "iso3": "BRA",
+          "baseYear": 2024,
+          "growthForecast": 3,
+          "termSpread": null,
+          "recessionProb": null
+        },
+        {
+          "iso3": "MEX",
+          "baseYear": 2024,
+          "growthForecast": 3.06,
+          "termSpread": -1.527,
+          "recessionProb": 0.138
+        },
+        {
+          "iso3": "ARG",
+          "baseYear": 2024,
+          "growthForecast": 1.9,
+          "termSpread": null,
+          "recessionProb": null
+        },
+        {
+          "iso3": "RUS",
+          "baseYear": 2024,
+          "growthForecast": 3.39,
+          "termSpread": null,
+          "recessionProb": null
+        },
+        {
+          "iso3": "SAU",
+          "baseYear": 2024,
+          "growthForecast": 4.31,
+          "termSpread": null,
+          "recessionProb": null
+        },
+        {
+          "iso3": "ZAF",
+          "baseYear": 2024,
+          "growthForecast": 3.4,
+          "termSpread": 2.888,
+          "recessionProb": 0.052
+        },
+        {
+          "iso3": "IDN",
+          "baseYear": 2024,
+          "growthForecast": 3.8,
+          "termSpread": null,
+          "recessionProb": null
+        },
+        {
+          "iso3": "TUR",
+          "baseYear": 2024,
+          "growthForecast": 4.55,
+          "termSpread": null,
+          "recessionProb": null
+        }
+      ]
     }
   ]
 }
