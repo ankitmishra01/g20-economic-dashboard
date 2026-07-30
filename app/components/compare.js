@@ -143,17 +143,15 @@ function mountCompareCharts() {
     return;
   }
 
-  const COLORS = [
-    'rgba(10,10,10,1)', 'rgba(185,28,28,1)', 'rgba(4,120,87,1)',
-    'rgba(161,98,7,1)', 'rgba(30,64,175,1)', 'rgba(109,40,217,1)',
-  ];
+  const COLORS = window.CATEGORICAL_PALETTE;
+  const theme = A.chartTheme();
 
   const unit = meta?.unit ? ' ' + meta.unit : '';
-  const TICK_OPTS = { font: { size: 10, family: "'Geist Mono', monospace" }, color: '#8A8A8A' };
+  const TICK_OPTS = { font: { size: 10, family: "'Geist Mono', monospace" }, color: theme.tick };
   const TOOLTIP_STYLE = {
-    backgroundColor: 'rgba(10,10,10,0.88)',
-    titleColor: '#8A8A8A',
-    bodyColor: '#F5F5F2',
+    backgroundColor: theme.tooltipBg,
+    titleColor: theme.tooltipTitle,
+    bodyColor: theme.tooltipBody,
     titleFont: { family: "'Geist Mono', monospace", size: 10 },
     bodyFont:  { family: "'Geist Mono', monospace", size: 11 },
     padding: 8,
@@ -186,7 +184,7 @@ function mountCompareCharts() {
         maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: { position: 'bottom', labels: { font: { size: 11, family: "'Geist Mono', monospace" }, padding: 14, color: '#525252' } },
+          legend: { position: 'bottom', labels: { font: { size: 11, family: "'Geist Mono', monospace" }, padding: 14, color: theme.tick } },
           tooltip: {
             ...TOOLTIP_STYLE,
             callbacks: {
@@ -197,8 +195,8 @@ function mountCompareCharts() {
           datalabels: { display: false },
         },
         scales: {
-          x: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: TICK_OPTS },
-          y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { ...TICK_OPTS, callback: v => v.toFixed(1) + unit } },
+          x: { grid: { color: theme.grid }, ticks: TICK_OPTS },
+          y: { grid: { color: theme.grid }, ticks: { ...TICK_OPTS, callback: v => v.toFixed(1) + unit } },
         },
       },
     });
@@ -226,7 +224,7 @@ function mountCompareCharts() {
         anchor: 'end', align: 'top',
         formatter: v => v != null ? v.toFixed(1) + unit : '',
         font: { family: "'Geist Mono', monospace", size: 9, weight: '600' },
-        color: '#383838',
+        color: theme.text2,
         offset: 2,
         clip: false,
       },
@@ -264,7 +262,7 @@ function mountCompareCharts() {
             labels: {
               font: { size: 10, family: "'Geist Mono', monospace" },
               padding: 10,
-              color: '#525252',
+              color: theme.tick,
               filter: item => item.text !== (meta?.label || indicator),
             },
           },
@@ -284,7 +282,7 @@ function mountCompareCharts() {
           y: {
             beginAtZero: true,
             grace: '8%',
-            grid: { color: 'rgba(0,0,0,0.04)' },
+            grid: { color: theme.grid },
             ticks: { ...TICK_OPTS, callback: v => v.toFixed(1) + unit },
           },
         },

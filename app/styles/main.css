@@ -31,7 +31,7 @@
   --text-1:    #0A0A0A;
   --text-2:    #383838;
   --text-3:    #656565;
-  --text-4:    #959595;
+  --text-4:    #707070;  /* was #959595 — 3.0:1 on white, fails WCAG AA; now 4.95:1 */
 
   --rule:      #DEDAD4;
   --rule-2:    #CECAC2;
@@ -39,6 +39,13 @@
   --text-on-ink:    #F5F5F2;
   --text-on-ink-2:  rgba(245,245,242,0.62);
   --text-on-ink-3:  rgba(245,245,242,0.40);
+
+  /* --pos/--neg/--warn below are tuned as dark text on a light background —
+     the profile hero is always rendered on var(--ink) regardless of theme,
+     so it needs its own light-on-dark variants instead. */
+  --pos-on-ink:  #6FCBA8;
+  --neg-on-ink:  #F08F8F;
+  --warn-on-ink: #E8C063;
 
   --pos:       #047857;
   --neg:       #B91C1C;
@@ -49,10 +56,57 @@
   --neg-bg:    rgba(185,28,28,0.08);
   --warn-bg:   rgba(161,98,7,0.10);
 
+  /* Status/risk badges: same semantic families as --pos/--neg/--warn/--info
+     above, tuned for use as chip text on a light tint (see [data-theme="dark"]
+     for the brighter values these swap to on a dark tint). --status-elevated
+     is the one tier with no plain-text equivalent — it sits between
+     --warn and --neg for risk levels more severe than "watch" but short of
+     "high". */
+  --status-stable-fg:    var(--pos);
+  --status-stable-bg:    rgba(4,120,87,0.12);
+  --status-watch-fg:     var(--warn);
+  --status-watch-bg:     rgba(161,98,7,0.06);   /* 0.12 measured 4.2:1, fails AA at this text size */
+  --status-elevated-fg:  #C2410C;
+  --status-elevated-bg:  rgba(194,65,12,0.06);  /* 0.12 measured 4.4:1, fails AA at this text size */
+  --status-high-fg:      var(--neg);
+  --status-high-bg:      rgba(185,28,28,0.15);
+  --status-insulated-fg: var(--info);
+  --status-insulated-bg: rgba(30,64,175,0.12);
+
   --font-sans: "Geist", "Inter Tight", system-ui, -apple-system, sans-serif;
   --font-mono: "Geist Mono", "JetBrains Mono", ui-monospace, monospace;
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* ── Spacing ─────────────────────────────────────────────────────────────────
+     1:1 tokenization of values already in use across the app (a dense "fintech
+     terminal" layout intentionally uses more than a strict 4/8pt grid) — this
+     names today's values rather than forcing a stricter scale. For new
+     spacing, prefer the 4/8/12/16/20/24/32 subset where a choice is open. */
+  --space-1: 1px;   --space-2: 2px;   --space-3: 3px;   --space-4: 4px;
+  --space-5: 5px;   --space-6: 6px;   --space-7: 7px;   --space-8: 8px;
+  --space-9: 9px;   --space-10: 10px; --space-11: 11px; --space-12: 12px;
+  --space-13: 13px; --space-14: 14px; --space-16: 16px; --space-18: 18px;
+  --space-20: 20px; --space-22: 22px; --space-24: 24px; --space-28: 28px;
+  --space-32: 32px; --space-36: 36px; --space-80: 80px;
+
+  /* ── Radius ──────────────────────────────────────────────────────────────────
+     Six distinct component tiers already in consistent use (legend
+     dots/swatches, badges/pills, small controls, nav/tabs/chips, list rows,
+     cards) — named rather than merged, since collapsing any of them would be
+     a visible shape change to real components. */
+  --radius-2xs: 2px;  /* legend dots, tiny swatches */
+  --radius-xs:  3px;  /* badges, pills, progress-bar fill */
+  --radius-sm:  4px;  /* small buttons/inputs */
+  --radius-md:  5px;  /* nav rail items, tabs, chips */
+  --radius-lg:  6px;  /* larger inputs, list rows, bars */
+  --radius-xl:  8px;  /* cards, panels */
+
+  /* Chart.js gridlines/tooltips — read via getComputedStyle at chart-mount
+     time (see A.chartTheme() in atoms.js) since Chart.js option colors are
+     static once a chart is created. */
+  --chart-grid:       rgba(0,0,0,0.04);
+  --chart-tooltip-bg: rgba(10,10,10,0.88);
 }
 
 /* ── Dark mode tokens ────────────────────────────────────────────────────────── */
@@ -66,7 +120,7 @@
   --text-1:    #F2F0EC;
   --text-2:    #BDB9B1;
   --text-3:    #7A7670;
-  --text-4:    #504C48;
+  --text-4:    #8A8680;  /* was #504C48 — 2.2:1 on dark bg, fails WCAG AA; now 5.2:1 */
   --rule:      #2A2826;
   --rule-2:    #363430;
   --rule-on-ink:   rgba(255,255,255,0.07);
@@ -76,6 +130,22 @@
   --pos-bg:    rgba(4,120,87,0.12);
   --neg-bg:    rgba(185,28,28,0.12);
   --warn-bg:   rgba(161,98,7,0.14);
+
+  /* Brighter than the light-mode chip colors above (which are tuned as dark
+     text on a light tint) — these read correctly as light text on a dark
+     tint instead. Same five status tiers, same hue families. */
+  --status-stable-fg:    #34d399;
+  --status-stable-bg:    rgba(52,211,153,0.16);
+  --status-watch-fg:     #FBBF24;
+  --status-watch-bg:     rgba(251,191,36,0.16);
+  --status-elevated-fg:  #FB923C;
+  --status-elevated-bg:  rgba(251,146,60,0.16);
+  --status-high-fg:      #F87171;
+  --status-high-bg:      rgba(248,113,113,0.18);
+  --status-insulated-fg: #3b82f6;
+  --status-insulated-bg: rgba(59,130,246,0.16);
+
+  --chart-grid: rgba(255,255,255,0.06);
 }
 
 html, body {
@@ -436,7 +506,7 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
 .hero__title .num-callout {
   font-family: var(--font-mono);
   font-weight: 600;
-  color: #6FCBA8;
+  color: var(--pos-on-ink);
   font-size: 28px;
   margin: 0 3px;
 }
@@ -504,9 +574,9 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   align-items: center;
   gap: 5px;
 }
-.delta-pos { color: #6FCBA8; }
-.delta-neg { color: #F08F8F; }
-.delta-warn { color: #E8C063; }
+.delta-pos { color: var(--pos-on-ink); }
+.delta-neg { color: var(--neg-on-ink); }
+.delta-warn { color: var(--warn-on-ink); }
 .delta-mute { color: var(--text-on-ink-3); }
 
 /* ── Page body ───────────────────────────────────────────────────────────────── */
@@ -614,7 +684,6 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
 .kpi-tile:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,0.07); }
 .kpi-tile.kpi-pos { border-left: 3px solid var(--pos); }
 .kpi-tile.kpi-neg { border-left: 3px solid var(--neg); }
-.kpi-tile.kpi-warn { border-left: 3px solid var(--warn); }
 .kpi-tile__head {
   display: flex;
   align-items: center;
@@ -768,6 +837,29 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
 }
 .rank-table tbody tr:last-child td { border-bottom: none; }
 .rank-table tbody tr:hover td { background: var(--bg-2); cursor: pointer; }
+
+/* Plain data-table header cell (e.g. Data sources table) */
+.tbl-th {
+  padding: var(--space-8) var(--space-14);
+  text-align: left;
+  color: var(--text-3);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+}
+
+/* Eyebrow-style section heading above a list (e.g. Key risks / Upside factors) */
+.eyebrow-lbl {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-4);
+  margin-bottom: var(--space-10);
+}
+
+/* Section spacing utility — repeated verbatim across panel/row-2 wrappers */
+.mb-20 { margin-bottom: var(--space-20); }
 .col-no { text-align: left !important; width: 36px; color: var(--text-3); font-size: 11.5px; }
 .col-flag { text-align: left !important; width: 28px; }
 .col-name { text-align: left !important; font-family: var(--font-sans) !important; }
@@ -783,10 +875,10 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   border-radius: 3px;
   white-space: nowrap;
 }
-.risk-stable   { background: rgba(52,211,153,.12); color: #34d399; }
-.risk-watch    { background: rgba(251,191,36,.12);  color: #FBBF24; }
-.risk-elevated { background: rgba(251,146,60,.12);  color: #FB923C; }
-.risk-high     { background: rgba(248,113,113,.15); color: #F87171; }
+.risk-stable   { background: var(--status-stable-bg);   color: var(--status-stable-fg); }
+.risk-watch    { background: var(--status-watch-bg);    color: var(--status-watch-fg); }
+.risk-elevated { background: var(--status-elevated-bg); color: var(--status-elevated-fg); }
+.risk-high     { background: var(--status-high-bg);      color: var(--status-high-fg); }
 
 /* ── AI Economy page ──────────────────────────────────────────────────────────── */
 .ai-risk-badge {
@@ -800,10 +892,10 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   text-transform: uppercase;
   white-space: nowrap;
 }
-.ai-risk-zone          { background: rgba(248,113,113,.12); color: #F87171; }
-.ai-risk-managed       { background: rgba(52,211,153,.12);  color: #34d399; }
-.ai-risk-insulated     { background: rgba(59,130,246,.12);  color: #3b82f6; }
-.ai-risk-transitioning { background: rgba(245,158,11,.12);  color: #F59E0B; }
+.ai-risk-zone          { background: var(--status-high-bg);      color: var(--status-high-fg); }
+.ai-risk-managed       { background: var(--status-stable-bg);    color: var(--status-stable-fg); }
+.ai-risk-insulated     { background: var(--status-insulated-bg); color: var(--status-insulated-fg); }
+.ai-risk-transitioning { background: var(--status-watch-bg);     color: var(--status-watch-fg); }
 
 @keyframes shimmer {
   0%   { background-position: 200% 0; }
@@ -1025,32 +1117,6 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
 }
 .back-btn:hover { color: var(--text-1); cursor: pointer; }
 
-/* Placement switcher */
-.placement-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--rule);
-  background: var(--bg-2);
-  font-family: var(--font-mono);
-  font-size: 11px;
-}
-.placement-bar .lbl { color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; }
-.placement-btn {
-  padding: 4px 10px;
-  border: 1px solid var(--rule);
-  border-radius: 4px;
-  background: var(--bg);
-  color: var(--text-3);
-  cursor: pointer;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  transition: all 100ms;
-}
-.placement-btn:hover { color: var(--text-1); border-color: var(--rule-2); }
-.placement-btn.active { background: var(--ink); color: var(--text-on-ink); border-color: var(--ink); }
-
 /* Analyst commentary block */
 .analyst-block {
   background: var(--bg);
@@ -1124,12 +1190,6 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   color: var(--text-3);
 }
 
-/* Profile chart grid */
-.profile-charts {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
 .chart-panel {
   background: var(--bg);
   border: 1px solid var(--rule);
@@ -1237,12 +1297,6 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   border-top: 1px solid var(--rule);
   background: var(--bg-2);
 }
-.country-brief__source {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text-4);
-}
-
 /* ── Methodology / data vintage footer ──────────────────────────────────────── */
 .brief-methodology { display: flex; flex-direction: column; gap: 8px; }
 .brief-method__title {
@@ -1325,24 +1379,6 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   .country-section-row { grid-template-columns: 1fr; }
   .country-section__text { border-right: none; border-bottom: 1px solid var(--rule); }
 }
-
-/* ── Compare page ────────────────────────────────────────────────────────────── */
-.compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-.compare-select-row { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
-.compare-select {
-  padding: 7px 12px;
-  border: 1px solid var(--rule);
-  border-radius: 6px;
-  font-family: var(--font-sans);
-  font-size: 13px;
-  color: var(--text-1);
-  background: var(--bg);
-  outline: none;
-  cursor: pointer;
-  min-width: 160px;
-}
-.compare-select:focus { border-color: var(--rule-2); }
-.compare-vs { font-family: var(--font-mono); color: var(--text-3); font-size: 12px; }
 
 /* ── Flags page ──────────────────────────────────────────────────────────────── */
 .flags-section { margin-bottom: 28px; }
@@ -1895,9 +1931,6 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   .profile-hero__stats { gap: 20px; }
   .profile-hero__name { font-size: 22px; }
   .profile-hero__flag { width: 48px; height: 32px; }
-
-  /* Country profile: stack the two trend charts */
-  .profile-charts { grid-template-columns: 1fr; }
 
   /* AI Economy: 4-up KPI strip → 2-up; editorials stack */
   .ai-kpi-strip, .flags-kpi-strip { grid-template-columns: repeat(2, 1fr) !important; }

@@ -79,7 +79,7 @@
 
   const fmtPct = v => (v == null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(1) + '%');
   const fmtTs = v => (v == null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(2) + 'pp');
-  const fragColor = s => s >= 50 ? 'var(--neg)' : s >= 30 ? 'var(--warn)' : s >= 15 ? '#A16207' : 'var(--pos)';
+  const fragColor = s => s >= 50 ? 'var(--neg)' : s >= 15 ? 'var(--warn)' : 'var(--pos)';
 
   // ── Country "Near-term outlook" panel ──────────────────────────────────────────
   window.renderForecastStrip = function (iso3) {

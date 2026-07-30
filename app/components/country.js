@@ -17,7 +17,7 @@ function renderCountries() {
           const growthClass = gv === undefined ? '' : gv >= 2 ? 'good' : gv < 0 ? 'bad' : '';
           const infClass    = inf?.value > 8 ? 'bad' : inf?.value > 4 ? 'warn' : '';
           return `
-            <div class="co-card" onclick="navTo('country/${c.iso3}')">
+            <div class="co-card" ${A.navRowAttrs(c.iso3, c.name)}>
               <div class="co-card__head">
                 <div class="co-flag" style="background-image:url('https://flagcdn.com/${c.code.toLowerCase()}.svg');background-size:cover;background-position:center;"></div>
                 <div>
@@ -77,7 +77,7 @@ function renderCountryProfile(iso3) {
   const iv = inf?.value;
   const dv = debt?.value;
 
-  const growthCls = gv !== undefined ? (gv < 0 ? '#F08F8F' : gv >= 4 ? '#6FCBA8' : 'var(--text-on-ink)') : 'var(--text-on-ink)';
+  const growthCls = gv !== undefined ? (gv < 0 ? 'var(--neg-on-ink)' : gv >= 4 ? 'var(--pos-on-ink)' : 'var(--text-on-ink)') : 'var(--text-on-ink)';
 
   const vintage = Math.max(
     gdp?.year || 0, gr?.year || 0, inf?.year || 0, une?.year || 0, debt?.year || 0
@@ -116,7 +116,7 @@ function renderCountryProfile(iso3) {
         ${gv !== undefined ? `<div><div class="profile-hero__stat-lbl">Growth</div><div class="profile-hero__stat-val" style="color:${growthCls}">${A.fmtSignedPct(gv)}</div></div>` : ''}
         ${iv !== undefined ? `<div><div class="profile-hero__stat-lbl">CPI</div><div class="profile-hero__stat-val">${iv.toFixed(1)}%</div></div>` : ''}
         ${une?.value !== undefined ? `<div><div class="profile-hero__stat-lbl">Unemp.</div><div class="profile-hero__stat-val">${une.value.toFixed(1)}%</div></div>` : ''}
-        ${dv !== undefined ? `<div><div class="profile-hero__stat-lbl">Debt/GDP</div><div class="profile-hero__stat-val" style="${dv > 100 ? 'color:#E8C063' : ''}">${dv.toFixed(0)}%</div></div>` : ''}
+        ${dv !== undefined ? `<div><div class="profile-hero__stat-lbl">Debt/GDP</div><div class="profile-hero__stat-val" style="${dv > 100 ? 'color:var(--warn-on-ink)' : ''}">${dv.toFixed(0)}%</div></div>` : ''}
       </div>
       ${vintage || commentaryDate ? `<div style="font-family:var(--font-mono);font-size:10px;color:rgba(245,245,242,0.4);margin-top:10px">${vintage ? `Data ${vintage}` : ''}${vintage && commentaryDate ? ' · ' : ''}${commentaryDate ? `Analysis ${commentaryDate}` : ''}</div>` : ''}
     </div>
@@ -146,7 +146,7 @@ function renderCountryProfile(iso3) {
   <div class="sec-head" style="margin-top:4px">
     <div class="sec-head__title">vs G20 median</div>
   </div>
-  <div class="panel" style="margin-bottom:20px">
+  <div class="panel mb-20">
     ${renderStanding(iso3)}
   </div>
 
@@ -242,14 +242,14 @@ function renderKeyFacts(iso3) {
   const items = [
     gdp    ? { label: 'GDP',          val: '$' + (gdp.value/1e12).toFixed(2) + 'T',   yr: gdp.year }    : null,
     gr     ? { label: 'GDP Growth',   val: A.fmtSignedPct(gr.value), yr: gr.year,
-               cls: gr.value < 0 ? 'color:#C0392B' : gr.value >= 4 ? 'color:#27AE60' : '' } : null,
+               cls: gr.value < 0 ? 'color:var(--neg)' : gr.value >= 4 ? 'color:var(--pos)' : '' } : null,
     inf    ? { label: 'Inflation',    val: inf.value.toFixed(1) + '%',    yr: inf.year,
-               cls: inf.value > 8 ? 'color:#C0392B' : inf.value > 4 ? 'color:#E8A236' : '' } : null,
+               cls: inf.value > 8 ? 'color:var(--neg)' : inf.value > 4 ? 'color:var(--warn)' : '' } : null,
     une    ? { label: 'Unemployment', val: une.value.toFixed(1) + '%',    yr: une.year }    : null,
     debt   ? { label: 'Debt / GDP',   val: debt.value.toFixed(0) + '%',   yr: debt.year,
-               cls: debt.value > 100 ? 'color:#E8A236' : '' } : null,
+               cls: debt.value > 100 ? 'color:var(--warn)' : '' } : null,
     fiscal ? { label: 'Fiscal Bal.',  val: A.fmtSignedPct(fiscal.value), yr: fiscal.year,
-               cls: fiscal.value < -6 ? 'color:#C0392B' : fiscal.value < 0 ? 'color:#E8A236' : 'color:#27AE60' } : null,
+               cls: fiscal.value < -6 ? 'color:var(--neg)' : fiscal.value < 0 ? 'color:var(--warn)' : 'color:var(--pos)' } : null,
     cap    ? { label: 'GDP / Capita', val: '$' + Math.round(cap.value/1000) + 'K',     yr: cap.year }    : null,
     life   ? { label: 'Life Expect.', val: life.value.toFixed(1) + ' yrs',              yr: life.year }   : null,
   ].filter(Boolean);
@@ -388,34 +388,6 @@ function renderAnalystBlock(iso3, countryName, contextSnippet, title, blockId) {
       </div>
     </div>`;
 }
-
-// ── Placement switcher ────────────────────────────────────────────────────────
-window.switchPlacement = function(mode, btn) {
-  document.querySelectorAll('.placement-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-
-  const lead   = document.getElementById('analyst-lead');
-  const side   = document.getElementById('analyst-side');
-  const inlineNote = document.getElementById('inline-note-gdp');
-  const layout = document.getElementById('profile-layout');
-
-  if (mode === 'lead') {
-    if (lead) lead.style.display = '';
-    if (side) side.style.display = 'none';
-    if (inlineNote) inlineNote.style.display = 'none';
-    if (layout) layout.style.gridTemplateColumns = '1fr auto';
-  } else if (mode === 'side') {
-    if (lead) lead.style.display = 'none';
-    if (side) side.style.display = '';
-    if (inlineNote) inlineNote.style.display = 'none';
-    if (layout) layout.style.gridTemplateColumns = '1fr 280px';
-  } else if (mode === 'inline') {
-    if (lead) lead.style.display = 'none';
-    if (side) side.style.display = 'none';
-    if (inlineNote) inlineNote.style.display = '';
-    if (layout) layout.style.gridTemplateColumns = '1fr';
-  }
-};
 
 // ── Analyst actions ───────────────────────────────────────────────────────────
 window.editAnalysis = function(blockId) {
@@ -1058,12 +1030,13 @@ window.mountCountryProfileCharts = function(iso3) {
 
     loadSavedNotes(iso3);
 
+    const theme = A.chartTheme();
     const MONO = { family: "'Geist Mono', monospace" };
-    const TICK_OPTS = { font: { ...MONO, size: 10 }, color: '#8A8A8A' };
+    const TICK_OPTS = { font: { ...MONO, size: 10 }, color: theme.tick };
     const TOOLTIP_BASE = {
-      backgroundColor: 'rgba(10,10,10,0.88)',
-      titleColor: '#8A8A8A',
-      bodyColor: '#F5F5F2',
+      backgroundColor: theme.tooltipBg,
+      titleColor: theme.tooltipTitle,
+      bodyColor: theme.tooltipBody,
       titleFont: { ...MONO, size: 10 },
       bodyFont:  { ...MONO, size: 11 },
       padding: 8,
@@ -1080,8 +1053,8 @@ window.mountCountryProfileCharts = function(iso3) {
         datalabels: { display: false },
       },
       scales: {
-        x: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { ...TICK_OPTS, maxTicksLimit: 6 } },
-        y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { ...TICK_OPTS, maxTicksLimit: 5 } },
+        x: { grid: { color: theme.grid }, ticks: { ...TICK_OPTS, maxTicksLimit: 6 } },
+        y: { grid: { color: theme.grid }, ticks: { ...TICK_OPTS, maxTicksLimit: 5 } },
       },
       elements: { point: { radius: 2, hoverRadius: 4 }, line: { tension: 0.3, borderWidth: 1.5 } },
     };
@@ -1141,6 +1114,9 @@ window.mountCountryProfileCharts = function(iso3) {
         });
       }
 
+      const existing = Chart.getChart(canvas);
+      if (existing) existing.destroy();
+
       new Chart(canvas.getContext('2d'), {
         type: 'line',
         data: { labels, datasets },
@@ -1161,7 +1137,7 @@ window.mountCountryProfileCharts = function(iso3) {
             },
             legend: {
               display: hasProjections && fullSeries.some(d => d.isProjection),
-              labels: { color: '#8A8A8A', font: { size: 10 }, boxWidth: 20, padding: 8 },
+              labels: { color: theme.tick, font: { size: 10 }, boxWidth: 20, padding: 8 },
             },
           },
           scales: {
@@ -1196,7 +1172,7 @@ function renderAIOutlookCard(countryName) {
          class="sec-head__tab" style="text-decoration:none;font-size:11px" id="ai-outlook-link-${iso3}">Full Index ↗</a>
     </div>
   </div>
-  <div id="ai-outlook-${iso3}" class="panel" style="margin-bottom:20px">
+  <div id="ai-outlook-${iso3}" class="panel mb-20">
     <div class="panel__body" style="padding:16px 20px;display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:11px;color:var(--text-4)">
       <div class="spinner" style="width:14px;height:14px;flex-shrink:0"></div>
       Loading AI Outlook…

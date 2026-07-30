@@ -93,6 +93,23 @@
     return `<span class="delta-badge ${cls}">${sign}${rounded.toFixed(1)}</span>`;
   }
 
+  // Chart.js option objects are built once at chart-creation time, so any
+  // color inside them must be resolved fresh right before `new Chart(...)` —
+  // reading a CSS custom property here, not a hardcoded hex, is what lets a
+  // chart look right after a dark-mode toggle re-mounts it.
+  function chartTheme() {
+    const cs = getComputedStyle(document.documentElement);
+    const v = (name, fallback) => cs.getPropertyValue(name).trim() || fallback;
+    return {
+      tick:      v('--text-3', '#8A8A8A'),
+      text2:     v('--text-2', '#383838'),
+      grid:      v('--chart-grid', 'rgba(0,0,0,0.04)'),
+      tooltipBg: v('--chart-tooltip-bg', 'rgba(10,10,10,0.88)'),
+      tooltipTitle: v('--text-3', '#8A8A8A'),
+      tooltipBody:  v('--text-on-ink', '#F5F5F2'),
+    };
+  }
+
   function escapeText(s) {
     return String(s ?? '').replace(/[&<>]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[ch]));
   }
@@ -102,6 +119,15 @@
     }[ch]));
   }
 
+  // Shared accessible-attributes string for the "whole element navigates to a
+  // country profile" pattern (country cards, flag list items, table rows) —
+  // these were plain onclick divs with no keyboard or screen-reader access.
+  function navRowAttrs(iso3, name) {
+    return `role="button" tabindex="0" onclick="navTo('country/${iso3}')" ` +
+      `onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navTo('country/${iso3}')}" ` +
+      `aria-label="Open ${escapeAttr(name)} profile"`;
+  }
+
   global.A = { icon, colorHash, fmtGDP, fmtPct, fmtSignedPct, fmtMillions, fmtThousands, fmtDecimal,
-               fmtByFormat, deltaBadge, escapeText, escapeAttr };
+               fmtByFormat, deltaBadge, escapeText, escapeAttr, chartTheme, navRowAttrs };
 })(window);

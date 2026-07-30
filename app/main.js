@@ -15,7 +15,53 @@
       html.setAttribute('data-theme', 'dark');
       localStorage.setItem('g20-theme', 'dark');
     }
+    remountChartsForTheme();
   };
+
+  // Chart.js option colors are read once at chart-creation time, so a CSS-only
+  // theme flip doesn't touch already-mounted charts — remount whatever's on
+  // screen so they pick up the new tokens. Uses location.hash directly
+  // (rather than _currentPage) since _currentPage is only updated for
+  // non-country pages. Deliberately skips mountAIOutlookCard: it's an HTML
+  // card, not a canvas, and re-invoking it on every toggle would be pointless
+  // extra work for a widget that doesn't need to re-render for theme.
+  //
+  // Wrapped in requestAnimationFrame: creating a Chart.js instance in the same
+  // tick as the data-theme attribute flip measures the canvas before the
+  // browser has settled the new theme's layout/paint, which produces a chart
+  // that reports correct dimensions but never actually paints a first frame
+  // (confirmed via canvas pixel sampling — a manual .update() after the fact
+  // does draw correctly). Deferring one frame gives layout time to settle.
+  function remountChartsForTheme() {
+    if (!_dataLoaded) return;
+    requestAnimationFrame(() => {
+      // Skip the entrance animation on a theme-triggered remount — the data
+      // isn't changing, only the colors, so animating bubbles/bars in from
+      // zero on every toggle just adds a flash of an empty chart for no
+      // benefit (also sidesteps relying on a run of animation frames landing
+      // correctly right as the browser is mid-repaint from the theme flip).
+      const prevAnimation = window.Chart ? Chart.defaults.animation : undefined;
+      if (window.Chart) Chart.defaults.animation = false;
+      const page = location.hash.replace('#', '') || 'overview';
+      if (page.startsWith('country/')) {
+        window.mountCountryProfileCharts(page.split('/')[1]);
+      } else {
+        mountPageCharts(page);
+      }
+      // mountAIEconomyCharts is async (awaits cached trajectory data before
+      // creating its charts), so restoring on the next microtask would win
+      // the race against its chart creation. A short timeout is well clear
+      // of that either way.
+      if (window.Chart) setTimeout(() => { Chart.defaults.animation = prevAnimation; }, 50);
+
+      // A freshly (re)created Chart.js instance sometimes reports the right
+      // canvas size but skips its first real paint — confirmed by sampling
+      // canvas pixel data: content was correct, it just never made it to
+      // screen until something nudged a resize. Dispatching `resize` one more
+      // frame later reliably forces that repaint.
+      requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
+    });
+  }
 
   // ── Mobile menu ────────────────────────────────────────────────────────────
   window.toggleMobileMenu = function () {

@@ -64,6 +64,14 @@ const FLAGS_CONFIG = {
   fiscalDeficit:    { key: 'FISCAL_BAL',  threshold: -6,  dir: 'below', label: 'Large Fiscal Deficit', severity: 'medium' },
 };
 
+// Shared categorical palette for multi-series charts (e.g. Compare page
+// country lines). Single source of truth so a future second consumer doesn't
+// have to invent its own color set.
+const CATEGORICAL_PALETTE = [
+  'rgba(10,10,10,1)', 'rgba(185,28,28,1)', 'rgba(4,120,87,1)',
+  'rgba(161,98,7,1)', 'rgba(30,64,175,1)', 'rgba(109,40,217,1)',
+];
+
 // Nav items for the sidebar.
 const NAV_ITEMS = [
   { id: 'overview',   label: 'Overview',         icon: 'home',   key: 'O' },
@@ -80,3 +88,4 @@ window.G20         = G20;
 window.INDICATORS  = INDICATORS;
 window.FLAGS_CONFIG = FLAGS_CONFIG;
 window.NAV_ITEMS   = NAV_ITEMS;
+window.CATEGORICAL_PALETTE = CATEGORICAL_PALETTE;

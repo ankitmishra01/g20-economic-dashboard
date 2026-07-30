@@ -24,7 +24,7 @@ function renderProsperity() {
     </div>
   </div>
 
-  <div class="panel" style="margin-bottom:20px">
+  <div class="panel mb-20">
     <div class="panel__body" style="padding:16px 20px">
       <div class="prosperity-quadrants" id="prosperity-quadrants" style="position:relative;height:480px">
         <canvas id="prosperity-chart"></canvas>
@@ -36,7 +36,7 @@ function renderProsperity() {
   <div class="sec-head">
     <div class="sec-head__title">Per-Capita Rankings <span class="sec-head__sub">PPP-adjusted · latest available</span></div>
   </div>
-  <div class="row-2" style="margin-bottom:20px">
+  <div class="row-2 mb-20">
     <div class="panel">
       <div class="panel__head">
         <div><span class="panel__title" id="pcap-title">GDP per Capita PPP</span><span class="panel__sub" id="pcap-sub">Int'l $ · highest first</span></div>
@@ -97,8 +97,9 @@ function mountProsperityChart(mode) {
   const canvas = document.getElementById('prosperity-chart');
   if (!canvas) return;
 
+  const theme = A.chartTheme();
   const MONO = { family: 'JetBrains Mono, monospace' };
-  const TICK  = { font: { ...MONO, size: 10 }, color: '#8A8A8A' };
+  const TICK  = { font: { ...MONO, size: 10 }, color: theme.tick };
 
   // Compute median growth + median income for quadrant lines (median adapts to the
   // active metric so quadrants stay meaningful whether PPP or nominal is selected)
@@ -116,12 +117,12 @@ function mountProsperityChart(mode) {
       plugins: {
         legend: {
           position: 'bottom',
-          labels: { color: '#8A8A8A', font: { ...MONO, size: 10 }, boxWidth: 10, padding: 12 },
+          labels: { color: theme.tick, font: { ...MONO, size: 10 }, boxWidth: 10, padding: 12 },
         },
         tooltip: {
-          backgroundColor: 'rgba(10,10,10,0.9)',
-          titleColor: '#8A8A8A',
-          bodyColor: '#F5F5F2',
+          backgroundColor: theme.tooltipBg,
+          titleColor: theme.tooltipTitle,
+          bodyColor: theme.tooltipBody,
           titleFont: { ...MONO, size: 10 },
           bodyFont:  { ...MONO, size: 11 },
           padding: 10,
@@ -143,13 +144,13 @@ function mountProsperityChart(mode) {
       },
       scales: {
         x: {
-          title: { display: true, text: axisLabel, color: '#64748b', font: { ...MONO, size: 10 } },
-          grid: { color: 'rgba(0,0,0,0.04)' },
+          title: { display: true, text: axisLabel, color: theme.tick, font: { ...MONO, size: 10 } },
+          grid: { color: theme.grid },
           ticks: { ...TICK, callback: v => '$' + (v / 1000).toFixed(0) + 'K' },
         },
         y: {
-          title: { display: true, text: 'GDP Growth Rate (%)', color: '#64748b', font: { ...MONO, size: 10 } },
-          grid: { color: 'rgba(0,0,0,0.04)' },
+          title: { display: true, text: 'GDP Growth Rate (%)', color: theme.tick, font: { ...MONO, size: 10 } },
+          grid: { color: theme.grid },
           ticks: { ...TICK, callback: v => A.fmtSignedPct(v) },
         },
       },
@@ -160,7 +161,9 @@ function mountProsperityChart(mode) {
         const ctx2 = chart.ctx;
         ctx2.save();
         ctx2.font = '9px JetBrains Mono, monospace';
-        ctx2.fillStyle = '#F5F5F2';
+        // Fixed on purpose: drawn on top of colored bubble fills, not the page
+        // background, so it doesn't need to track the light/dark theme.
+        ctx2.fillStyle = theme.tooltipBody;
         ctx2.textAlign = 'center';
         ctx2.textBaseline = 'middle';
         chart.data.datasets.forEach((ds, di) => {

@@ -73,7 +73,7 @@ function renderFlags() {
     <div class="flags-section-title">Flagged — ${flagged.length} countries</div>
     <div class="panel" style="overflow:hidden">
       ${flagged.map((c, i) => `
-        <div class="flag-item" onclick="navTo('country/${c.iso3}')">
+        <div class="flag-item" ${A.navRowAttrs(c.iso3, c.name)}>
           <div class="flag-item__rank">${String(i+1).padStart(2,'0')}</div>
           <span class="flag-rect" style="background-image:url('https://flagcdn.com/${c.code.toLowerCase()}.svg');background-size:cover;background-position:center;"></span>
           <div>
@@ -95,7 +95,7 @@ function renderFlags() {
     <div class="flags-section-title">On track — ${healthy.length} countries</div>
     <div class="panel" style="overflow:hidden">
       ${healthy.map(c => `
-        <div class="flag-item" onclick="navTo('country/${c.iso3}')">
+        <div class="flag-item" ${A.navRowAttrs(c.iso3, c.name)}>
           <div class="flag-item__rank"></div>
           <span class="flag-rect" style="background-image:url('https://flagcdn.com/${c.code.toLowerCase()}.svg');background-size:cover;background-position:center;"></span>
           <div>
