@@ -27,13 +27,20 @@ const DIM_COLORS = {
   economic_readiness: 'rgba(236,72,153,0.8)',
 };
 const MONO = { family: "'JetBrains Mono', 'Geist Mono', monospace" };
-const TICK  = { font: { ...MONO, size: 10 }, color: '#8A8A8A' };
-const TT    = {
-  backgroundColor: 'rgba(10,10,10,0.9)',
-  titleColor: '#8A8A8A', bodyColor: '#F5F5F2',
-  titleFont: { ...MONO, size: 10 }, bodyFont: { ...MONO, size: 11 },
-  padding: 10, cornerRadius: 4,
-};
+// Functions, not constants: Chart.js option colors are static once a chart is
+// created, so these must be re-resolved from CSS custom properties fresh at
+// each mount — including a dark-mode-triggered remount.
+function tick() { return { font: { ...MONO, size: 10 }, color: A.chartTheme().tick }; }
+function chartGrid() { return A.chartTheme().grid; }
+function tt() {
+  const theme = A.chartTheme();
+  return {
+    backgroundColor: theme.tooltipBg,
+    titleColor: theme.tooltipTitle, bodyColor: theme.tooltipBody,
+    titleFont: { ...MONO, size: 10 }, bodyFont: { ...MONO, size: 11 },
+    padding: 10, cornerRadius: 4,
+  };
+}
 
 // ── Data fetch ────────────────────────────────────────────────────────────────
 async function loadAITrajectoryData() {
@@ -285,13 +292,13 @@ function renderAIEconomyEditorial(aiData, g20sorted) {
       ${trajSorted.slice(0, 5).map(c => `
         <div class="ai-editorial-sidebar__row">
           <span>${A.escapeText(c.name)}</span>
-          <span class="ai-editorial-sidebar__score">${c.ai.total_score} → <span style="color:#34d399">${c.ai.projected_score_2028}</span></span>
+          <span class="ai-editorial-sidebar__score">${c.ai.total_score} → <span style="color:var(--status-stable-fg)">${c.ai.projected_score_2028}</span></span>
         </div>`).join('')}
       <div class="ai-editorial-sidebar__hd" style="margin-top:16px">Watch List</div>
       ${watchList.map(c => `
         <div class="ai-editorial-sidebar__row">
           <span>${A.escapeText(c.name)}</span>
-          <span class="ai-editorial-sidebar__score" style="color:#8A8A8A;font-size:10px;max-width:120px;text-align:right;line-height:1.3">${A.escapeText((c.ai.top_risk || '').substring(0, 48))}…</span>
+          <span class="ai-editorial-sidebar__score" style="color:var(--text-3);font-size:10px;max-width:120px;text-align:right;line-height:1.3">${A.escapeText((c.ai.top_risk || '').substring(0, 48))}…</span>
         </div>`).join('')}
     </div>`;
 
@@ -321,6 +328,7 @@ function mountReadinessChart(sorted) {
   const labels = sorted.map(c => c.name);
   const dims = ['infrastructure', 'talent', 'governance', 'investment', 'economic_readiness'];
 
+  const existing = Chart.getChart(canvas); if (existing) existing.destroy();
   new Chart(canvas.getContext('2d'), {
     type: 'bar',
     data: {
@@ -336,9 +344,9 @@ function mountReadinessChart(sorted) {
       indexAxis: 'y',
       responsive: true, maintainAspectRatio: false,
       plugins: {
-        legend: { position: 'bottom', labels: { color: '#8A8A8A', font: { ...MONO, size: 10 }, boxWidth: 12, padding: 10 } },
+        legend: { position: 'bottom', labels: { color: A.chartTheme().tick, font: { ...MONO, size: 10 }, boxWidth: 12, padding: 10 } },
         tooltip: {
-          ...TT,
+          ...tt(),
           callbacks: {
             title: ctx => ctx[0]?.label,
             label: ctx => `  ${ctx.dataset.label}: ${ctx.parsed.x}/20`,
@@ -348,8 +356,8 @@ function mountReadinessChart(sorted) {
         datalabels: { display: false },
       },
       scales: {
-        x: { stacked: true, max: 100, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { ...TICK, callback: v => v } },
-        y: { stacked: true, grid: { display: false }, ticks: { ...TICK, font: { ...MONO, size: 10 } } },
+        x: { stacked: true, max: 100, grid: { color: chartGrid() }, ticks: { ...tick(), callback: v => v } },
+        y: { stacked: true, grid: { display: false }, ticks: { ...tick(), font: { ...MONO, size: 10 } } },
       },
     },
   });
@@ -361,6 +369,7 @@ function mountTrajectoryChart(sorted) {
 
   const byTraj = [...sorted].sort((a, b) => b.ai.trajectory_score - a.ai.trajectory_score);
 
+  const existing = Chart.getChart(canvas); if (existing) existing.destroy();
   new Chart(canvas.getContext('2d'), {
     type: 'bar',
     data: {
@@ -378,7 +387,7 @@ function mountTrajectoryChart(sorted) {
       plugins: {
         legend: { display: false },
         tooltip: {
-          ...TT,
+          ...tt(),
           callbacks: {
             title: ctx => ctx[0]?.label,
             label: ctx => [
@@ -391,8 +400,8 @@ function mountTrajectoryChart(sorted) {
         datalabels: { display: false },
       },
       scales: {
-        x: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { ...TICK, callback: v => (v > 0 ? '+' : '') + v } },
-        y: { grid: { display: false }, ticks: { ...TICK } },
+        x: { grid: { color: chartGrid() }, ticks: { ...tick(), callback: v => (v > 0 ? '+' : '') + v } },
+        y: { grid: { display: false }, ticks: { ...tick() } },
       },
     },
   });
@@ -444,15 +453,16 @@ function mountScatterChart(sorted) {
   const medExposure = 40;
   const medScore = 60;
 
+  const existing = Chart.getChart(canvas); if (existing) existing.destroy();
   const scatterChart = new Chart(canvas.getContext('2d'), {
     type: 'bubble',
     data: { datasets },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: {
-        legend: { position: 'bottom', labels: { color: '#8A8A8A', font: { ...MONO, size: 10 }, boxWidth: 10, padding: 12 } },
+        legend: { position: 'bottom', labels: { color: A.chartTheme().tick, font: { ...MONO, size: 10 }, boxWidth: 10, padding: 12 } },
         tooltip: {
-          ...TT,
+          ...tt(),
           callbacks: {
             title: ctx => ctx[0]?.raw?._meta?.name || '',
             label: ctx => {
@@ -469,16 +479,16 @@ function mountScatterChart(sorted) {
       },
       scales: {
         x: {
-          title: { display: true, text: 'AI Labour Exposure (% of jobs)', color: '#64748b', font: { ...MONO, size: 10 } },
+          title: { display: true, text: 'AI Labour Exposure (% of jobs)', color: A.chartTheme().tick, font: { ...MONO, size: 10 } },
           min: 20, max: 65,
-          grid: { color: 'rgba(0,0,0,0.04)' },
-          ticks: { ...TICK, callback: v => v + '%' },
+          grid: { color: chartGrid() },
+          ticks: { ...tick(), callback: v => v + '%' },
         },
         y: {
-          title: { display: true, text: 'AI Readiness Score', color: '#64748b', font: { ...MONO, size: 10 } },
+          title: { display: true, text: 'AI Readiness Score', color: A.chartTheme().tick, font: { ...MONO, size: 10 } },
           min: 35, max: 95,
-          grid: { color: 'rgba(0,0,0,0.04)' },
-          ticks: { ...TICK },
+          grid: { color: chartGrid() },
+          ticks: { ...tick() },
         },
       },
     },
@@ -607,6 +617,7 @@ function mountGrowthChart(sorted) {
   const xMin = Math.min(...points.map(p=>p.x)) - 2;
   const xMax = Math.max(...points.map(p=>p.x)) + 2;
 
+  const existing = Chart.getChart(canvas); if (existing) existing.destroy();
   new Chart(canvas.getContext('2d'), {
     type: 'scatter',
     data: {
@@ -635,7 +646,7 @@ function mountGrowthChart(sorted) {
       plugins: {
         legend: { display: false },
         tooltip: {
-          ...TT,
+          ...tt(),
           filter: item => item.datasetIndex === 0,
           callbacks: {
             title: ctx => ctx[0]?.raw?._meta?.name || '',
@@ -649,12 +660,12 @@ function mountGrowthChart(sorted) {
       },
       scales: {
         x: {
-          title: { display: true, text: 'AI Readiness Score', color: '#64748b', font: { ...MONO, size: 10 } },
-          grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { ...TICK },
+          title: { display: true, text: 'AI Readiness Score', color: A.chartTheme().tick, font: { ...MONO, size: 10 } },
+          grid: { color: chartGrid() }, ticks: { ...tick() },
         },
         y: {
-          title: { display: true, text: 'GDP Growth Rate (%)', color: '#64748b', font: { ...MONO, size: 10 } },
-          grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { ...TICK, callback: v => A.fmtSignedPct(v) },
+          title: { display: true, text: 'GDP Growth Rate (%)', color: A.chartTheme().tick, font: { ...MONO, size: 10 } },
+          grid: { color: chartGrid() }, ticks: { ...tick(), callback: v => A.fmtSignedPct(v) },
         },
       },
     },
@@ -663,7 +674,7 @@ function mountGrowthChart(sorted) {
         const ctx2 = chart.ctx;
         ctx2.save();
         ctx2.font = '9px JetBrains Mono, monospace';
-        ctx2.fillStyle = '#8A8A8A';
+        ctx2.fillStyle = A.chartTheme().tick;
         ctx2.textAlign = 'left';
         ctx2.textBaseline = 'middle';
         const ds = chart.getDatasetMeta(0);

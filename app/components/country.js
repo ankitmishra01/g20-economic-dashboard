@@ -1030,12 +1030,13 @@ window.mountCountryProfileCharts = function(iso3) {
 
     loadSavedNotes(iso3);
 
+    const theme = A.chartTheme();
     const MONO = { family: "'Geist Mono', monospace" };
-    const TICK_OPTS = { font: { ...MONO, size: 10 }, color: '#8A8A8A' };
+    const TICK_OPTS = { font: { ...MONO, size: 10 }, color: theme.tick };
     const TOOLTIP_BASE = {
-      backgroundColor: 'rgba(10,10,10,0.88)',
-      titleColor: '#8A8A8A',
-      bodyColor: '#F5F5F2',
+      backgroundColor: theme.tooltipBg,
+      titleColor: theme.tooltipTitle,
+      bodyColor: theme.tooltipBody,
       titleFont: { ...MONO, size: 10 },
       bodyFont:  { ...MONO, size: 11 },
       padding: 8,
@@ -1052,8 +1053,8 @@ window.mountCountryProfileCharts = function(iso3) {
         datalabels: { display: false },
       },
       scales: {
-        x: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { ...TICK_OPTS, maxTicksLimit: 6 } },
-        y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { ...TICK_OPTS, maxTicksLimit: 5 } },
+        x: { grid: { color: theme.grid }, ticks: { ...TICK_OPTS, maxTicksLimit: 6 } },
+        y: { grid: { color: theme.grid }, ticks: { ...TICK_OPTS, maxTicksLimit: 5 } },
       },
       elements: { point: { radius: 2, hoverRadius: 4 }, line: { tension: 0.3, borderWidth: 1.5 } },
     };
@@ -1113,6 +1114,9 @@ window.mountCountryProfileCharts = function(iso3) {
         });
       }
 
+      const existing = Chart.getChart(canvas);
+      if (existing) existing.destroy();
+
       new Chart(canvas.getContext('2d'), {
         type: 'line',
         data: { labels, datasets },
@@ -1133,7 +1137,7 @@ window.mountCountryProfileCharts = function(iso3) {
             },
             legend: {
               display: hasProjections && fullSeries.some(d => d.isProjection),
-              labels: { color: '#8A8A8A', font: { size: 10 }, boxWidth: 20, padding: 8 },
+              labels: { color: theme.tick, font: { size: 10 }, boxWidth: 20, padding: 8 },
             },
           },
           scales: {

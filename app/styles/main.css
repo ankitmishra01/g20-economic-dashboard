@@ -101,6 +101,12 @@
   --radius-md:  5px;  /* nav rail items, tabs, chips */
   --radius-lg:  6px;  /* larger inputs, list rows, bars */
   --radius-xl:  8px;  /* cards, panels */
+
+  /* Chart.js gridlines/tooltips — read via getComputedStyle at chart-mount
+     time (see A.chartTheme() in atoms.js) since Chart.js option colors are
+     static once a chart is created. */
+  --chart-grid:       rgba(0,0,0,0.04);
+  --chart-tooltip-bg: rgba(10,10,10,0.88);
 }
 
 /* ── Dark mode tokens ────────────────────────────────────────────────────────── */
@@ -138,6 +144,8 @@
   --status-high-bg:      rgba(248,113,113,0.18);
   --status-insulated-fg: #3b82f6;
   --status-insulated-bg: rgba(59,130,246,0.16);
+
+  --chart-grid: rgba(255,255,255,0.06);
 }
 
 html, body {
