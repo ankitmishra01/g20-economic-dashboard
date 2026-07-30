@@ -110,7 +110,7 @@ function renderAIEconomy() {
   <div class="sec-head">
     <div class="sec-head__title">AI Readiness <span class="sec-head__sub">5 dimensions · Infrastructure · Talent · Governance · Investment · Econ. Readiness</span></div>
   </div>
-  <div class="panel" style="margin-bottom:20px">
+  <div class="panel mb-20">
     <div class="panel__body" style="padding:16px 20px">
       <div style="position:relative;height:500px"><canvas id="ai-readiness-chart"></canvas></div>
     </div>
@@ -120,7 +120,7 @@ function renderAIEconomy() {
   <div class="sec-head">
     <div class="sec-head__title">2028 Trajectory <span class="sec-head__sub">projected score change from current</span></div>
   </div>
-  <div class="row-2" style="margin-bottom:20px">
+  <div class="row-2 mb-20">
     <div class="panel">
       <div class="panel__body" style="padding:16px 20px">
         <div style="position:relative;height:380px"><canvas id="ai-trajectory-chart"></canvas></div>
@@ -138,7 +138,7 @@ function renderAIEconomy() {
   <div class="sec-head">
     <div class="sec-head__title">Displacement Risk vs AI Readiness <span class="sec-head__sub">flag size = GDP per capita PPP · x = AI job exposure (IMF 2024) · y = AI readiness score</span></div>
   </div>
-  <div class="panel" style="margin-bottom:20px">
+  <div class="panel mb-20">
     <div class="panel__body" style="padding:16px 20px">
       <div style="position:relative;height:500px"><canvas id="ai-scatter-chart"></canvas></div>
     </div>
@@ -148,7 +148,7 @@ function renderAIEconomy() {
   <div class="sec-head">
     <div class="sec-head__title">AI Readiness vs GDP Growth <span class="sec-head__sub">does AI investment translate to growth?</span></div>
   </div>
-  <div class="row-2" style="margin-bottom:20px">
+  <div class="row-2 mb-20">
     <div class="panel">
       <div class="panel__body" style="padding:16px 20px">
         <div style="position:relative;height:340px"><canvas id="ai-growth-chart"></canvas></div>
@@ -306,7 +306,7 @@ function renderAIEconomyEditorial(aiData, g20sorted) {
     <div class="sec-head">
       <div class="sec-head__title">G20 AI Landscape <span class="sec-head__sub">editorial · computed from AI Trajectory Index</span></div>
     </div>
-    <div class="panel" style="margin-bottom:20px">
+    <div class="panel mb-20">
       <div class="panel__body" style="padding:20px 24px">
         <div class="ai-editorial-grid" style="display:grid;grid-template-columns:1fr 240px;gap:32px;align-items:start">
           <div>

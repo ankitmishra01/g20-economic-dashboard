@@ -272,21 +272,21 @@ function renderOverview() {
   <div class="sec-head" style="margin-top:24px">
     <div class="sec-head__title">Forecast track record <span class="sec-head__sub">model accuracy · out-of-sample backtest</span></div>
   </div>
-  <div class="panel" id="track-record" style="margin-bottom:20px"></div>
+  <div class="panel mb-20" id="track-record"></div>
 
   <!-- Data sources table -->
   <div class="sec-head" style="margin-top:24px">
     <div class="sec-head__title">Data sources</div>
   </div>
-  <div class="panel" style="margin-bottom:20px">
+  <div class="panel mb-20">
     <div class="panel__body" style="padding:0">
       <div class="table-scroll"><table style="width:100%;border-collapse:collapse;font-size:12px">
         <thead>
           <tr style="border-bottom:1px solid var(--rule)">
-            <th style="padding:8px 14px;text-align:left;color:var(--text-3);font-weight:600;font-size:11px;letter-spacing:.03em">Indicator</th>
-            <th style="padding:8px 14px;text-align:left;color:var(--text-3);font-weight:600;font-size:11px;letter-spacing:.03em">Source</th>
-            <th style="padding:8px 14px;text-align:left;color:var(--text-3);font-weight:600;font-size:11px;letter-spacing:.03em">Coverage</th>
-            <th style="padding:8px 14px;text-align:left;color:var(--text-3);font-weight:600;font-size:11px;letter-spacing:.03em">Frequency</th>
+            <th class="tbl-th">Indicator</th>
+            <th class="tbl-th">Source</th>
+            <th class="tbl-th">Coverage</th>
+            <th class="tbl-th">Frequency</th>
           </tr>
         </thead>
         <tbody>
@@ -598,11 +598,11 @@ function renderGlobalOutlookComputed() {
         </div>
 
         <div style="border-left:1px solid var(--rule);padding-left:20px">
-          <div style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-4);margin-bottom:10px">Key risks</div>
+          <div class="eyebrow-lbl">Key risks</div>
           <ul style="margin:0 0 20px;padding:0;list-style:none">
             ${keyRisks.map(r => listItem(r, 'var(--neg)')).join('')}
           </ul>
-          <div style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-4);margin-bottom:10px">Upside factors</div>
+          <div class="eyebrow-lbl">Upside factors</div>
           <ul style="margin:0;padding:0;list-style:none">
             ${upsides.map(r => listItem(r, 'var(--pos)')).join('')}
           </ul>
@@ -640,7 +640,7 @@ function renderGlobalOutlook() {
         </div>
 
         <div style="border-left:1px solid var(--rule);padding-left:20px">
-          <div style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-4);margin-bottom:10px">Key risks</div>
+          <div class="eyebrow-lbl">Key risks</div>
           <ul style="margin:0 0 20px;padding:0;list-style:none">
             ${g.keyRisks.map(r => `
               <li style="display:flex;gap:8px;align-items:baseline;margin-bottom:8px;font-size:12px;line-height:1.5;color:var(--text-2)">
@@ -648,7 +648,7 @@ function renderGlobalOutlook() {
                 ${A.escapeText(r)}
               </li>`).join('')}
           </ul>
-          <div style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-4);margin-bottom:10px">Upside factors</div>
+          <div class="eyebrow-lbl">Upside factors</div>
           <ul style="margin:0;padding:0;list-style:none">
             ${g.upside.map(r => `
               <li style="display:flex;gap:8px;align-items:baseline;margin-bottom:8px;font-size:12px;line-height:1.5;color:var(--text-2)">

@@ -146,7 +146,7 @@ function renderCountryProfile(iso3) {
   <div class="sec-head" style="margin-top:4px">
     <div class="sec-head__title">vs G20 median</div>
   </div>
-  <div class="panel" style="margin-bottom:20px">
+  <div class="panel mb-20">
     ${renderStanding(iso3)}
   </div>
 
@@ -1172,7 +1172,7 @@ function renderAIOutlookCard(countryName) {
          class="sec-head__tab" style="text-decoration:none;font-size:11px" id="ai-outlook-link-${iso3}">Full Index ↗</a>
     </div>
   </div>
-  <div id="ai-outlook-${iso3}" class="panel" style="margin-bottom:20px">
+  <div id="ai-outlook-${iso3}" class="panel mb-20">
     <div class="panel__body" style="padding:16px 20px;display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:11px;color:var(--text-4)">
       <div class="spinner" style="width:14px;height:14px;flex-shrink:0"></div>
       Loading AI Outlook…

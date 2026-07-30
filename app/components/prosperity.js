@@ -24,7 +24,7 @@ function renderProsperity() {
     </div>
   </div>
 
-  <div class="panel" style="margin-bottom:20px">
+  <div class="panel mb-20">
     <div class="panel__body" style="padding:16px 20px">
       <div class="prosperity-quadrants" id="prosperity-quadrants" style="position:relative;height:480px">
         <canvas id="prosperity-chart"></canvas>
@@ -36,7 +36,7 @@ function renderProsperity() {
   <div class="sec-head">
     <div class="sec-head__title">Per-Capita Rankings <span class="sec-head__sub">PPP-adjusted · latest available</span></div>
   </div>
-  <div class="row-2" style="margin-bottom:20px">
+  <div class="row-2 mb-20">
     <div class="panel">
       <div class="panel__head">
         <div><span class="panel__title" id="pcap-title">GDP per Capita PPP</span><span class="panel__sub" id="pcap-sub">Int'l $ · highest first</span></div>

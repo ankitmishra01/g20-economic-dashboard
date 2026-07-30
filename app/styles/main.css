@@ -837,6 +837,29 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
 }
 .rank-table tbody tr:last-child td { border-bottom: none; }
 .rank-table tbody tr:hover td { background: var(--bg-2); cursor: pointer; }
+
+/* Plain data-table header cell (e.g. Data sources table) */
+.tbl-th {
+  padding: var(--space-8) var(--space-14);
+  text-align: left;
+  color: var(--text-3);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+}
+
+/* Eyebrow-style section heading above a list (e.g. Key risks / Upside factors) */
+.eyebrow-lbl {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-4);
+  margin-bottom: var(--space-10);
+}
+
+/* Section spacing utility — repeated verbatim across panel/row-2 wrappers */
+.mb-20 { margin-bottom: var(--space-20); }
 .col-no { text-align: left !important; width: 36px; color: var(--text-3); font-size: 11.5px; }
 .col-flag { text-align: left !important; width: 28px; }
 .col-name { text-align: left !important; font-family: var(--font-sans) !important; }
