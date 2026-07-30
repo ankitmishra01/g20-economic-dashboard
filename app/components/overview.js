@@ -474,7 +474,7 @@ function renderRankingRows(rows) {
     const caCls     = cav !== undefined ? (cav < -2 ? 'v-warn' : '') : '';
 
     return `
-    <tr onclick="navTo('country/${c.iso3}')" style="cursor:pointer">
+    <tr ${A.navRowAttrs(c.iso3, c.name)} style="cursor:pointer">
       <td class="col-no">${String(i+1).padStart(2,'0')}</td>
       <td class="col-flag"><span class="flag-rect" style="${flagBG(c.code)}"></span></td>
       <td class="col-name">
@@ -496,7 +496,7 @@ function renderRankingRows(rows) {
 function renderRiskRows(items, descFn, valFn, sub) {
   if (!items.length) return '';
   return items.map(c => `
-    <div class="risk-row" onclick="navTo('country/${c.iso3}')">
+    <div class="risk-row" ${A.navRowAttrs(c.iso3, c.name)}>
       <div class="risk-row__main">
         <span class="risk-row__country">
           <span class="flag-rect" style="${flagBG(c.code)}"></span>

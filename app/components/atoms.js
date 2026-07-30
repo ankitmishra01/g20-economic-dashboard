@@ -119,6 +119,15 @@
     }[ch]));
   }
 
+  // Shared accessible-attributes string for the "whole element navigates to a
+  // country profile" pattern (country cards, flag list items, table rows) —
+  // these were plain onclick divs with no keyboard or screen-reader access.
+  function navRowAttrs(iso3, name) {
+    return `role="button" tabindex="0" onclick="navTo('country/${iso3}')" ` +
+      `onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navTo('country/${iso3}')}" ` +
+      `aria-label="Open ${escapeAttr(name)} profile"`;
+  }
+
   global.A = { icon, colorHash, fmtGDP, fmtPct, fmtSignedPct, fmtMillions, fmtThousands, fmtDecimal,
-               fmtByFormat, deltaBadge, escapeText, escapeAttr, chartTheme };
+               fmtByFormat, deltaBadge, escapeText, escapeAttr, chartTheme, navRowAttrs };
 })(window);

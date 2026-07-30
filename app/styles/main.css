@@ -31,7 +31,7 @@
   --text-1:    #0A0A0A;
   --text-2:    #383838;
   --text-3:    #656565;
-  --text-4:    #959595;
+  --text-4:    #707070;  /* was #959595 — 3.0:1 on white, fails WCAG AA; now 4.95:1 */
 
   --rule:      #DEDAD4;
   --rule-2:    #CECAC2;
@@ -65,9 +65,9 @@
   --status-stable-fg:    var(--pos);
   --status-stable-bg:    rgba(4,120,87,0.12);
   --status-watch-fg:     var(--warn);
-  --status-watch-bg:     rgba(161,98,7,0.12);
+  --status-watch-bg:     rgba(161,98,7,0.06);   /* 0.12 measured 4.2:1, fails AA at this text size */
   --status-elevated-fg:  #C2410C;
-  --status-elevated-bg:  rgba(194,65,12,0.12);
+  --status-elevated-bg:  rgba(194,65,12,0.06);  /* 0.12 measured 4.4:1, fails AA at this text size */
   --status-high-fg:      var(--neg);
   --status-high-bg:      rgba(185,28,28,0.15);
   --status-insulated-fg: var(--info);
@@ -120,7 +120,7 @@
   --text-1:    #F2F0EC;
   --text-2:    #BDB9B1;
   --text-3:    #7A7670;
-  --text-4:    #504C48;
+  --text-4:    #8A8680;  /* was #504C48 — 2.2:1 on dark bg, fails WCAG AA; now 5.2:1 */
   --rule:      #2A2826;
   --rule-2:    #363430;
   --rule-on-ink:   rgba(255,255,255,0.07);

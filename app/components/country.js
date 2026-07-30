@@ -17,7 +17,7 @@ function renderCountries() {
           const growthClass = gv === undefined ? '' : gv >= 2 ? 'good' : gv < 0 ? 'bad' : '';
           const infClass    = inf?.value > 8 ? 'bad' : inf?.value > 4 ? 'warn' : '';
           return `
-            <div class="co-card" onclick="navTo('country/${c.iso3}')">
+            <div class="co-card" ${A.navRowAttrs(c.iso3, c.name)}>
               <div class="co-card__head">
                 <div class="co-flag" style="background-image:url('https://flagcdn.com/${c.code.toLowerCase()}.svg');background-size:cover;background-position:center;"></div>
                 <div>
