@@ -49,10 +49,51 @@
   --neg-bg:    rgba(185,28,28,0.08);
   --warn-bg:   rgba(161,98,7,0.10);
 
+  /* Status/risk badges: same semantic families as --pos/--neg/--warn/--info
+     above, tuned for use as chip text on a light tint (see [data-theme="dark"]
+     for the brighter values these swap to on a dark tint). --status-elevated
+     is the one tier with no plain-text equivalent — it sits between
+     --warn and --neg for risk levels more severe than "watch" but short of
+     "high". */
+  --status-stable-fg:    var(--pos);
+  --status-stable-bg:    rgba(4,120,87,0.12);
+  --status-watch-fg:     var(--warn);
+  --status-watch-bg:     rgba(161,98,7,0.12);
+  --status-elevated-fg:  #C2410C;
+  --status-elevated-bg:  rgba(194,65,12,0.12);
+  --status-high-fg:      var(--neg);
+  --status-high-bg:      rgba(185,28,28,0.15);
+  --status-insulated-fg: var(--info);
+  --status-insulated-bg: rgba(30,64,175,0.12);
+
   --font-sans: "Geist", "Inter Tight", system-ui, -apple-system, sans-serif;
   --font-mono: "Geist Mono", "JetBrains Mono", ui-monospace, monospace;
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* ── Spacing ─────────────────────────────────────────────────────────────────
+     1:1 tokenization of values already in use across the app (a dense "fintech
+     terminal" layout intentionally uses more than a strict 4/8pt grid) — this
+     names today's values rather than forcing a stricter scale. For new
+     spacing, prefer the 4/8/12/16/20/24/32 subset where a choice is open. */
+  --space-1: 1px;   --space-2: 2px;   --space-3: 3px;   --space-4: 4px;
+  --space-5: 5px;   --space-6: 6px;   --space-7: 7px;   --space-8: 8px;
+  --space-9: 9px;   --space-10: 10px; --space-11: 11px; --space-12: 12px;
+  --space-13: 13px; --space-14: 14px; --space-16: 16px; --space-18: 18px;
+  --space-20: 20px; --space-22: 22px; --space-24: 24px; --space-28: 28px;
+  --space-32: 32px; --space-36: 36px; --space-80: 80px;
+
+  /* ── Radius ──────────────────────────────────────────────────────────────────
+     Six distinct component tiers already in consistent use (legend
+     dots/swatches, badges/pills, small controls, nav/tabs/chips, list rows,
+     cards) — named rather than merged, since collapsing any of them would be
+     a visible shape change to real components. */
+  --radius-2xs: 2px;  /* legend dots, tiny swatches */
+  --radius-xs:  3px;  /* badges, pills, progress-bar fill */
+  --radius-sm:  4px;  /* small buttons/inputs */
+  --radius-md:  5px;  /* nav rail items, tabs, chips */
+  --radius-lg:  6px;  /* larger inputs, list rows, bars */
+  --radius-xl:  8px;  /* cards, panels */
 }
 
 /* ── Dark mode tokens ────────────────────────────────────────────────────────── */
@@ -76,6 +117,20 @@
   --pos-bg:    rgba(4,120,87,0.12);
   --neg-bg:    rgba(185,28,28,0.12);
   --warn-bg:   rgba(161,98,7,0.14);
+
+  /* Brighter than the light-mode chip colors above (which are tuned as dark
+     text on a light tint) — these read correctly as light text on a dark
+     tint instead. Same five status tiers, same hue families. */
+  --status-stable-fg:    #34d399;
+  --status-stable-bg:    rgba(52,211,153,0.16);
+  --status-watch-fg:     #FBBF24;
+  --status-watch-bg:     rgba(251,191,36,0.16);
+  --status-elevated-fg:  #FB923C;
+  --status-elevated-bg:  rgba(251,146,60,0.16);
+  --status-high-fg:      #F87171;
+  --status-high-bg:      rgba(248,113,113,0.18);
+  --status-insulated-fg: #3b82f6;
+  --status-insulated-bg: rgba(59,130,246,0.16);
 }
 
 html, body {
@@ -782,10 +837,10 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   border-radius: 3px;
   white-space: nowrap;
 }
-.risk-stable   { background: rgba(52,211,153,.12); color: #34d399; }
-.risk-watch    { background: rgba(251,191,36,.12);  color: #FBBF24; }
-.risk-elevated { background: rgba(251,146,60,.12);  color: #FB923C; }
-.risk-high     { background: rgba(248,113,113,.15); color: #F87171; }
+.risk-stable   { background: var(--status-stable-bg);   color: var(--status-stable-fg); }
+.risk-watch    { background: var(--status-watch-bg);    color: var(--status-watch-fg); }
+.risk-elevated { background: var(--status-elevated-bg); color: var(--status-elevated-fg); }
+.risk-high     { background: var(--status-high-bg);      color: var(--status-high-fg); }
 
 /* ── AI Economy page ──────────────────────────────────────────────────────────── */
 .ai-risk-badge {
@@ -799,10 +854,10 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   text-transform: uppercase;
   white-space: nowrap;
 }
-.ai-risk-zone          { background: rgba(248,113,113,.12); color: #F87171; }
-.ai-risk-managed       { background: rgba(52,211,153,.12);  color: #34d399; }
-.ai-risk-insulated     { background: rgba(59,130,246,.12);  color: #3b82f6; }
-.ai-risk-transitioning { background: rgba(245,158,11,.12);  color: #F59E0B; }
+.ai-risk-zone          { background: var(--status-high-bg);      color: var(--status-high-fg); }
+.ai-risk-managed       { background: var(--status-stable-bg);    color: var(--status-stable-fg); }
+.ai-risk-insulated     { background: var(--status-insulated-bg); color: var(--status-insulated-fg); }
+.ai-risk-transitioning { background: var(--status-watch-bg);     color: var(--status-watch-fg); }
 
 @keyframes shimmer {
   0%   { background-position: 200% 0; }

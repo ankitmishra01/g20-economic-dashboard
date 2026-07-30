@@ -143,10 +143,7 @@ function mountCompareCharts() {
     return;
   }
 
-  const COLORS = [
-    'rgba(10,10,10,1)', 'rgba(185,28,28,1)', 'rgba(4,120,87,1)',
-    'rgba(161,98,7,1)', 'rgba(30,64,175,1)', 'rgba(109,40,217,1)',
-  ];
+  const COLORS = window.CATEGORICAL_PALETTE;
 
   const unit = meta?.unit ? ' ' + meta.unit : '';
   const TICK_OPTS = { font: { size: 10, family: "'Geist Mono', monospace" }, color: '#8A8A8A' };
