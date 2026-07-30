@@ -40,6 +40,13 @@
   --text-on-ink-2:  rgba(245,245,242,0.62);
   --text-on-ink-3:  rgba(245,245,242,0.40);
 
+  /* --pos/--neg/--warn below are tuned as dark text on a light background —
+     the profile hero is always rendered on var(--ink) regardless of theme,
+     so it needs its own light-on-dark variants instead. */
+  --pos-on-ink:  #6FCBA8;
+  --neg-on-ink:  #F08F8F;
+  --warn-on-ink: #E8C063;
+
   --pos:       #047857;
   --neg:       #B91C1C;
   --warn:      #A16207;
@@ -491,7 +498,7 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
 .hero__title .num-callout {
   font-family: var(--font-mono);
   font-weight: 600;
-  color: #6FCBA8;
+  color: var(--pos-on-ink);
   font-size: 28px;
   margin: 0 3px;
 }
@@ -559,9 +566,9 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   align-items: center;
   gap: 5px;
 }
-.delta-pos { color: #6FCBA8; }
-.delta-neg { color: #F08F8F; }
-.delta-warn { color: #E8C063; }
+.delta-pos { color: var(--pos-on-ink); }
+.delta-neg { color: var(--neg-on-ink); }
+.delta-warn { color: var(--warn-on-ink); }
 .delta-mute { color: var(--text-on-ink-3); }
 
 /* ── Page body ───────────────────────────────────────────────────────────────── */

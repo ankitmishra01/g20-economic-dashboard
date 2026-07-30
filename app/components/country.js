@@ -77,7 +77,7 @@ function renderCountryProfile(iso3) {
   const iv = inf?.value;
   const dv = debt?.value;
 
-  const growthCls = gv !== undefined ? (gv < 0 ? '#F08F8F' : gv >= 4 ? '#6FCBA8' : 'var(--text-on-ink)') : 'var(--text-on-ink)';
+  const growthCls = gv !== undefined ? (gv < 0 ? 'var(--neg-on-ink)' : gv >= 4 ? 'var(--pos-on-ink)' : 'var(--text-on-ink)') : 'var(--text-on-ink)';
 
   const vintage = Math.max(
     gdp?.year || 0, gr?.year || 0, inf?.year || 0, une?.year || 0, debt?.year || 0
@@ -116,7 +116,7 @@ function renderCountryProfile(iso3) {
         ${gv !== undefined ? `<div><div class="profile-hero__stat-lbl">Growth</div><div class="profile-hero__stat-val" style="color:${growthCls}">${A.fmtSignedPct(gv)}</div></div>` : ''}
         ${iv !== undefined ? `<div><div class="profile-hero__stat-lbl">CPI</div><div class="profile-hero__stat-val">${iv.toFixed(1)}%</div></div>` : ''}
         ${une?.value !== undefined ? `<div><div class="profile-hero__stat-lbl">Unemp.</div><div class="profile-hero__stat-val">${une.value.toFixed(1)}%</div></div>` : ''}
-        ${dv !== undefined ? `<div><div class="profile-hero__stat-lbl">Debt/GDP</div><div class="profile-hero__stat-val" style="${dv > 100 ? 'color:#E8C063' : ''}">${dv.toFixed(0)}%</div></div>` : ''}
+        ${dv !== undefined ? `<div><div class="profile-hero__stat-lbl">Debt/GDP</div><div class="profile-hero__stat-val" style="${dv > 100 ? 'color:var(--warn-on-ink)' : ''}">${dv.toFixed(0)}%</div></div>` : ''}
       </div>
       ${vintage || commentaryDate ? `<div style="font-family:var(--font-mono);font-size:10px;color:rgba(245,245,242,0.4);margin-top:10px">${vintage ? `Data ${vintage}` : ''}${vintage && commentaryDate ? ' · ' : ''}${commentaryDate ? `Analysis ${commentaryDate}` : ''}</div>` : ''}
     </div>
@@ -242,14 +242,14 @@ function renderKeyFacts(iso3) {
   const items = [
     gdp    ? { label: 'GDP',          val: '$' + (gdp.value/1e12).toFixed(2) + 'T',   yr: gdp.year }    : null,
     gr     ? { label: 'GDP Growth',   val: A.fmtSignedPct(gr.value), yr: gr.year,
-               cls: gr.value < 0 ? 'color:#C0392B' : gr.value >= 4 ? 'color:#27AE60' : '' } : null,
+               cls: gr.value < 0 ? 'color:var(--neg)' : gr.value >= 4 ? 'color:var(--pos)' : '' } : null,
     inf    ? { label: 'Inflation',    val: inf.value.toFixed(1) + '%',    yr: inf.year,
-               cls: inf.value > 8 ? 'color:#C0392B' : inf.value > 4 ? 'color:#E8A236' : '' } : null,
+               cls: inf.value > 8 ? 'color:var(--neg)' : inf.value > 4 ? 'color:var(--warn)' : '' } : null,
     une    ? { label: 'Unemployment', val: une.value.toFixed(1) + '%',    yr: une.year }    : null,
     debt   ? { label: 'Debt / GDP',   val: debt.value.toFixed(0) + '%',   yr: debt.year,
-               cls: debt.value > 100 ? 'color:#E8A236' : '' } : null,
+               cls: debt.value > 100 ? 'color:var(--warn)' : '' } : null,
     fiscal ? { label: 'Fiscal Bal.',  val: A.fmtSignedPct(fiscal.value), yr: fiscal.year,
-               cls: fiscal.value < -6 ? 'color:#C0392B' : fiscal.value < 0 ? 'color:#E8A236' : 'color:#27AE60' } : null,
+               cls: fiscal.value < -6 ? 'color:var(--neg)' : fiscal.value < 0 ? 'color:var(--warn)' : 'color:var(--pos)' } : null,
     cap    ? { label: 'GDP / Capita', val: '$' + Math.round(cap.value/1000) + 'K',     yr: cap.year }    : null,
     life   ? { label: 'Life Expect.', val: life.value.toFixed(1) + ' yrs',              yr: life.year }   : null,
   ].filter(Boolean);

@@ -14,9 +14,9 @@
     .ins-tbl td { padding: 5px 8px; border-bottom: 1px solid rgba(0,0,0,.04); }
     .ins-tbl tr:last-child td { border-bottom: none; }
     .ins-tbl td:first-child { color: var(--text-3); }
-    .ins-hi  { color: #C0392B; font-weight: 500; }
-    .ins-lo  { color: #27AE60; font-weight: 500; }
-    .ins-warn { color: #E8A236; font-weight: 500; }
+    .ins-hi  { color: var(--neg); font-weight: 500; }
+    .ins-lo  { color: var(--pos); font-weight: 500; }
+    .ins-warn { color: var(--warn); font-weight: 500; }
     .ins-src { font-size: 10.5px; font-family: var(--font-mono); color: var(--text-4);
                border-top: 1px solid var(--rule); padding-top: 6px; margin-top: 4px; }
     .ins-badge { display: inline-block; font-size: 9.5px; font-family: var(--font-mono);
