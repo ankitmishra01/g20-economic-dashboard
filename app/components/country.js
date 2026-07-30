@@ -389,34 +389,6 @@ function renderAnalystBlock(iso3, countryName, contextSnippet, title, blockId) {
     </div>`;
 }
 
-// ── Placement switcher ────────────────────────────────────────────────────────
-window.switchPlacement = function(mode, btn) {
-  document.querySelectorAll('.placement-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-
-  const lead   = document.getElementById('analyst-lead');
-  const side   = document.getElementById('analyst-side');
-  const inlineNote = document.getElementById('inline-note-gdp');
-  const layout = document.getElementById('profile-layout');
-
-  if (mode === 'lead') {
-    if (lead) lead.style.display = '';
-    if (side) side.style.display = 'none';
-    if (inlineNote) inlineNote.style.display = 'none';
-    if (layout) layout.style.gridTemplateColumns = '1fr auto';
-  } else if (mode === 'side') {
-    if (lead) lead.style.display = 'none';
-    if (side) side.style.display = '';
-    if (inlineNote) inlineNote.style.display = 'none';
-    if (layout) layout.style.gridTemplateColumns = '1fr 280px';
-  } else if (mode === 'inline') {
-    if (lead) lead.style.display = 'none';
-    if (side) side.style.display = 'none';
-    if (inlineNote) inlineNote.style.display = '';
-    if (layout) layout.style.gridTemplateColumns = '1fr';
-  }
-};
-
 // ── Analyst actions ───────────────────────────────────────────────────────────
 window.editAnalysis = function(blockId) {
   const body = document.getElementById(`analyst-body-${blockId}`);
