@@ -240,7 +240,7 @@ window.G20_MODEL = {
     }
   ],
   "meta": {
-    "trainedAt": "2026-08-01",
+    "trainedAt": "2026-09-01",
     "nGrowth": 434,
     "nRecession": 270,
     "growthRMSE": 3.42,
