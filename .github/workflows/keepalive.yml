@@ -1,0 +1,33 @@
+name: Supabase Keep-Alive
+
+# Supabase free-tier projects auto-pause after a stretch of inactivity, which
+# takes the whole dashboard down (every page except News reads from Supabase).
+# The monthly Refresh workflow is the only other thing that touches the DB and
+# it runs far less often than the pause window. This job pokes the REST API a
+# few times a week so the project never goes idle long enough to pause.
+
+on:
+  schedule:
+    - cron: '0 7 */3 * *'   # every 3 days at 07:00 UTC
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query Supabase REST API
+        run: |
+          # Publishable (anon) key — read-only, and already committed in the repo
+          # (app/data.js). No secret needed.
+          KEY="sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG"
+          URL="https://qozknjenyhewmkapsizk.supabase.co/rest/v1/g20_indicators?select=key&limit=1"
+          echo "Pinging $URL"
+          code=$(curl -sS -o /tmp/resp.json -w '%{http_code}' \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" "$URL")
+          echo "HTTP $code"
+          cat /tmp/resp.json
+          echo
+          if [ "$code" != "200" ]; then
+            echo "::error::Supabase keep-alive ping failed (HTTP $code) — project may be paused"
+            exit 1
+          fi
