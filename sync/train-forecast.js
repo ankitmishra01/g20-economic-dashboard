@@ -15,7 +15,7 @@
 // Run:  node sync/train-forecast.js
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://qozknjenyhewmkapsizk.supabase.co';
-const SUPABASE_KEY = process.env.SUPABASE_KEY || 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
+const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
 const REC_AUC_GATE = 0.65;
 
 const G20_ISO3 = ['USA','GBR','CAN','DEU','FRA','ITA','JPN','AUS','KOR','CHN','IND','BRA','MEX','ARG','RUS','SAU','ZAF','IDN','TUR'];
@@ -29,7 +29,7 @@ async function loadPanel() {
   const PAGE = 1000; const rows = []; let offset = 0;
   while (true) {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/g20_economic_data?select=country_iso3,indicator_key,year,value&order=year.asc`,
-      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Range: `${offset}-${offset + PAGE - 1}` } });
+      { headers: { apikey: SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`, Range: `${offset}-${offset + PAGE - 1}` } });
     if (!r.ok) throw new Error(`Supabase fetch failed: ${r.status}`);
     const page = await r.json(); rows.push(...page);
     if (page.length < PAGE) break; offset += PAGE;

@@ -18,11 +18,16 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Verify refresh credentials
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: test -n "$SUPABASE_SERVICE_ROLE_KEY" || (echo "SUPABASE_SERVICE_ROLE_KEY is not configured" && exit 1)
+
       - name: Fetch, seed data, and generate commentary
         run: node sync/seed.js
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 
       - name: Refresh yield-curve term spread + retrain forecast model
@@ -31,7 +36,7 @@ jobs:
           node sync/train-forecast.js      # -> app/forecast-model.js (+ app/forecast-history.json)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
 
       - name: Commit updated commentary + forecast artifacts
         run: |

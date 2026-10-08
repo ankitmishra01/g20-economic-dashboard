@@ -5,8 +5,12 @@
 // Requires: Node 18+ (native fetch). No npm install needed.
 // Credentials can be passed via env vars (used by GitHub Actions).
 
+import refreshUtils from './refresh-utils.js';
+
+const { requireServiceRoleKey, stampRows } = refreshUtils;
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://qozknjenyhewmkapsizk.supabase.co';
-const SUPABASE_KEY = process.env.SUPABASE_KEY || 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
+const SUPABASE_SERVICE_ROLE_KEY = requireServiceRoleKey();
+const RUN_TIMESTAMP = new Date().toISOString();
 
 const G20_ISO3 = [
   'USA','GBR','CAN','DEU','FRA','ITA','JPN','AUS','KOR',
@@ -102,12 +106,13 @@ function chunk(arr, size) {
 
 async function upsert(rows) {
   if (!rows.length) return;
-  for (const batch of chunk(rows, CHUNK_SIZE)) {
+  const stampedRows = stampRows(rows, 'fetched_at', RUN_TIMESTAMP);
+  for (const batch of chunk(stampedRows, CHUNK_SIZE)) {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/g20_economic_data`, {
       method: 'POST',
       headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'apikey': SUPABASE_SERVICE_ROLE_KEY,
+        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
         'Content-Type': 'application/json',
         'Prefer': 'resolution=merge-duplicates',
       },
@@ -280,8 +285,8 @@ async function validate() {
       `${SUPABASE_URL}/rest/v1/g20_economic_data?select=country_iso3,indicator_key,year,value`,
       {
         headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'apikey': SUPABASE_SERVICE_ROLE_KEY,
+          'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
           'Range': `${offset}-${offset + PAGE - 1}`,
         },
       }
@@ -356,12 +361,13 @@ async function validate() {
 
 async function upsertQuarterly(rows) {
   if (!rows.length) return;
-  for (const batch of chunk(rows, CHUNK_SIZE)) {
+  const stampedRows = stampRows(rows, 'fetched_at', RUN_TIMESTAMP);
+  for (const batch of chunk(stampedRows, CHUNK_SIZE)) {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/g20_quarterly_data`, {
       method: 'POST',
       headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'apikey': SUPABASE_SERVICE_ROLE_KEY,
+        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
         'Content-Type': 'application/json',
         'Prefer': 'resolution=merge-duplicates',
       },
@@ -514,12 +520,13 @@ async function seedIndicatorMetadata() {
   ];
 
   process.stdout.write(`Seeding g20_indicators metadata (${META.length} rows)…`);
-  for (const batch of chunk(META, 50)) {
+  const stampedMetadata = stampRows(META, 'updated_at', RUN_TIMESTAMP);
+  for (const batch of chunk(stampedMetadata, 50)) {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/g20_indicators`, {
       method: 'POST',
       headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'apikey': SUPABASE_SERVICE_ROLE_KEY,
+        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
         'Content-Type': 'application/json',
         'Prefer': 'resolution=merge-duplicates',
       },
