@@ -6,7 +6,8 @@ on:
   workflow_dispatch:        # Allow manual trigger from GitHub Actions UI
 
 permissions:
-  contents: write   # needed so the "Commit updated commentary + forecast artifacts" step can push
+  contents: write   # needed so the "Commit forecast artifacts" step can push
+  issues: write     # needed so a failed refresh opens an issue (GitHub emails the repo owner)
 
 jobs:
   seed:
@@ -18,12 +19,16 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Fetch, seed data, and generate commentary
+      - name: Verify refresh credentials
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: test -n "$SUPABASE_SERVICE_ROLE_KEY" || (echo "SUPABASE_SERVICE_ROLE_KEY is not configured" && exit 1)
+
+      - name: Fetch and seed data
         run: node sync/seed.js
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
       - name: Refresh yield-curve term spread + retrain forecast model
         run: |
@@ -31,13 +36,31 @@ jobs:
           node sync/train-forecast.js      # -> app/forecast-model.js (+ app/forecast-history.json)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
 
-      - name: Commit updated commentary + forecast artifacts
+      - name: Verify the refresh really wrote to the database
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        run: |
+          # Publishable key is read-only and already public in app/data.js
+          KEY="sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG"
+          BASE="${SUPABASE_URL:-https://qozknjenyhewmkapsizk.supabase.co}"
+          latest=$(curl -sS -H "apikey: $KEY" "$BASE/rest/v1/g20_economic_data?select=fetched_at&order=fetched_at.desc&limit=1" | python3 -c 'import sys,json; print(json.load(sys.stdin)[0]["fetched_at"])')
+          echo "Latest fetched_at: $latest"
+          python3 - "$latest" <<'PY'
+          import sys, datetime
+          ts = datetime.datetime.fromisoformat(sys.argv[1].replace("Z", "+00:00"))
+          age = (datetime.datetime.now(datetime.timezone.utc) - ts).total_seconds() / 3600
+          if age > 2:
+              print(f"::error::Refresh finished but the newest row is {age:.1f} hours old, so nothing was written")
+              sys.exit(1)
+          PY
+
+      - name: Commit forecast artifacts
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add app/components/commentary.js app/term-spread.js app/forecast-model.js app/forecast-history.json
+          git add app/term-spread.js app/forecast-model.js app/forecast-history.json
           if git diff --staged --quiet; then
             echo "No changes to commit."
           else
@@ -52,3 +75,12 @@ jobs:
           name: data-quality-report
           path: sync/report.json
           if-no-files-found: ignore
+
+      - name: Open an issue if the refresh failed
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create --repo "$GITHUB_REPOSITORY" \
+            --title "Monthly data refresh failed ($(date -u +%Y-%m-%d))" \
+            --body "The scheduled refresh failed, so the dashboard data and the written analysis may be out of date. Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"

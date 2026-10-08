@@ -124,7 +124,8 @@ The seed script (`sync/seed.js`) fetches all indicators from World Bank, IMF WEO
 
 **Required GitHub secrets:**
 - `SUPABASE_URL`
-- `SUPABASE_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (server-only refresh writer; never expose it in frontend code or a Vercel public variable)
+- `SUPABASE_PUBLISHABLE_KEY` (read-only forecast training client)
 - `FRED_API_KEY` (for US quarterly data)
 
 ---
@@ -145,7 +146,7 @@ Open `http://localhost:3000`. The app reads from the shared Supabase instance us
 To re-seed the database:
 
 ```bash
-SUPABASE_URL=... SUPABASE_KEY=... FRED_API_KEY=... node sync/seed.js
+SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... FRED_API_KEY=... node sync/seed.js
 ```
 
 ---
