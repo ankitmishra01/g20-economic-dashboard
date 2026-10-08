@@ -224,16 +224,14 @@ async function fetchIMF() {
 
 // ── OECD ─────────────────────────────────────────────────────────────────────
 
-// The OECD SDMX gateway rate-limits (429, roughly 20 queries/hour) and intermittently answers 5xx; World Bank/IMF
-// calls also time out now and then. Retry before giving up, waiting much longer after a 429.
+// The OECD SDMX gateway intermittently answers 5xx/429; retry a few times before giving up.
 async function fetchWithRetry(url, options, attempts = 4) {
   let last;
   for (let i = 1; i <= attempts; i++) {
     try {
-      const r = await fetch(url, { ...options, signal: AbortSignal.timeout(45000) });
+      const r = await fetchWithRetry(url, { ...options, signal: AbortSignal.timeout(45000) });
       if (r.status < 500 && r.status !== 429) return r;
       last = new Error(`HTTP ${r.status}`);
-      if (r.status === 429) { await new Promise(res => setTimeout(res, 30000 * i)); continue; }
     } catch (e) { last = e; }
     await new Promise(res => setTimeout(res, 1500 * i));
   }
@@ -651,7 +649,7 @@ async function main() {
 
   // ── Quarterly data (g20_quarterly_data table) ────────────────────────────────
   console.log('\n── Quarterly data pipeline ──────────────────────────────────');
-  process.stdout.write('Fetching quarterly GDP_GROWTH (OECD QNA, 11 G20 OECD members, one request):\n');
+  process.stdout.write('Fetching quarterly GDP_GROWTH (OECD QNA — 11 G20 OECD members):\n');
   try {
     const rows = await fetchAllOECDQuarterly();
     if (rows.length) {
