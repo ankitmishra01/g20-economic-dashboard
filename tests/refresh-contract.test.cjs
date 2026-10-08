@@ -81,3 +81,9 @@ test('refresh workflow alerts on failure and verifies the write', () => {
   assert.match(wf, /if: failure\(\)/);
   assert.match(wf, /Verify the refresh really wrote to the database/);
 });
+
+test('front-end pages through the quarterly table instead of reading only the first 1,000 rows', () => {
+  const data = fs.readFileSync(path.join(__dirname, '../app/data.js'), 'utf8');
+  assert.match(data, /QPAGE/);
+  assert.match(data, /'Range': `\$\{qoffset\}-\$\{qoffset \+ QPAGE - 1\}`/);
+});

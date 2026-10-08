@@ -68,14 +68,27 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
 
     // Load quarterly data from g20_quarterly_data table (non-blocking; graceful fallback)
     try {
-      const qr = await fetch(
-        `${SUPABASE_URL}/rest/v1/g20_quarterly_data?select=country_iso3,indicator_key,period,value&order=period.asc`,
-        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
-      );
-      if (qr.ok) {
-        const qrows = await qr.json();
-        window.G20_QDATA = buildQuarterlyIndex(Array.isArray(qrows) ? qrows : []);
+      // PostgREST returns at most 1,000 rows per request, and the table holds several thousand, so page through it.
+      // Without this the page only ever received the oldest 1,000 rows (latest period 1976Q2) and the newest
+      // quarters never reached the charts or the written analysis.
+      const QPAGE = 1000;
+      const qrows = [];
+      for (let qoffset = 0; ; qoffset += QPAGE) {
+        const qr = await fetch(
+          `${SUPABASE_URL}/rest/v1/g20_quarterly_data?select=country_iso3,indicator_key,period,value&order=period.asc,country_iso3.asc,indicator_key.asc`,
+          { headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`,
+              'Range': `${qoffset}-${qoffset + QPAGE - 1}`,
+          } }
+        );
+        if (!qr.ok) throw new Error(`quarterly fetch failed: ${qr.status}`);
+        const page = await qr.json();
+        if (!Array.isArray(page)) break;
+        qrows.push(...page);
+        if (page.length < QPAGE) break;
       }
+      window.G20_QDATA = buildQuarterlyIndex(qrows);
     } catch (_) { /* quarterly table may not exist yet — no-op */ }
 
     // Load indicator metadata (non-blocking; graceful fallback)

@@ -2,7 +2,7 @@
 
 A live economic intelligence dashboard for all G20 member economies. Tracks 24 macroeconomic indicators, IMF forward projections, AI readiness scores, and workforce displacement risk — refreshed automatically every month via GitHub Actions.
 
-**[Live demo →](https://g20-economic-dashboard-gamma.vercel.app)**
+**[Live demo →](https://g20-gamma.vercel.app)**
 
 ![status](https://img.shields.io/badge/status-live-brightgreen) ![refresh](https://img.shields.io/badge/refresh-monthly-blue) ![deploy](https://img.shields.io/badge/deployed%20on-Vercel-black)
 
@@ -205,4 +205,4 @@ SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... FRED_API_KEY=... node sync/seed.j
 
 ---
 
-*Built with [Claude](https://claude.ai) · [Live dashboard](https://g20-economic-dashboard-gamma.vercel.app) · [AI Trajectory Index](https://ai-trajectory-index.vercel.app)*
+*Built with [Claude](https://claude.ai) · [Live dashboard](https://g20-gamma.vercel.app) · [AI Trajectory Index](https://ai-trajectory-index.vercel.app)*
