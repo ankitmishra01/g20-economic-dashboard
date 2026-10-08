@@ -42,3 +42,42 @@ test('seed requires a service-role key and stamps every write payload', () => {
   assert.match(source, /stampRows\(rows, 'fetched_at', RUN_TIMESTAMP\)/);
   assert.match(source, /stampRows\(META, 'updated_at', RUN_TIMESTAMP\)/);
 });
+
+const seedSource = () => fs.readFileSync(path.join(__dirname, '../sync/seed.js'), 'utf8');
+
+test('CO2 uses the current World Bank series, not the archived one', () => {
+  const source = seedSource();
+  assert.match(source, /CO2_CAPITA:\s+'EN\.GHG\.CO2\.PC\.CE\.AR5'/);
+  assert.doesNotMatch(source, /'EN\.ATM\.CO2E\.PC'/);
+});
+
+test('OECD R&D query uses the six-part MSTI key', () => {
+  assert.match(seedSource(), /\$\{countries\}\.A\.G\.PT_B1GQ\._Z\._Z\?startPeriod/);
+});
+
+test('quarterly GDP uses the current SDMX dataflow in one batched request', () => {
+  const source = seedSource();
+  assert.match(source, /DF_QNA_EXPENDITURE_GROWTH_G20/);
+  assert.doesNotMatch(source, /stats\.oecd\.org\/SDMX-JSON/);
+  assert.match(source, /OECD_QNA_COUNTRIES\.join\('\+'\)/);
+});
+
+test('FRED quarterly inflation is a year-on-year rate, never a CPI index level', () => {
+  const source = seedSource();
+  assert.match(source, /function yoyPercent/);
+  assert.match(source, /add\('INFLATION',\s+quarterlyAverage\(yoyPercent\(/);
+  assert.doesNotMatch(source, /A191RL1Q225SBEA/);
+});
+
+test('implausible quarterly values are rejected', () => {
+  const source = seedSource();
+  assert.match(source, /QUARTERLY_BOUNDS/);
+  assert.match(source, /INFLATION: \[-10, 60\]/);
+});
+
+test('refresh workflow alerts on failure and verifies the write', () => {
+  const wf = fs.readFileSync(path.join(__dirname, '../.github/workflows/refresh.yml'), 'utf8');
+  assert.match(wf, /issues: write/);
+  assert.match(wf, /if: failure\(\)/);
+  assert.match(wf, /Verify the refresh really wrote to the database/);
+});

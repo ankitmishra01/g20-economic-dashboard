@@ -990,13 +990,13 @@ function loadSavedNotes(iso3) {
   // 3. Static pre-written fallback (only when live data is unavailable)
   const cc = window.G20_COMMENTARY?.countries?.[iso3];
   if (cc?.sections?.length) {
-    headline.textContent = cc.headline || '—';
+    headline.textContent = `${cc.headline || '—'} (archived 2024 text: live data unavailable)`;
     cc.sections.forEach((s, i) => {
       const p = document.getElementById(`brief-body-${i}`);
       if (p) p.textContent = s.body;
     });
   } else if (cc?.paragraphs?.length) {
-    headline.textContent = cc.headline || '—';
+    headline.textContent = `${cc.headline || '—'} (archived 2024 text: live data unavailable)`;
     cc.paragraphs.forEach((text, i) => {
       const p = document.getElementById(`brief-body-${i}`);
       if (p) p.textContent = text;

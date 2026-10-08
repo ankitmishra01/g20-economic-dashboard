@@ -31,7 +31,7 @@ const WB_INDICATORS = {
   CURRENT_ACC:    'BN.CAB.XOKA.GD.ZS',
   GDP_CAPITA:     'NY.GDP.PCAP.CD',
   GDP_CAPITA_PPP: 'NY.GDP.PCAP.PP.CD',
-  CO2_CAPITA:     'EN.ATM.CO2E.PC',
+  CO2_CAPITA:     'EN.GHG.CO2.PC.CE.AR5', // replaces archived EN.ATM.CO2E.PC (same values)
   TRADE_GDP:      'NE.TRD.GNFS.ZS',
   EXPORTS_GDP:    'NE.EXP.GNFS.ZS',
   CAPITAL_FORM:   'NE.GDI.TOTL.ZS',
@@ -224,6 +224,20 @@ async function fetchIMF() {
 
 // ── OECD ─────────────────────────────────────────────────────────────────────
 
+// The OECD SDMX gateway intermittently answers 5xx/429; retry a few times before giving up.
+async function fetchWithRetry(url, options, attempts = 4) {
+  let last;
+  for (let i = 1; i <= attempts; i++) {
+    try {
+      const r = await fetch(url, { ...options, signal: AbortSignal.timeout(45000) });
+      if (r.status < 500 && r.status !== 429) return r;
+      last = new Error(`HTTP ${r.status}`);
+    } catch (e) { last = e; }
+    await new Promise(res => setTimeout(res, 1500 * i));
+  }
+  throw last;
+}
+
 function parseOECDSDMX(json, indicatorKey) {
   const structure = json?.data?.structures?.[0];
   const dataSet   = json?.data?.dataSets?.[0];
@@ -259,10 +273,11 @@ async function fetchOECDRD() {
   // OECD MSTI — Gross domestic expenditure on R&D (GERD) as % of GDP.
   // Overwrites WB R&D data for OECD members; non-members keep WB values.
   const countries = [...OECD_G20, ...OECD_PARTNERS].join('+');
-  const url = `https://sdmx.oecd.org/public/rest/data/OECD.STI.STP,DSD_MSTI@DF_MSTI,1.0/A.${countries}.GERD.PT_B1GQ?format=jsondata&startPeriod=2000&endPeriod=${YEAR_END}`;
-  const r = await fetch(url, {
-    headers: { 'User-Agent': 'G20Dashboard-Seed/1.0', 'Accept': 'application/json' },
-    signal: AbortSignal.timeout(45000),
+  // Key order (DSD_MSTI): REF_AREA.FREQ.MEASURE.UNIT_MEASURE.PRICE_BASE.TRANSFORMATION
+  // G = GERD, PT_B1GQ = % of GDP. The old 4-part key now returns HTTP 403 "expecting 6 key values".
+  const url = `https://sdmx.oecd.org/public/rest/data/OECD.STI.STP,DSD_MSTI@DF_MSTI,1.0/${countries}.A.G.PT_B1GQ._Z._Z?startPeriod=2000&endPeriod=${YEAR_END}`;
+  const r = await fetchWithRetry(url, {
+    headers: { 'User-Agent': 'G20Dashboard-Seed/1.0', 'Accept': 'application/vnd.sdmx.data+json;version=2' },
   });
   if (!r.ok) throw new Error(`OECD MSTI API ${r.status}`);
   const json = await r.json();
@@ -359,7 +374,25 @@ async function validate() {
 
 // ── Quarterly data pipeline ───────────────────────────────────────────────────
 
-async function upsertQuarterly(rows) {
+// Plausible bounds for quarterly series. A value outside these is a unit error (for example a CPI index level
+// stored as a percentage) and must never reach the dashboard.
+const QUARTERLY_BOUNDS = { GDP_GROWTH: [-35, 35], INFLATION: [-10, 60], UNEMPLOYMENT: [0, 40] };
+
+function rejectImplausibleQuarterly(rows) {
+  const ok = [];
+  for (const row of rows) {
+    const [lo, hi] = QUARTERLY_BOUNDS[row.indicator_key] || [-Infinity, Infinity];
+    if (row.value < lo || row.value > hi) {
+      console.log(`  ⚠ dropped implausible ${row.country_iso3} ${row.indicator_key} ${row.period}: ${row.value}`);
+      continue;
+    }
+    ok.push(row);
+  }
+  return ok;
+}
+
+async function upsertQuarterly(allRows) {
+  const rows = rejectImplausibleQuarterly(allRows);
   if (!rows.length) return;
   const stampedRows = stampRows(rows, 'fetched_at', RUN_TIMESTAMP);
   for (const batch of chunk(stampedRows, CHUNK_SIZE)) {
@@ -386,105 +419,96 @@ function oecd2period(str) {
 }
 
 // Fetch quarterly GDP growth (year-on-year, seasonally adjusted) from OECD National Accounts.
-// Uses the OECD.Stat SDMX-JSON API (QNA dataset, B1_GE.GPSA = GDP YoY SA).
-// Filters for: TRANSFORMATION=GY, TRANSACTION=B1GQ, ADJUSTMENT=Y
-async function fetchOECDQNA(iso3, startPeriod = '2018-Q1') {
-  const url = `https://stats.oecd.org/SDMX-JSON/data/QNA/${iso3}.B1_GE.GPSA.Q/all?startTime=${startPeriod}`;
-  const r = await fetch(url, {
-    headers: { 'User-Agent': 'G20Dashboard-Seed/1.0', 'Accept': 'application/json' },
-    signal: AbortSignal.timeout(45000),
-  });
-  if (!r.ok) throw new Error(`OECD QNA ${r.status} for ${iso3}`);
-
-  const json = await r.json();
-  const data    = json?.data;
-  const structs = data?.structures?.[0];
-  const ds      = data?.dataSets?.[0];
-  if (!structs || !ds) throw new Error(`OECD QNA: no data for ${iso3}`);
-
-  const sdims = structs.dimensions?.series || [];
-  const odims = structs.dimensions?.observation || [];
-
-  const trIdx  = sdims.findIndex(x => x.id === 'TRANSFORMATION');
-  const txIdx  = sdims.findIndex(x => x.id === 'TRANSACTION');
-  const adjIdx = sdims.findIndex(x => x.id === 'ADJUSTMENT');
-  if (trIdx < 0 || txIdx < 0 || adjIdx < 0) throw new Error(`OECD QNA: missing dims for ${iso3}`);
-
-  const gyIdx   = sdims[trIdx].values.findIndex(v => v.id === 'GY');
-  const b1gqIdx = sdims[txIdx].values.findIndex(v => v.id === 'B1GQ');
-  const yIdx    = sdims[adjIdx].values.findIndex(v => v.id === 'Y');
-
-  const td = odims.find(x => x.id === 'TIME_PERIOD');
-  if (!td) throw new Error(`OECD QNA: no TIME_PERIOD for ${iso3}`);
-  const tv = td.values;
-
-  // Deduplicate by period — multiple series may match the filter; keep first non-null value per period
-  const seen = new Map();
-  for (const [sk, sv] of Object.entries(ds.series || {})) {
-    const parts = sk.split(':').map(Number);
-    if (parts[trIdx] !== gyIdx || parts[txIdx] !== b1gqIdx || parts[adjIdx] !== yIdx) continue;
-    for (const [obsKey, obsArr] of Object.entries(sv.observations || {})) {
-      const period = oecd2period(tv[parseInt(obsKey)]?.id);
-      const value  = Array.isArray(obsArr) ? obsArr[0] : obsArr;
-      if (!period || value === null || isNaN(Number(value))) continue;
-      if (!seen.has(period)) seen.set(period, Number(value));
-    }
-  }
-  return Array.from(seen.entries()).map(([period, value]) => ({
-    country_iso3: iso3, indicator_key: 'GDP_GROWTH', period, value, source: 'oecd_qna',
-  }));
-}
-
+// The legacy stats.oecd.org QNA endpoint redirects (HTTP 301) and no longer serves data, so this uses the
+// current SDMX dataflow DF_QNA_EXPENDITURE_GROWTH_G20.
+// Key: FREQ.ADJUSTMENT.REF_AREA.SECTOR.COUNTERPART_SECTOR.TRANSACTION.INSTR_ASSET.ACTIVITY.EXPENDITURE.UNIT_MEASURE.PRICE_BASE.TRANSFORMATION.TABLE_IDENTIFIER
+// = Q.Y.<iso3>+<iso3>.S1.S1.B1GQ._Z._Z._Z.PC.L.GY.T0102  (GDP, seasonally adjusted, % change on same quarter a year earlier)
+// The OECD gateway allows only a few requests per hour per IP (HTTP 429), so all countries go in ONE request.
 // G20 OECD members that have quarterly national accounts data
 const OECD_QNA_COUNTRIES = ['AUS', 'CAN', 'GBR', 'DEU', 'FRA', 'ITA', 'JPN', 'KOR', 'MEX', 'TUR', 'USA'];
 
-async function fetchAllOECDQuarterly() {
-  const allRows = [];
-  for (const iso3 of OECD_QNA_COUNTRIES) {
-    process.stdout.write(`  ${iso3}…`);
-    try {
-      const rows = await fetchOECDQNA(iso3);
-      allRows.push(...rows);
-      process.stdout.write(`${rows.length}q `);
-    } catch (e) {
-      process.stdout.write(`✗ `);
-    }
-    await new Promise(r => setTimeout(r, 300));
+async function fetchAllOECDQuarterly(startPeriod = '2018-Q1') {
+  const key = `Q.Y.${OECD_QNA_COUNTRIES.join('+')}.S1.S1.B1GQ._Z._Z._Z.PC.L.GY.T0102`;
+  const url = `https://sdmx.oecd.org/public/rest/data/OECD.SDD.NAD,DSD_NAMAIN1@DF_QNA_EXPENDITURE_GROWTH_G20,1.1/${key}?startPeriod=${startPeriod}&dimensionAtObservation=AllDimensions`;
+  const r = await fetchWithRetry(url, {
+    headers: { 'User-Agent': 'G20Dashboard-Seed/1.0', 'Accept': 'application/vnd.sdmx.data+json;version=2' },
+  });
+  if (!r.ok) throw new Error(`OECD QNA ${r.status}`);
+
+  const json = await r.json();
+  const structs = json?.data?.structures?.[0];
+  const obs     = json?.data?.dataSets?.[0]?.observations;
+  if (!structs || !obs) throw new Error('OECD QNA: no data returned');
+
+  // With dimensionAtObservation=AllDimensions every observation key is 'i:j:...' over the observation dimensions.
+  const odims = structs.dimensions?.observation || [];
+  const tIdx  = odims.findIndex(x => x.id === 'TIME_PERIOD');
+  const aIdx  = odims.findIndex(x => x.id === 'REF_AREA');
+  if (tIdx < 0 || aIdx < 0) throw new Error('OECD QNA: missing TIME_PERIOD/REF_AREA dimension');
+
+  const rows = [];
+  for (const [obsKey, obsArr] of Object.entries(obs)) {
+    const parts  = obsKey.split(':');
+    const iso3   = odims[aIdx].values[parseInt(parts[aIdx])]?.id;
+    const period = oecd2period(odims[tIdx].values[parseInt(parts[tIdx])]?.id);
+    const value  = Array.isArray(obsArr) ? obsArr[0] : obsArr;
+    if (!iso3 || !period || value === null || isNaN(Number(value))) continue;
+    rows.push({ country_iso3: iso3, indicator_key: 'GDP_GROWTH', period, value: Number(value), source: 'oecd_qna' });
   }
-  console.log('');
-  return allRows;
+  return rows;
 }
 
-// FRED (St. Louis Fed) — USA quarterly data, requires free API key
-// Set process.env.FRED_API_KEY to enable. Key available at fred.stlouisfed.org
-async function fetchFREDQuarterly(apiKey) {
-  const SERIES = [
-    { id: 'A191RL1Q225SBEA', key: 'GDP_GROWTH'  }, // Real GDP % change annualized
-    { id: 'CPIAUCSL',        key: 'INFLATION'   }, // CPI monthly → Q average
-    { id: 'UNRATE',          key: 'UNEMPLOYMENT'}, // Unemployment monthly → Q average
-  ];
-  const rows = [];
-  for (const s of SERIES) {
-    try {
-      const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${s.id}&api_key=${apiKey}&file_type=json&observation_start=2018-01-01&sort_order=asc`;
-      const r = await fetch(url, { signal: AbortSignal.timeout(20000) });
-      if (!r.ok) continue;
-      const json = await r.json();
-      // Group observations into quarterly averages
-      const qMap = {};
-      for (const obs of (json?.observations || [])) {
-        if (!obs.date || obs.value === '.') continue;
-        const [yr, mo] = obs.date.split('-').map(Number);
-        const period = `${yr}Q${Math.ceil(mo / 3)}`;
-        if (!qMap[period]) qMap[period] = [];
-        qMap[period].push(parseFloat(obs.value));
-      }
-      for (const [period, vals] of Object.entries(qMap)) {
-        const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
-        rows.push({ country_iso3: 'USA', indicator_key: s.key, period, value: avg, source: 'fred' });
-      }
-    } catch (_) {}
+// FRED (St. Louis Fed) — USA quarterly data via the keyless fredgraph CSV endpoint (no API key needed, so the
+// monthly GitHub Action refreshes it too). Stored values must be comparable with the annual series:
+//   INFLATION    = year-on-year % change in CPI, quarterly average (NOT the CPI index level)
+//   UNEMPLOYMENT = unemployment rate %, quarterly average
+// GDP growth is not taken from FRED: its annualised quarter-on-quarter rate is a different measure from the
+// year-on-year rate used everywhere else, so USA GDP_GROWTH comes from the OECD quarterly series instead.
+async function fetchFREDSeries(id) {
+  const r = await fetch(`https://fred.stlouisfed.org/graph/fredgraph.csv?id=${id}&cosd=2016-01-01`, {
+    headers: { 'User-Agent': 'G20Dashboard-Seed/1.0' },
+    signal: AbortSignal.timeout(30000),
+  });
+  if (!r.ok) throw new Error(`FRED ${id} ${r.status}`);
+  const lines = (await r.text()).trim().split('\n').slice(1);
+  return lines.map(l => l.split(',')).filter(([d, v]) => d && v && v !== '.' && !isNaN(parseFloat(v)))
+    .map(([d, v]) => ({ date: d, value: parseFloat(v) }));
+}
+
+function quarterlyAverage(points) {
+  const qMap = {};
+  for (const { date, value } of points) {
+    const [yr, mo] = date.split('-').map(Number);
+    const period = `${yr}Q${Math.ceil(mo / 3)}`;
+    (qMap[period] = qMap[period] || []).push(value);
   }
+  return qMap;
+}
+
+function yoyPercent(points) {
+  // points are monthly, ascending; compare with the same month a year earlier
+  const byMonth = new Map(points.map(p => [p.date.slice(0, 7), p.value]));
+  const out = [];
+  for (const { date, value } of points) {
+    const [yr, mo] = date.split('-');
+    const prev = byMonth.get(`${Number(yr) - 1}-${mo}`);
+    if (prev) out.push({ date, value: (value / prev - 1) * 100 });
+  }
+  return out;
+}
+
+async function fetchFREDQuarterly() {
+  const rows = [];
+  const add = (key, qMap) => {
+    for (const [period, vals] of Object.entries(qMap)) {
+      // a partial quarter (fewer than 3 months) would be a flash estimate, so only keep complete quarters
+      if (vals.length < 3) continue;
+      const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+      rows.push({ country_iso3: 'USA', indicator_key: key, period, value: Math.round(avg * 100) / 100, source: 'fred' });
+    }
+  };
+  add('INFLATION',    quarterlyAverage(yoyPercent(await fetchFREDSeries('CPIAUCSL'))));
+  add('UNEMPLOYMENT', quarterlyAverage(await fetchFREDSeries('UNRATE')));
   return rows;
 }
 
@@ -514,7 +538,7 @@ async function seedIndicatorMetadata() {
     { key: 'YOUTH_UNEMP',    label: 'Youth Unemployment',          unit: '%',        description: 'Youth (15–24) unemployment as % of youth labour force',                     source_name: 'World Bank',     source_code: 'SL.UEM.1524.ZS',       source_url: 'https://data.worldbank.org/indicator/SL.UEM.1524.ZS',       coverage_note: '18/19 G20 economies' },
     { key: 'FEMALE_LFP',     label: 'Female Labour Participation', unit: '%',        description: 'Female labour force participation rate, % of female population aged 15+',  source_name: 'World Bank',     source_code: 'SL.TLF.CACT.FE.ZS',   source_url: 'https://data.worldbank.org/indicator/SL.TLF.CACT.FE.ZS',   coverage_note: '19/19 G20 economies' },
     { key: 'LIFE_EXPECT',    label: 'Life Expectancy',             unit: 'years',    description: 'Life expectancy at birth, total population (years)',                         source_name: 'World Bank',     source_code: 'SP.DYN.LE00.IN',       source_url: 'https://data.worldbank.org/indicator/SP.DYN.LE00.IN',       coverage_note: '19/19 G20 economies' },
-    { key: 'CO2_CAPITA',     label: 'CO₂ per Capita',              unit: 't/capita', description: 'CO₂ emissions per capita (metric tonnes)',                                  source_name: 'World Bank',     source_code: 'EN.ATM.CO2E.PC',       source_url: 'https://data.worldbank.org/indicator/EN.ATM.CO2E.PC',       coverage_note: '18/19 G20 economies' },
+    { key: 'CO2_CAPITA',     label: 'CO₂ per Capita',              unit: 't/capita', description: 'CO₂ emissions per capita (metric tonnes)',                                  source_name: 'World Bank',     source_code: 'EN.GHG.CO2.PC.CE.AR5',       source_url: 'https://data.worldbank.org/indicator/EN.GHG.CO2.PC.CE.AR5',       coverage_note: '18/19 G20 economies' },
     { key: 'POPULATION',     label: 'Population',                  unit: 'count',    description: 'Total population',                                                           source_name: 'World Bank',     source_code: 'SP.POP.TOTL',          source_url: 'https://data.worldbank.org/indicator/SP.POP.TOTL',          coverage_note: '19/19 G20 economies' },
     { key: 'RESEARCHERS',    label: 'Researchers per Million',     unit: '/million', description: 'Researchers in R&D per million people',                                       source_name: 'World Bank',     source_code: 'SP.POP.SCIE.RD.P6',   source_url: 'https://data.worldbank.org/indicator/SP.POP.SCIE.RD.P6',   coverage_note: '15/19 G20 economies' },
   ];
@@ -576,6 +600,7 @@ async function main() {
     console.log(` ✓`);
   } catch (e) {
     console.log(` ✗ ${e.message} (WB fallback retained)`);
+    console.log(`::warning::OECD R&D refresh failed: ${e.message}; World Bank values kept`);
     // Non-fatal: WB R&D data already upserted above
   }
 
@@ -636,18 +661,20 @@ async function main() {
     }
   } catch (e) {
     console.log(`  ✗ OECD quarterly: ${e.message}`);
+    console.log(`::warning::OECD quarterly GDP refresh failed: ${e.message}; previous quarterly values kept`);
     console.log('  → Run the schema.sql migration in Supabase to create g20_quarterly_data table.');
   }
 
-  if (process.env.FRED_API_KEY) {
-    process.stdout.write('Fetching USA quarterly data (FRED)…');
+  {
+    process.stdout.write('Fetching USA quarterly data (FRED, keyless)…');
     try {
-      const rows = await fetchFREDQuarterly(process.env.FRED_API_KEY);
+      const rows = await fetchFREDQuarterly();
       process.stdout.write(` ${rows.length} rows → upserting…`);
       await upsertQuarterly(rows);
       console.log(' ✓');
     } catch (e) {
       console.log(` ✗ ${e.message} (OECD data retained)`);
+      console.log(`::warning::FRED quarterly refresh failed: ${e.message}`);
     }
   }
 

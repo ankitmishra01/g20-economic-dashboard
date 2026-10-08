@@ -12,16 +12,18 @@ CREATE TABLE IF NOT EXISTS g20_economic_data (
   PRIMARY KEY (country_iso3, indicator_key, year)
 );
 
--- RLS: all data is public World Bank / IMF data — allow public read + write
+-- RLS: public clients may read; only the server-side refresh role may write.
 ALTER TABLE g20_economic_data ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Public read"   ON g20_economic_data;
 DROP POLICY IF EXISTS "Public write"  ON g20_economic_data;
 DROP POLICY IF EXISTS "Public upsert" ON g20_economic_data;
 
-CREATE POLICY "Public read"   ON g20_economic_data FOR SELECT USING (true);
-CREATE POLICY "Public write"  ON g20_economic_data FOR INSERT WITH CHECK (true);
-CREATE POLICY "Public upsert" ON g20_economic_data FOR UPDATE USING (true);
+CREATE POLICY "Public read" ON g20_economic_data
+  FOR SELECT TO anon, authenticated USING (true);
+REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER
+  ON g20_economic_data FROM anon, authenticated;
+GRANT SELECT ON g20_economic_data TO anon, authenticated;
 
 -- Indexes for fast lookups
 CREATE INDEX IF NOT EXISTS idx_g20_country   ON g20_economic_data (country_iso3);
@@ -51,9 +53,11 @@ ALTER TABLE g20_quarterly_data ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Public read"   ON g20_quarterly_data;
 DROP POLICY IF EXISTS "Public write"  ON g20_quarterly_data;
 DROP POLICY IF EXISTS "Public upsert" ON g20_quarterly_data;
-CREATE POLICY "Public read"   ON g20_quarterly_data FOR SELECT USING (true);
-CREATE POLICY "Public write"  ON g20_quarterly_data FOR INSERT WITH CHECK (true);
-CREATE POLICY "Public upsert" ON g20_quarterly_data FOR UPDATE USING (true);
+CREATE POLICY "Public read" ON g20_quarterly_data
+  FOR SELECT TO anon, authenticated USING (true);
+REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER
+  ON g20_quarterly_data FROM anon, authenticated;
+GRANT SELECT ON g20_quarterly_data TO anon, authenticated;
 
 CREATE INDEX IF NOT EXISTS idx_g20q_country   ON g20_quarterly_data (country_iso3);
 CREATE INDEX IF NOT EXISTS idx_g20q_indicator ON g20_quarterly_data (indicator_key);
@@ -76,6 +80,15 @@ ALTER TABLE g20_indicators ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Public read"   ON g20_indicators;
 DROP POLICY IF EXISTS "Public write"  ON g20_indicators;
 DROP POLICY IF EXISTS "Public upsert" ON g20_indicators;
-CREATE POLICY "Public read"   ON g20_indicators FOR SELECT USING (true);
-CREATE POLICY "Public write"  ON g20_indicators FOR INSERT WITH CHECK (true);
-CREATE POLICY "Public upsert" ON g20_indicators FOR UPDATE USING (true);
+CREATE POLICY "Public read" ON g20_indicators
+  FOR SELECT TO anon, authenticated USING (true);
+REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER
+  ON g20_indicators FROM anon, authenticated;
+GRANT SELECT ON g20_indicators TO anon, authenticated;
+
+-- Prevent future public-schema tables from inheriting write privileges.
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
+  REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER
+  ON TABLES FROM anon, authenticated;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
+  GRANT SELECT ON TABLES TO anon, authenticated;
