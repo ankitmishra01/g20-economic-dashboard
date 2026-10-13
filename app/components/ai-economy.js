@@ -26,11 +26,13 @@ const DIM_COLORS = {
   investment:         'rgba(245,158,11,0.8)',
   economic_readiness: 'rgba(236,72,153,0.8)',
 };
+// Projected 2028 score minus current score: the one definition used by the bars, tables, hero tile and editorial.
+const scoreDelta = c => c.ai.projected_score_2028 - c.ai.total_score;
 const MONO = { family: "'JetBrains Mono', 'Geist Mono', monospace" };
 // Functions, not constants: Chart.js option colors are static once a chart is
 // created, so these must be re-resolved from CSS custom properties fresh at
 // each mount — including a dark-mode-triggered remount.
-function tick() { return { font: { ...MONO, size: 10 }, color: A.chartTheme().tick }; }
+function tick() { return { font: { ...MONO, size: 11 }, color: A.chartTheme().tick }; }
 function chartGrid() { return A.chartTheme().grid; }
 function tt() {
   const theme = A.chartTheme();
@@ -112,7 +114,7 @@ function renderAIEconomy() {
   </div>
   <div class="panel mb-20">
     <div class="panel__body" style="padding:16px 20px">
-      <div style="position:relative;height:500px"><canvas id="ai-readiness-chart"></canvas></div>
+      <div style="position:relative;height:560px"><canvas id="ai-readiness-chart"></canvas></div>
     </div>
   </div>
 
@@ -123,7 +125,7 @@ function renderAIEconomy() {
   <div class="row-2 mb-20">
     <div class="panel">
       <div class="panel__body" style="padding:16px 20px">
-        <div style="position:relative;height:380px"><canvas id="ai-trajectory-chart"></canvas></div>
+        <div style="position:relative;height:440px"><canvas id="ai-trajectory-chart"></canvas></div>
       </div>
     </div>
     <div class="panel">
@@ -136,11 +138,11 @@ function renderAIEconomy() {
 
   <!-- Section 3: Displacement vs Readiness (money shot) -->
   <div class="sec-head">
-    <div class="sec-head__title">Displacement Risk vs AI Readiness <span class="sec-head__sub">flag size = GDP per capita PPP · x = AI job exposure (IMF 2024) · y = AI readiness score</span></div>
+    <div class="sec-head__title">Displacement Risk vs AI Readiness <span class="sec-head__sub">flag size = GDP per capita PPP · x = AI job exposure (IMF 2024) · y = AI readiness · quadrant lines at 40% exposure and a score of 60</span></div>
   </div>
   <div class="panel mb-20">
     <div class="panel__body" style="padding:16px 20px">
-      <div style="position:relative;height:500px"><canvas id="ai-scatter-chart"></canvas></div>
+      <div style="position:relative;height:580px"><canvas id="ai-scatter-chart"></canvas></div>
     </div>
   </div>
 
@@ -151,7 +153,7 @@ function renderAIEconomy() {
   <div class="row-2 mb-20">
     <div class="panel">
       <div class="panel__body" style="padding:16px 20px">
-        <div style="position:relative;height:340px"><canvas id="ai-growth-chart"></canvas></div>
+        <div style="position:relative;height:400px"><canvas id="ai-growth-chart"></canvas></div>
       </div>
     </div>
     <div class="panel">
@@ -202,13 +204,13 @@ async function mountAIEconomyCharts() {
 
   // Update hero tiles
   const topCountry = sorted[0];
-  const fastestRising = [...sorted].sort((a,b) => b.ai.trajectory_score - a.ai.trajectory_score)[0];
+  const fastestRising = [...sorted].sort((a,b) => scoreDelta(b) - scoreDelta(a))[0];
   const scores = sorted.map(c => c.ai.total_score).sort((a,b)=>a-b);
   const medianScore = scores[Math.floor(scores.length/2)];
 
   document.getElementById('hero-top-score').innerHTML = `${topCountry.ai.total_score}<span class="unit">/100</span>`;
   document.getElementById('hero-top-name').textContent = topCountry.name;
-  document.getElementById('hero-traj-val').innerHTML = `+${fastestRising.ai.trajectory_score}<span class="unit"> pts</span>`;
+  document.getElementById('hero-traj-val').innerHTML = `+${scoreDelta(fastestRising)}<span class="unit"> pts</span>`;
   document.getElementById('hero-traj-name').textContent = `${fastestRising.name} → ${fastestRising.ai.projected_score_2028}`;
   document.getElementById('hero-median').innerHTML = `${medianScore}<span class="unit">/100</span>`;
 
@@ -242,7 +244,7 @@ function renderAIEconomyEditorial(aiData, g20sorted) {
   const bot5avg   = Math.round(bottom5.reduce((s, c) => s + c.ai.total_score, 0) / bottom5.length);
   const gap       = top5avg - bot5avg;
 
-  const trajSorted = [...g20sorted].sort((a, b) => b.ai.trajectory_score - a.ai.trajectory_score);
+  const trajSorted = [...g20sorted].sort((a, b) => scoreDelta(b) - scoreDelta(a));
   const top3Traj   = trajSorted.slice(0, 3);
   const watchList  = trajSorted.slice(-3).reverse();
 
@@ -269,7 +271,7 @@ function renderAIEconomyEditorial(aiData, g20sorted) {
 
   // Paragraph 3 — The Trajectory Story
   const p3Parts = top3Traj.map(c =>
-    `<strong>${A.escapeText(c.name)}</strong> projects a gain of +${c.ai.trajectory_score} points to ${c.ai.projected_score_2028}/100 by 2028, driven by ${A.escapeText(c.ai.top_accelerator || c.ai.trajectory_label || 'strong policy momentum')}`
+    `<strong>${A.escapeText(c.name)}</strong> projects a gain of +${scoreDelta(c)} points to ${c.ai.projected_score_2028}/100 by 2028, driven by ${A.escapeText(c.ai.top_accelerator || c.ai.trajectory_label || 'strong policy momentum')}`
   );
   const p3 = `Three economies stand out on trajectory. ${p3Parts.join('. ')}. However, trajectory scores reflect policy commitments and investment pipelines not yet translated into measurable capability gain. The gap between declared AI strategy and observable progress typically runs 18 to 36 months.`;
 
@@ -344,7 +346,7 @@ function mountReadinessChart(sorted) {
       indexAxis: 'y',
       responsive: true, maintainAspectRatio: false,
       plugins: {
-        legend: { position: 'bottom', labels: { color: A.chartTheme().tick, font: { ...MONO, size: 10 }, boxWidth: 12, padding: 10 } },
+        legend: { position: 'top', align: 'start', labels: { color: A.chartTheme().tick, font: { ...MONO, size: 12 }, boxWidth: 12, padding: 14 } },
         tooltip: {
           ...tt(),
           callbacks: {
@@ -357,9 +359,26 @@ function mountReadinessChart(sorted) {
       },
       scales: {
         x: { stacked: true, max: 100, grid: { color: chartGrid() }, ticks: { ...tick(), callback: v => v } },
-        y: { stacked: true, grid: { display: false }, ticks: { ...tick(), font: { ...MONO, size: 10 } } },
+        y: { stacked: true, grid: { display: false }, ticks: { ...tick(), font: { ...MONO, size: 12 } } },
       },
     },
+    plugins: [{
+      id: 'barTotals',
+      afterDatasetsDraw(chart) {
+        const ctx2 = chart.ctx;
+        const last = chart.getDatasetMeta(chart.data.datasets.length - 1).data;
+        ctx2.save();
+        ctx2.font = 'bold 13px JetBrains Mono, monospace';
+        ctx2.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-1').trim() || '#111';
+        ctx2.textAlign = 'left';
+        ctx2.textBaseline = 'middle';
+        last.forEach((bar, i) => {
+          const total = chart.data.datasets.reduce((s, d) => s + (d.data[i] || 0), 0);
+          ctx2.fillText(String(total), bar.x + 8, bar.y);
+        });
+        ctx2.restore();
+      },
+    }],
   });
 }
 
@@ -367,7 +386,9 @@ function mountTrajectoryChart(sorted) {
   const canvas = document.getElementById('ai-trajectory-chart');
   if (!canvas) return;
 
-  const byTraj = [...sorted].sort((a, b) => b.ai.trajectory_score - a.ai.trajectory_score);
+  // Change = projected 2028 score minus current score, so the bar, label and table always agree.
+  const delta = scoreDelta;
+  const byTraj = [...sorted].sort((a, b) => delta(b) - delta(a));
 
   const existing = Chart.getChart(canvas); if (existing) existing.destroy();
   new Chart(canvas.getContext('2d'), {
@@ -375,10 +396,10 @@ function mountTrajectoryChart(sorted) {
     data: {
       labels: byTraj.map(c => c.name),
       datasets: [{
-        data: byTraj.map(c => c.ai.projected_score_2028 - c.ai.total_score),
-        backgroundColor: byTraj.map(c => c.ai.trajectory_score >= 0 ? 'rgba(52,211,153,0.8)' : 'rgba(248,113,113,0.8)'),
+        data: byTraj.map(delta),
+        backgroundColor: byTraj.map((c, i) => delta(c) < 0 ? 'rgba(248,113,113,0.85)' : (i < 5 ? 'rgba(16,185,129,0.95)' : 'rgba(52,211,153,0.6)')),
         borderRadius: 3,
-        barThickness: 14,
+        barThickness: 15,
       }],
     },
     options: {
@@ -400,10 +421,26 @@ function mountTrajectoryChart(sorted) {
         datalabels: { display: false },
       },
       scales: {
-        x: { grid: { color: chartGrid() }, ticks: { ...tick(), callback: v => (v > 0 ? '+' : '') + v } },
-        y: { grid: { display: false }, ticks: { ...tick() } },
+        x: { grid: { color: chartGrid() }, ticks: { ...tick(), callback: v => (v > 0 ? '+' : '') + v }, grace: '8%' },
+        y: { grid: { display: false }, ticks: { ...tick(), font: { ...MONO, size: 12 } } },
       },
     },
+    plugins: [{
+      id: 'deltaLabels',
+      afterDatasetsDraw(chart) {
+        const ctx2 = chart.ctx;
+        ctx2.save();
+        ctx2.font = 'bold 12px JetBrains Mono, monospace';
+        ctx2.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-1').trim() || '#111';
+        ctx2.textBaseline = 'middle';
+        chart.getDatasetMeta(0).data.forEach((bar, i) => {
+          const v = chart.data.datasets[0].data[i];
+          ctx2.textAlign = v >= 0 ? 'left' : 'right';
+          ctx2.fillText((v > 0 ? '+' : '') + v, bar.x + (v >= 0 ? 7 : -7), bar.y);
+        });
+        ctx2.restore();
+      },
+    }],
   });
 }
 
@@ -433,7 +470,7 @@ function mountScatterChart(sorted) {
         const ppp = window.G20Data.getLatest(c.iso3, 'GDP_CAPITA_PPP');
         // Flag width scales with PPP (keeps the "bubble = PPP" encoding); r is the
         // hover hit-radius, kept in step with the drawn flag so tooltips line up.
-        const flagW = ppp?.value ? Math.max(22, Math.min(40, Math.sqrt(ppp.value / 1000) * 4.2)) : 24;
+        const flagW = ppp?.value ? Math.max(20, Math.min(34, Math.sqrt(ppp.value / 1000) * 3.6)) : 24;
         return {
           x: AI_LABOR_EXPOSURE[c.name] ?? 35,
           y: c.ai.total_score,
@@ -460,7 +497,14 @@ function mountScatterChart(sorted) {
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: {
-        legend: { position: 'bottom', labels: { color: A.chartTheme().tick, font: { ...MONO, size: 10 }, boxWidth: 10, padding: 12 } },
+        legend: {
+          position: 'bottom',
+          labels: {
+            color: A.chartTheme().tick, font: { ...MONO, size: 12 }, boxWidth: 12, padding: 16,
+            // bubbles are transparent (flags are drawn on top), so build the swatches from the region colour
+            generateLabels: chart => chart.data.datasets.map((d, i) => ({ text: d.label, fillStyle: d.borderColor, strokeStyle: d.borderColor, lineWidth: 0, hidden: !chart.isDatasetVisible(i), datasetIndex: i })),
+          },
+        },
         tooltip: {
           ...tt(),
           callbacks: {
@@ -479,14 +523,14 @@ function mountScatterChart(sorted) {
       },
       scales: {
         x: {
-          title: { display: true, text: 'AI Labour Exposure (% of jobs)', color: A.chartTheme().tick, font: { ...MONO, size: 10 } },
+          title: { display: true, text: 'AI labour exposure (% of jobs highly exposed)  →  more exposed', color: A.chartTheme().tick, font: { ...MONO, size: 12 } },
           min: 20, max: 65,
           grid: { color: chartGrid() },
           ticks: { ...tick(), callback: v => v + '%' },
         },
         y: {
-          title: { display: true, text: 'AI Readiness Score', color: A.chartTheme().tick, font: { ...MONO, size: 10 } },
-          min: 35, max: 95,
+          title: { display: true, text: 'AI readiness score (0 to 100)  →  more ready', color: A.chartTheme().tick, font: { ...MONO, size: 12 } },
+          min: 35, max: 100,
           grid: { color: chartGrid() },
           ticks: { ...tick() },
         },
@@ -505,18 +549,29 @@ function mountScatterChart(sorted) {
 
         // Quadrant backgrounds
         const zones = [
-          { x1: xMid, x2: right,  y1: top,    y2: yMid,   color: 'rgba(52,211,153,0.05)',  label: 'Managed',       lx: (xMid+right)/2,  ly: top + 14 },
-          { x1: left,  x2: xMid,  y1: top,    y2: yMid,   color: 'rgba(59,130,246,0.05)',  label: 'Insulated',     lx: (left+xMid)/2,   ly: top + 14 },
-          { x1: xMid, x2: right,  y1: yMid,   y2: bottom, color: 'rgba(239,68,68,0.07)',   label: 'Risk Zone',     lx: (xMid+right)/2,  ly: bottom - 10 },
-          { x1: left,  x2: xMid,  y1: yMid,   y2: bottom, color: 'rgba(245,158,11,0.05)',  label: 'Transitioning', lx: (left+xMid)/2,   ly: bottom - 10 },
+          { x1: xMid, x2: right,  y1: top,    y2: yMid,   color: 'rgba(52,211,153,0.07)',  label: 'Managed',       sub: 'exposed but ready',     ax: right - 12, ay: top + 12,    align: 'right', base: 'top' },
+          { x1: left,  x2: xMid,  y1: top,    y2: yMid,   color: 'rgba(59,130,246,0.07)',  label: 'Insulated',     sub: 'less exposed, ready',   ax: left + 12,  ay: top + 12,    align: 'left',  base: 'top' },
+          { x1: xMid, x2: right,  y1: yMid,   y2: bottom, color: 'rgba(239,68,68,0.09)',   label: 'Risk zone',     sub: 'exposed and not ready', ax: right - 12, ay: bottom - 12, align: 'right', base: 'bottom' },
+          { x1: left,  x2: xMid,  y1: yMid,   y2: bottom, color: 'rgba(245,158,11,0.07)',  label: 'Transitioning', sub: 'less exposed, not ready', ax: left + 12, ay: bottom - 12, align: 'left',  base: 'bottom' },
         ];
+        const zoneInk = getComputedStyle(document.documentElement).getPropertyValue('--text-2').trim() || '#475569';
         zones.forEach(z => {
           ctx2.fillStyle = z.color;
           ctx2.fillRect(z.x1, z.y1, z.x2 - z.x1, z.y2 - z.y1);
-          ctx2.fillStyle = 'rgba(148,163,184,0.5)';
-          ctx2.font = '9px JetBrains Mono, monospace';
-          ctx2.textAlign = 'center';
-          ctx2.fillText(z.label.toUpperCase(), z.lx, z.ly);
+          ctx2.textAlign = z.align;
+          ctx2.textBaseline = z.base;
+          ctx2.globalAlpha = 0.85;
+          ctx2.fillStyle = zoneInk;
+          // bottom quadrants stack sub-label under the title, so draw the sub-label first when anchored to the bottom
+          const big = 'bold 13px JetBrains Mono, monospace', small = '11px JetBrains Mono, monospace';
+          if (z.base === 'top') {
+            ctx2.font = big;   ctx2.fillText(z.label.toUpperCase(), z.ax, z.ay);
+            ctx2.font = small; ctx2.fillText(z.sub, z.ax, z.ay + 17);
+          } else {
+            ctx2.font = small; ctx2.fillText(z.sub, z.ax, z.ay);
+            ctx2.font = big;   ctx2.fillText(z.label.toUpperCase(), z.ax, z.ay - 15);
+          }
+          ctx2.globalAlpha = 1;
         });
 
         // Crosshair lines
@@ -566,7 +621,7 @@ function mountScatterChart(sorted) {
 
             // ISO3 label beneath the flag
             ctx2.fillStyle = txtColor;
-            ctx2.font = 'bold 9px JetBrains Mono, monospace';
+            ctx2.font = 'bold 11px JetBrains Mono, monospace';
             ctx2.textAlign = 'center';
             ctx2.textBaseline = 'top';
             ctx2.fillText(m.iso3 || '', meta.x, y + h + 2);
@@ -614,6 +669,10 @@ function mountGrowthChart(sorted) {
   const sumX2 = points.reduce((s,p) => s + p.x * p.x, 0);
   const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
   const intercept = (sumY - slope * sumX) / n;
+  const sumY2 = points.reduce((s,p) => s + p.y * p.y, 0);
+  const corrDen = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+  const corr = corrDen ? (n * sumXY - sumX * sumY) / corrDen : 0;
+  const corrWord = Math.abs(corr) < 0.3 ? 'weak' : Math.abs(corr) < 0.6 ? 'moderate' : 'strong';
   const xMin = Math.min(...points.map(p=>p.x)) - 2;
   const xMax = Math.max(...points.map(p=>p.x)) + 2;
 
@@ -625,9 +684,9 @@ function mountGrowthChart(sorted) {
         {
           label: 'G20 Countries',
           data: points,
-          backgroundColor: 'rgba(10,10,10,0.75)',
-          pointRadius: 6,
-          pointHoverRadius: 8,
+          backgroundColor: 'rgba(10,10,10,0.8)',
+          pointRadius: 7,
+          pointHoverRadius: 9,
         },
         {
           label: 'Trend',
@@ -660,12 +719,14 @@ function mountGrowthChart(sorted) {
       },
       scales: {
         x: {
-          title: { display: true, text: 'AI Readiness Score', color: A.chartTheme().tick, font: { ...MONO, size: 10 } },
+          title: { display: true, text: 'AI readiness score', color: A.chartTheme().tick, font: { ...MONO, size: 12 } },
           grid: { color: chartGrid() }, ticks: { ...tick() },
         },
         y: {
-          title: { display: true, text: 'GDP Growth Rate (%)', color: A.chartTheme().tick, font: { ...MONO, size: 10 } },
+          title: { display: true, text: 'Real GDP growth (%)', color: A.chartTheme().tick, font: { ...MONO, size: 12 } },
           grid: { color: chartGrid() }, ticks: { ...tick(), callback: v => A.fmtSignedPct(v) },
+          // headroom above the highest point so the correlation callout never sits on a data label
+          suggestedMax: Math.max(...points.map(p => p.y)) + 2.5,
         },
       },
     },
@@ -673,7 +734,16 @@ function mountGrowthChart(sorted) {
       afterDatasetsDraw(chart) {
         const ctx2 = chart.ctx;
         ctx2.save();
-        ctx2.font = '9px JetBrains Mono, monospace';
+        // Correlation callout: shows the honest answer to the chart's question
+        const area = chart.chartArea;
+        ctx2.font = 'bold 13px JetBrains Mono, monospace';
+        ctx2.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-1').trim() || '#111';
+        ctx2.textAlign = 'left';
+        ctx2.textBaseline = 'top';
+        ctx2.fillText(`Correlation r = ${corr.toFixed(2)} (${corrWord}), n = ${n}`, area.left + 10, area.top + 8);
+        ctx2.font = '11px JetBrains Mono, monospace';
+        ctx2.fillText(Math.abs(corr) < 0.3 ? 'Readiness alone does not explain growth' : corr > 0 ? 'Higher readiness tends to go with faster growth' : 'Higher readiness tends to go with slower growth', area.left + 10, area.top + 26);
+        ctx2.font = '11px JetBrains Mono, monospace';
         ctx2.fillStyle = A.chartTheme().tick;
         ctx2.textAlign = 'left';
         ctx2.textBaseline = 'middle';
@@ -681,7 +751,7 @@ function mountGrowthChart(sorted) {
         ds.data.forEach((pt, i) => {
           const d = points[i];
           if (!d) return;
-          ctx2.fillText(d._meta.iso3, pt.x + 6, pt.y);
+          ctx2.fillText(d._meta.iso3, pt.x + 9, pt.y);
         });
         ctx2.restore();
       },
@@ -693,7 +763,8 @@ function renderTrajectoryTable(sorted) {
   const el = document.getElementById('ai-trajectory-table');
   if (!el) return;
 
-  const byTraj = [...sorted].sort((a,b) => b.ai.trajectory_score - a.ai.trajectory_score);
+  const delta   = scoreDelta;
+  const byTraj = [...sorted].sort((a,b) => delta(b) - delta(a));
   const risers  = byTraj.slice(0, 5);
   const fallers = byTraj.slice(-3).reverse();
 
@@ -705,7 +776,7 @@ function renderTrajectoryTable(sorted) {
           <span style="color:var(--text-2)">${A.escapeText(c.name)}</span>
           <span style="font-family:var(--font-mono);font-size:11px">
             ${c.ai.total_score} → <span style="color:#34d399">${c.ai.projected_score_2028}</span>
-            <span style="color:var(--text-4);margin-left:4px">(+${c.ai.trajectory_score})</span>
+            <span style="color:var(--text-4);margin-left:4px">(+${delta(c)})</span>
           </span>
         </div>`).join('')}
     </div>
@@ -716,7 +787,7 @@ function renderTrajectoryTable(sorted) {
           <span style="color:var(--text-2)">${A.escapeText(c.name)}</span>
           <span style="font-family:var(--font-mono);font-size:11px">
             ${c.ai.total_score} → <span style="color:#F87171">${c.ai.projected_score_2028}</span>
-            <span style="color:var(--text-4);margin-left:4px">(${c.ai.trajectory_score > 0 ? '+' : ''}${c.ai.trajectory_score})</span>
+            <span style="color:var(--text-4);margin-left:4px">(${delta(c) > 0 ? '+' : ''}${delta(c)})</span>
           </span>
         </div>`).join('')}
     </div>`;

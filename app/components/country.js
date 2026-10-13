@@ -129,6 +129,8 @@ function renderCountryProfile(iso3) {
 
   ${window.renderForecastStrip ? window.renderForecastStrip(iso3) : ''}
 
+  <div id="country-projection-outlook" class="projection-mini panel mb-20"><span>Loading 2026 to 2028 outlook…</span></div>
+
   <div class="sec-head" style="margin-top:4px">
     <div class="sec-head__title">Key indicators</div>
   </div>

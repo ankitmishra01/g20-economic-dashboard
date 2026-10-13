@@ -1,10 +1,26 @@
 # G20 Economic Monitor
 
-A live economic intelligence dashboard for all G20 member economies. Tracks 24 macroeconomic indicators, IMF forward projections, AI readiness scores, and workforce displacement risk — refreshed automatically every month via GitHub Actions.
+A live economic intelligence dashboard for all G20 member economies. Tracks 25 macroeconomic indicators, IMF forward projections, AI readiness scores, and workforce displacement risk — refreshed automatically every month via GitHub Actions.
 
-**[Live demo →](https://g20-economic-dashboard-gamma.vercel.app)**
+**[Live demo →](https://g20-gamma.vercel.app)**
 
 ![status](https://img.shields.io/badge/status-live-brightgreen) ![refresh](https://img.shields.io/badge/refresh-monthly-blue) ![deploy](https://img.shields.io/badge/deployed%20on-Vercel-black)
+
+---
+
+## The problem, how AI was used, and what it delivers
+
+**The problem.** G20 macro data lives in three places (World Bank, IMF, OECD) with different formats, update cycles and definitions, so comparing economies means hours of manual collection and cleaning, and errors go unnoticed.
+
+**What this does.** One live dashboard, refreshed monthly by an automated pipeline, with country profiles, rankings, a risk register, IMF projections and a plain-English analyst you can question.
+
+**How AI was used.**
+- *To build it:* the dashboard, data pipeline and tests were built with AI coding assistants, with every number checked by hand against the source (see the audit below).
+- *Inside the product:* the Ask AI drawer routes factual questions (rankings, comparisons) to a local, rule-based data engine and open-ended questions ("why", "what if") to an LLM (Gemini or Claude) that is given the live data snapshot as context. If the LLM is unavailable, the data engine answers instead.
+
+**Accuracy audit and security.** About 590 stored values were spot-checked against IMF and World Bank sources; a US inflation series stored as an index level was corrected to a year-on-year rate. The database is read-only for the public: write access is restricted with row-level security (`supabase/migrations/20260916021414_restrict_public_writes.sql`) and covered by tests (`tests/schema-policy.test.cjs`, `tests/refresh-contract.test.cjs`). The refresh pipeline verifies its own writes and opens an issue on failure.
+
+**AI provider setup.** Set one of `GEMINI_API_KEY` (free tier from Google AI Studio) or `ANTHROPIC_API_KEY` in the Vercel project environment variables; optionally `AI_MODEL` to override the model id. With no key set, the Ask AI drawer falls back to the data engine.
 
 ---
 
@@ -24,8 +40,20 @@ A live economic intelligence dashboard for all G20 member economies. Tracks 24 m
 
 ## Features
 
+### Multi year projection engine
+
+The `#projections` route presents a 2026 to 2027 headline outlook and five year paths for real GDP growth, CPI inflation, unemployment, government debt, fiscal balance and the current account. It covers the 19 G20 countries, a G20 median and OECD aggregate growth. The EU remains a G20 member in the dashboard but is excluded from modelling and aggregation to avoid double counting.
+
+Each indicator and horizon compares a naive last value baseline, damped trend, mean reversion and pooled ridge regression with direct multi horizon fits. A rolling origin backtest selects the lowest error method only when it beats the naive baseline. Otherwise the artifact explicitly records `no skill, showing baseline`. Debt follows a debt dynamics identity using projected growth and fiscal balance with a documented 3% interest rate assumption.
+
+The 50% and 80% ranges are empirical out of sample residual quantiles, not Gaussian confidence intervals. `app/projections.json` stores MAE, RMSE, skill versus naive and interval coverage for every indicator and horizon, both with and without the 2020 and 2022 shocks. The generated About table reads these values from the same artifact, preventing methodology text from drifting from results.
+
+Scenarios are illustrative assumptions layered on the central paths: a trade openness scaled global slowdown, differentiated commodity importer and exporter effects, a rates shock scaled to debt, and an AI productivity uplift scaled to readiness. No LLM produces any projected number. The Ask AI feature receives stored projection facts, ranges and backtest skill only for explanation.
+
+Run `node sync/train-projections.js` to regenerate `app/projections.json` and append the dated archive in `app/projection-history.json`. The monthly workflow runs the trainer after data refresh and fails before committing if schema validation or the headline backtest gate fails.
+
 ### Macroeconomic tracking
-- **24 indicators** per economy — GDP, growth, inflation, unemployment, debt, current account, fiscal balance, trade, FDI, R&D, health, education, CO₂, manufacturing, capital formation, life expectancy, female labour force participation, youth unemployment, and more
+- **25 indicators** per economy — GDP, growth, inflation, unemployment, debt, current account, fiscal balance, trade, FDI, R&D, health, education, CO₂, manufacturing, capital formation, life expectancy, female labour force participation, youth unemployment, and more
 - **IMF forward projections** — dashed forecast lines (2026–2028) on country trend charts, sourced from IMF World Economic Outlook data already in the database
 - **Recession risk score** — composite 0–100 signal per country derived from 7 signals (growth trend, fiscal deficit, debt trajectory, current account, unemployment, inflation, momentum decline); rendered as colour-coded pill on the overview table
 - **Quarterly data** — OECD QNA and FRED data provide quarterly GDP growth and inflation readings for select G20 members, preferred over annual figures where more recent
@@ -60,18 +88,18 @@ A live economic intelligence dashboard for all G20 member economies. Tracks 24 m
 | Fonts | Geist Sans + Geist Mono (via CDN) |
 | Charts | Chart.js v4 (trend + scatter + bubble charts), custom SVG sparklines |
 | Backend | Vercel serverless functions (Node.js) |
-| Database | Supabase (PostgreSQL) — ~15,000 rows, 24 indicators |
+| Database | Supabase (PostgreSQL) — ~12,000 rows, 25 indicators |
 | Data sources | World Bank Open Data · IMF WEO · OECD MSTI · OECD QNA · FRED |
 | AI Economy data | [AI Trajectory Index](https://github.com/ankitmishra01/ai-trajectory-index) — 186 countries, fetched at runtime |
 | News | RSS feeds (BBC Business, FT, Reuters) |
-| AI | Anthropic Claude API (`claude-sonnet-4-6`) |
+| AI | Provider-agnostic `/api/agent`: Google Gemini (free tier, default `gemini-flash-latest`) or Anthropic Claude (`claude-sonnet-4-6`), chosen by which key is set |
 | CI/CD | GitHub Actions — monthly cron + Vercel auto-deploy on push |
 
 ---
 
 ## Data
 
-24 indicators tracked for all G20 members:
+25 indicators tracked for all G20 members:
 
 | Indicator | Source | Notes |
 |---|---|---|
@@ -156,7 +184,7 @@ SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... FRED_API_KEY=... node sync/seed.j
 ```
 ├── app/                        # Static frontend (Vercel output directory)
 │   ├── index.html              # Single-page shell — all routing in main.js
-│   ├── config.js               # G20 registry, 24 indicator definitions, risk thresholds, nav
+│   ├── config.js               # G20 registry, 25 indicator definitions, risk thresholds, nav
 │   ├── data.js                 # Supabase client — paginated load, G20Data API, projection support
 │   ├── main.js                 # Router, rail nav, keyboard shortcuts, news strip, agent drawer
 │   ├── styles/main.css         # Design tokens, layout, all component styles
@@ -205,4 +233,4 @@ SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... FRED_API_KEY=... node sync/seed.j
 
 ---
 
-*Built with [Claude](https://claude.ai) · [Live dashboard](https://g20-economic-dashboard-gamma.vercel.app) · [AI Trajectory Index](https://ai-trajectory-index.vercel.app)*
+*Built with [Claude](https://claude.ai) · [Live dashboard](https://g20-gamma.vercel.app) · [AI Trajectory Index](https://ai-trajectory-index.vercel.app)*

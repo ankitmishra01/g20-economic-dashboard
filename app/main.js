@@ -3,6 +3,7 @@
 (function () {
   let _currentPage = 'overview';
   let _dataLoaded = false;
+  let _dataFailed = false;
 
   // ── Dark mode ──────────────────────────────────────────────────────────────
   window.toggleDarkMode = function () {
@@ -75,7 +76,7 @@
   document.addEventListener('DOMContentLoaded', async () => {
     renderRail();
     updateLiveClock();
-    setInterval(updateLiveClock, 60000);
+    loadRefreshStamp();
 
     // Show skeleton while data loads
     const root = document.getElementById('page-root');
@@ -93,6 +94,9 @@
         <div class="skel skel-panel" style="height:200px"></div>
       </div>`;
 
+    // OECD total growth (static file refreshed with the data); optional, never blocks the app
+    fetch('oecd-aggregate.json').then(r => r.ok ? r.json() : null).then(j => { if (j) window.OECD_AGG = j; }).catch(() => {});
+
     try {
       await window.G20Data.loadAllData();
       _dataLoaded = true;
@@ -101,9 +105,10 @@
       // Update period label from actual data
       const gdpRank = window.G20Data.getRanking('GDP');
       if (gdpRank[0]?.year) {
-        document.getElementById('rail-period').textContent = `Q4·${gdpRank[0].year}`;
+        document.getElementById('rail-period').textContent = `${gdpRank[0].year}`;
       }
     } catch (e) {
+      _dataFailed = true;
       document.getElementById('data-status').textContent = 'data error';
       console.error('Data load failed:', e);
     }
@@ -127,7 +132,7 @@
         return;
       }
       if (e.metaKey || e.ctrlKey || e.altKey) return;
-      const shortcuts = { 'o': 'overview', 'c': 'countries', 'r': 'prosperity', 'a': 'ai-economy', 'p': 'compare', 'f': 'flags', 'n': 'news' };
+      const shortcuts = { 'o': 'overview', 'u': 'projections', 'c': 'countries', 'r': 'prosperity', 'a': 'ai-economy', 'p': 'compare', 'f': 'flags', 'n': 'news' };
       const target = shortcuts[e.key.toLowerCase()];
       if (target) navTo(target);
     });
@@ -135,13 +140,20 @@
     loadNewsStrip();
   });
 
+  // Shows when the dataset was last refreshed (from /api/status), not the wall clock.
   function updateLiveClock() {
     const el = document.getElementById('live-time');
     if (!el) return;
-    const now = new Date();
-    const hh = String(now.getUTCHours()).padStart(2, '0');
-    const mm = String(now.getUTCMinutes()).padStart(2, '0');
-    el.textContent = `Live · ${hh}:${mm} UTC`;
+    const iso = window._dataRefreshedAt;
+    el.textContent = iso ? `Data refreshed ${iso.slice(0, 10)}` : 'Live data';
+  }
+
+  async function loadRefreshStamp() {
+    try {
+      const r = await fetch('/api/status');
+      const d = await r.json();
+      if (d && d.lastRefreshed) { window._dataRefreshedAt = d.lastRefreshed; updateLiveClock(); }
+    } catch (e) { /* status is optional; keep the default label */ }
   }
 
   // ── Rail ──────────────────────────────────────────────────────────────────
@@ -167,6 +179,7 @@
       flag:     '<path d="M3 14V3l8 2v5l-8-2"/>',
       inbox:    '<rect x="2" y="3" width="12" height="10" rx="1"/><path d="M2 6h12M5 9h6M5 11h4"/>',
       globe:    '<circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c0 4 2 6 0 12M8 2c0 4-2 6 0 12"/>',
+      info:     '<circle cx="8" cy="8" r="6"/><path d="M8 7.5v4M8 5v.01"/>',
       sparkles: '<path d="M8 1l1.5 4L14 6.5 9.5 8 8 12 6.5 8 2 6.5 6.5 5z"/><path d="M13 1l.8 2 2 .8-2 .8L13 7l-.8-2.4-2-.8 2-.8z"/>',
     };
     return icons[icon] || icons.home;
@@ -201,7 +214,13 @@
 
     const root = document.getElementById('page-root');
     if (!_dataLoaded && page !== 'news') {
-      root.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><span>Loading data…</span></div>`;
+      root.innerHTML = _dataFailed
+        ? `<div class="loading-spinner" style="flex-direction:column;gap:12px;text-align:center">
+             <strong>Data temporarily unavailable</strong>
+             <span>The live database could not be reached. This is usually brief.</span>
+             <button class="ask-btn" onclick="location.reload()">Retry</button>
+           </div>`
+        : `<div class="loading-spinner"><div class="spinner"></div><span>Loading data…</span></div>`;
       return;
     }
 
@@ -211,12 +230,14 @@
     } else {
       switch (page) {
         case 'overview':    root.innerHTML = renderOverview();     break;
+        case 'projections': root.innerHTML = renderProjections();  break;
         case 'countries':   root.innerHTML = renderCountries();   break;
         case 'prosperity':  root.innerHTML = renderProsperity();  break;
         case 'ai-economy':  root.innerHTML = renderAIEconomy();   break;
         case 'compare':     root.innerHTML = renderCompare();     break;
         case 'flags':       root.innerHTML = renderFlags();       break;
         case 'news':        renderNewsPage(root);                 break;
+        case 'about':       root.innerHTML = renderAbout();       break;
         default:            root.innerHTML = renderOverview();
       }
     }
@@ -294,22 +315,40 @@
     `;
     body.scrollTop = body.scrollHeight;
 
-    // Try local insight engine first (no API key required)
-    const localInsight = window.generateLocalInsight?.(question);
-    if (localInsight) {
-      document.getElementById(loadingId)?.remove();
+    const addMsg = (label, html) => {
       body.innerHTML += `
         <div class="agent-msg">
-          <div class="agent-msg-label">Data Engine · G20</div>
-          <div class="agent-msg-text">${localInsight}</div>
-        </div>
-      `;
+          <div class="agent-msg-label">${label}</div>
+          <div class="agent-msg-text">${html}</div>
+        </div>`;
+    };
+    const showLocal = (insight) => {
+      document.getElementById(loadingId)?.remove();
+      addMsg('Data Engine · G20', insight);
+    };
+
+    // Open-ended questions (why / what if / scenarios) go to the AI analyst first.
+    // Everything else is answered by the local data engine, which needs no API key.
+    const asksProjection = /\b(project(?:ed|ion)?|forecast|outlook|uncertain|range)\b/i.test(question);
+    if (asksProjection && window.loadProjectionData) { try { await window.loadProjectionData(); } catch (_) {} }
+    const projectionInsight = asksProjection ? window.generateProjectionInsight?.(question) : null;
+    const wantsAI = /\b(why|what if|explain|spillovers?|derail|implications?|scenario|could|would|should)\b/i.test(question);
+    const localInsight = projectionInsight || (wantsAI ? null : window.generateLocalInsight?.(question));
+    if (localInsight) {
+      showLocal(localInsight);
       sendBtn.disabled = false;
       body.scrollTop = body.scrollHeight;
       return;
     }
 
-    // Fall back to Claude API
+    // AI analyst (Gemini free tier or Claude, whichever key the server has)
+    const friendlyFallback = (reason) => {
+      document.getElementById(loadingId)?.remove();
+      // If the AI is unavailable, still try to answer from the data engine.
+      const fallback = window.generateLocalInsight?.(question);
+      if (fallback) { addMsg('Data Engine · G20', fallback); return; }
+      addMsg('Data Engine', `${reason} The data engine can still answer questions about specific countries, rankings, fiscal health, growth, inflation, trade and regional comparisons. Try asking about a G20 economy by name.`);
+    };
     try {
       // Use country-enriched context (with news + projections) when on a country page
       const hash = location.hash.replace('#', '');
@@ -317,52 +356,58 @@
       const context = window.G20Data
         ? (activeIso3 ? window.G20Data.buildCountryContext(activeIso3) : window.G20Data.buildAgentContext())
         : '';
+      const projectionContext = window.projectionContext?.(question) || '';
       const r = await fetch('/api/agent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question, context }),
+        body: JSON.stringify({ question, context: [context, projectionContext].filter(Boolean).join('\n\n') }),
       });
-      const data = await r.json();
-      document.getElementById(loadingId)?.remove();
-
-      if (data.error && data.error.includes('API key')) {
-        body.innerHTML += `
-          <div class="agent-msg">
-            <div class="agent-msg-label">Data Engine</div>
-            <div class="agent-msg-text">No AI API key is configured on this server. The data engine can answer questions about specific countries, rankings, fiscal health, growth trends, inflation, trade, and regional comparisons — try one of the suggested questions below, or ask about any G20 economy by name.</div>
-          </div>
-        `;
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || !data.text) {
+        console.warn('AI analyst unavailable:', r.status, data.code, data.error);
+        if (data.code === 'NO_AI_KEY') friendlyFallback('The AI analyst is not switched on for this deployment.');
+        else if (r.status === 429) friendlyFallback('The AI analyst is busy right now (rate limit). Please try again in a minute.');
+        else friendlyFallback('The AI analyst could not answer this time.');
       } else {
-        body.innerHTML += `
-          <div class="agent-msg">
-            <div class="agent-msg-label">AI Analyst</div>
-            <div class="agent-msg-text">${A.escapeText(data.text || data.error || 'No response')}</div>
-          </div>
-        `;
+        document.getElementById(loadingId)?.remove();
+        const modelTag = data.model ? ` · ${A.escapeText(data.model)}` : '';
+        addMsg(`AI Analyst${modelTag}`, A.escapeText(data.text));
       }
     } catch (e) {
-      document.getElementById(loadingId)?.remove();
-      body.innerHTML += `
-        <div class="agent-msg">
-          <div class="agent-msg-label">Data Engine</div>
-          <div class="agent-msg-text">Could not reach the AI endpoint — but I can still answer data-driven questions from the live G20 dataset. Try asking about a specific country, ranking, or economic indicator.</div>
-        </div>
-      `;
+      friendlyFallback('Could not reach the AI endpoint.');
     }
 
     sendBtn.disabled = false;
     body.scrollTop = body.scrollHeight;
   };
 
+  // ── Present mode: larger text and charts for screen sharing ────────────────
+  function applyPresentMode(on) {
+    document.documentElement.classList.toggle('present', on);
+    const btn = document.getElementById('present-btn');
+    if (btn) btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    try { localStorage.setItem('g20-present', on ? '1' : '0'); } catch (e) { /* storage may be blocked */ }
+    window.dispatchEvent(new Event('resize')); // let Chart.js re-measure its canvases
+  }
+  window.togglePresentMode = function () { applyPresentMode(!document.documentElement.classList.contains('present')); };
+  (function initPresentMode() {
+    let on = /[?&]present\b/.test(location.search);
+    try { if (!on) on = localStorage.getItem('g20-present') === '1'; } catch (e) { /* ignore */ }
+    if (on) document.addEventListener('DOMContentLoaded', () => applyPresentMode(true));
+  })();
+
   // ── Chart mounting (deferred so canvas is in DOM) ─────────────────────────
   function mountPageCharts(page) {
-    if (page === 'overview')    mountOverviewCharts();
+    if (page === 'overview')    { mountOverviewCharts(); if (window.mountProjectionSummary) window.mountProjectionSummary(); }
+    if (page === 'projections') mountProjections();
+    if (page === 'about' && window.mountProjectionMethodology) window.mountProjectionMethodology();
     if (page === 'prosperity')  mountProsperityChart();
     if (page === 'ai-economy')  mountAIEconomyCharts();
     if (page === 'compare')     mountCompareCharts();
     if (page.startsWith('country/')) {
       const iso3 = page.split('/')[1];
       window.mountCountryProfileCharts(iso3);
+      if (window.mountProjectionSummary) window.mountProjectionSummary(iso3);
       if (window.mountAIOutlookCard) window.mountAIOutlookCard(iso3);
     }
   }

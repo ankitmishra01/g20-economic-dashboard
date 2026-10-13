@@ -34,6 +34,7 @@ jobs:
         run: |
           node sync/fetch-term-spread.js   # keyless FRED -> app/term-spread.js (committed static asset)
           node sync/train-forecast.js      # -> app/forecast-model.js (+ app/forecast-history.json)
+          node sync/train-projections.js   # -> app/projections.json (+ app/projection-history.json)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
@@ -60,7 +61,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add app/term-spread.js app/forecast-model.js app/forecast-history.json
+          git add app/term-spread.js app/forecast-model.js app/forecast-history.json app/projections.json app/projection-history.json
           if git diff --staged --quiet; then
             echo "No changes to commit."
           else
