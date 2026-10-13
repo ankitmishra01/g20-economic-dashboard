@@ -253,7 +253,7 @@ function renderAIEconomyEditorial(aiData, g20sorted) {
   );
 
   const growthOutliers = g20sorted.filter(c => {
-    const g = window.G20Data?.getLatest(c.iso3, 'GDP_GROWTH');
+    const g = window.G20Data?.getLatest(c.iso3, 'GDP_GROWTH', { annualOnly: true });
     return g && g.value > 4 && c.ai.total_score < 65;
   });
 
@@ -279,7 +279,7 @@ function renderAIEconomyEditorial(aiData, g20sorted) {
   let p4;
   if (growthOutliers.length > 0) {
     const outlierText = growthOutliers.map(c => {
-      const g = window.G20Data.getLatest(c.iso3, 'GDP_GROWTH');
+      const g = window.G20Data.getLatest(c.iso3, 'GDP_GROWTH', { annualOnly: true });
       return `<strong>${A.escapeText(c.name)}</strong> (${g.value.toFixed(1)}% GDP growth at ${c.ai.total_score}/100 AI readiness)`;
     }).join(' and ');
     p4 = `Across the G20, AI readiness and near-term GDP growth show only a weak correlation, consistent with early-phase technology adoption where infrastructure build-out precedes productivity payoff. ${outlierText} illustrate the paradox: catch-up growth dynamics and demographic dividends can outpace readiness-driven productivity gains in the short run. The productive payoff of AI investment is likely to concentrate in the 2026 to 2030 window as adoption crosses the deployment threshold. First-mover advantage should accrue to ${top3Traj.slice(0, 2).map(c => A.escapeText(c.name)).join(' and ')}, whose current trajectory positions them to capture outsized productivity gains as frontier AI diffuses into enterprise operations.`;
@@ -467,7 +467,7 @@ function mountScatterChart(sorted) {
     return {
       label: region,
       data: countries.map(c => {
-        const ppp = window.G20Data.getLatest(c.iso3, 'GDP_CAPITA_PPP');
+        const ppp = window.G20Data.getLatest(c.iso3, 'GDP_CAPITA_PPP', { annualOnly: true });
         // Flag width scales with PPP (keeps the "bubble = PPP" encoding); r is the
         // hover hit-radius, kept in step with the drawn flag so tooltips line up.
         const flagW = ppp?.value ? Math.max(20, Math.min(34, Math.sqrt(ppp.value / 1000) * 3.6)) : 24;
@@ -656,7 +656,7 @@ function mountGrowthChart(sorted) {
   if (!canvas) return;
 
   const points = sorted.map(c => {
-    const g = window.G20Data.getLatest(c.iso3, 'GDP_GROWTH');
+    const g = window.G20Data.getLatest(c.iso3, 'GDP_GROWTH', { annualOnly: true });
     if (!g) return null;
     return { x: c.ai.total_score, y: g.value, _meta: { name: c.name, iso3: c.iso3, year: g.year } };
   }).filter(Boolean);

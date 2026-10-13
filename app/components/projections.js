@@ -6,7 +6,7 @@
   const esc = value => window.A?.escapeText ? A.escapeText(String(value)) : String(value);
   const countryName = iso => iso === 'G20_MEDIAN' ? 'G20 median' : iso === 'OECD' ? 'OECD aggregate' : G20.find(c => c.iso3 === iso)?.name || iso;
   const projection = (iso, key, year) => data?.projections.find(r => r.iso3 === iso && r.indicator === key && r.year === year);
-  const latest = (iso, key) => window.G20Data?.getLatest(iso, key)?.value;
+  const latest = (iso, key) => window.G20Data?.getLatest(iso, key, { annualOnly: true })?.value;
 
   function load() {
     if (data) return Promise.resolve(data);

@@ -35,7 +35,7 @@
   function num(v, d = 1) { return v != null ? Number(v).toFixed(d) : '—'; }
   function sign(v) { return v > 0 ? '+' : ''; }
 
-  function getLatest(iso3, key) { return window.G20Data?.getLatest(iso3, key) || null; }
+  function getLatest(iso3, key) { return window.G20Data?.getLatest(iso3, key, { annualOnly: true }) || null; }
   function getRanking(key) { return window.G20Data?.getRanking(key)?.filter(c => c.iso3 !== 'EUU') || []; }
   function flag(iso3) { return window.G20?.find(c => c.iso3 === iso3)?.flag || ''; }
   function cname(iso3) { return window.G20?.find(c => c.iso3 === iso3)?.name || iso3; }

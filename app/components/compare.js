@@ -205,7 +205,7 @@ function mountCompareCharts() {
   const barEl = document.getElementById('compare-bar-chart');
   if (barEl) {
     const latest = countries.map((c, i) => {
-      const l = window.G20Data.getLatest(c.iso3, indicator);
+      const l = window.G20Data.getLatest(c.iso3, indicator, { annualOnly: true });
       return { name: c.name, iso3: c.iso3, value: l?.value ?? null, year: l?.year ?? null, color: COLORS[i] };
     }).filter(d => d.value !== null);
 
