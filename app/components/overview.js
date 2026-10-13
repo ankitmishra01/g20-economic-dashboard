@@ -89,7 +89,7 @@ function renderOverview() {
 
   // G20 has 20 members: 19 countries plus the EU. Aggregate GDP sums the 19 countries only
   // (the EU's GDP is already inside its member states), but 'expanding' counts all 20 members.
-  const euGrowth     = window.G20Data.getLatest('EUU', 'GDP_GROWTH')?.value;
+  const euGrowth     = window.G20Data.getLatest('EUU', 'GDP_GROWTH', { annualOnly: true })?.value;
   const memberTotal  = growthVals.length + (euGrowth != null ? 1 : 0);
   const memberExpand = expandingN + (euGrowth != null && euGrowth > 0 ? 1 : 0);
   const oecdNow      = oecdGrowth(latestYear);
@@ -489,11 +489,11 @@ function renderInflationBars(rows) {
 // ── Ranking table rows ─────────────────────────────────────────────────────────
 function renderRankingRows(rows) {
   return rows.map((c, i) => {
-    const growth = window.G20Data.getLatest(c.iso3, 'GDP_GROWTH');
-    const inf    = window.G20Data.getLatest(c.iso3, 'INFLATION');
-    const unemp  = window.G20Data.getLatest(c.iso3, 'UNEMPLOYMENT');
-    const debt   = window.G20Data.getLatest(c.iso3, 'DEBT_GDP');
-    const ca     = window.G20Data.getLatest(c.iso3, 'CURRENT_ACC');
+    const growth = window.G20Data.getLatest(c.iso3, 'GDP_GROWTH', { annualOnly: true });
+    const inf    = window.G20Data.getLatest(c.iso3, 'INFLATION', { annualOnly: true });
+    const unemp  = window.G20Data.getLatest(c.iso3, 'UNEMPLOYMENT', { annualOnly: true });
+    const debt   = window.G20Data.getLatest(c.iso3, 'DEBT_GDP', { annualOnly: true });
+    const ca     = window.G20Data.getLatest(c.iso3, 'CURRENT_ACC', { annualOnly: true });
     const gdpSeries = window.G20Data.getSeries(c.iso3, 'GDP', 2015).map(d => d.value);
 
     const gv = growth?.value;

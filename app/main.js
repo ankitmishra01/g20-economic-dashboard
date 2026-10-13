@@ -100,7 +100,7 @@
     try {
       await window.G20Data.loadAllData();
       _dataLoaded = true;
-      document.getElementById('data-status').textContent = 'read-only · live';
+      document.getElementById('data-status').textContent = window.G20_SNAPSHOT_AT ? 'offline snapshot' : 'read-only · live';
 
       // Update period label from actual data
       const gdpRank = window.G20Data.getRanking('GDP');

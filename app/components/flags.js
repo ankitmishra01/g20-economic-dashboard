@@ -6,7 +6,7 @@ function renderFlags() {
   for (const country of G20) {
     const badges = [];
     for (const [, cfg] of Object.entries(FLAGS_CONFIG)) {
-      const latest = window.G20Data.getLatest(country.iso3, cfg.key);
+      const latest = window.G20Data.getLatest(country.iso3, cfg.key, { annualOnly: true });
       if (!latest) continue;
       const v = latest.value;
       const breached = cfg.dir === 'above' ? v >= cfg.threshold : v <= cfg.threshold;

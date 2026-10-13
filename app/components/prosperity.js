@@ -68,9 +68,9 @@ function mountProsperityChart(mode) {
 
   // Build bubble data
   const data = window.G20.filter(nonEU).map(c => {
-    const inc    = window.G20Data.getLatest(c.iso3, metricKey);
-    const growth = window.G20Data.getLatest(c.iso3, 'GDP_GROWTH');
-    const pop    = window.G20Data.getLatest(c.iso3, 'POPULATION');
+    const inc    = window.G20Data.getLatest(c.iso3, metricKey, { annualOnly: true });
+    const growth = window.G20Data.getLatest(c.iso3, 'GDP_GROWTH', { annualOnly: true });
+    const pop    = window.G20Data.getLatest(c.iso3, 'POPULATION', { annualOnly: true });
     if (!inc || !growth) return null;
     return {
       iso3: c.iso3, name: c.name, code: c.code, region: c.region,
