@@ -87,6 +87,13 @@ function renderOverview() {
 
   const latestYear  = gdpRank[0]?.year || '2024';
 
+  // G20 has 20 members: 19 countries plus the EU. Aggregate GDP sums the 19 countries only
+  // (the EU's GDP is already inside its member states), but 'expanding' counts all 20 members.
+  const euGrowth     = window.G20Data.getLatest('EUU', 'GDP_GROWTH')?.value;
+  const memberTotal  = growthVals.length + (euGrowth != null ? 1 : 0);
+  const memberExpand = expandingN + (euGrowth != null && euGrowth > 0 ? 1 : 0);
+  const oecdNow      = oecdGrowth(latestYear);
+
   return `
 <section class="hero">
   <div class="hero__inner">
@@ -94,17 +101,12 @@ function renderOverview() {
       <div>
         <div class="hero__eyebrow">
           <span class="tag"><span class="dot"></span>Live dataset</span>
-          <span>G20 · ${tableRows.length} economies · 13 indicators · 2015–${latestYear}</span>
+          <span>G20 · ${memberTotal} members (${tableRows.length} countries + EU) · ${Object.keys(window.INDICATORS || {}).length} indicators · 2015–${latestYear}</span>
         </div>
         <h1 class="hero__title">
           G20 closed ${latestYear} with <span class="num-callout">${A.fmtSignedPct(medianGrowth)}</span> median real growth.<br>
           <span class="accent">Disinflation continues, yet debt levels persist.</span>
         </h1>
-      </div>
-      <div class="hero__filters">
-        <button class="hero__filter active"><span class="lbl-mini">Period</span> Latest</button>
-        <button class="hero__filter"><span class="lbl-mini">View</span> Levels</button>
-        <button class="hero__filter"><span class="lbl-mini">Sort</span> GDP ↓</button>
       </div>
     </div>
 
@@ -112,14 +114,14 @@ function renderOverview() {
       <div class="hero__stat">
         <div class="hero__stat-lbl">Aggregate GDP</div>
         <div class="hero__stat-val">${(totalGDP / 1e12).toFixed(1)}<span class="unit">USD tn</span></div>
-        <div class="hero__stat-delta"><span class="delta-pos">${expandingN} of ${growthVals.length} expanding</span></div>
+        <div class="hero__stat-delta" title="Sum of the 19 countries. The EU aggregate is excluded because its GDP is already inside its member states."><span class="delta-pos">${memberExpand} of ${memberTotal} members expanding</span></div>
       </div>
       <div class="hero__stat">
         <div class="hero__stat-lbl">Median growth</div>
         <div class="hero__stat-val">${medianGrowth.toFixed(1)}<span class="unit">%</span></div>
         <div class="hero__stat-delta">
           <span class="${medianGrowth >= 2 ? 'delta-pos' : medianGrowth >= 0 ? 'delta-mute' : 'delta-neg'}">
-            ${medianGrowth >= 0 ? '▲' : '▼'} YoY real GDP
+            ${medianGrowth >= 0 ? '▲' : '▼'} YoY real GDP${oecdNow !== null ? ` · OECD total ${oecdNow.toFixed(1)}%` : ''}
           </span>
         </div>
       </div>
@@ -151,6 +153,8 @@ function renderOverview() {
 
 <div class="page-body">
 
+  <div id="overview-projection-outlook" class="projection-mini panel mb-20"><span>Loading projected G20 median growth…</span></div>
+
   <!-- KPI tiles -->
   <div class="sec-head">
     <div class="sec-head__title">Key indicators <span class="count">/ 5</span><span class="sec-head__sub">latest reads, 10y trend</span></div>
@@ -162,7 +166,7 @@ function renderOverview() {
   </div>
 
   <div class="kpi-grid" id="kpi-grid">
-    ${renderKPITiles(totalGDP, medianGrowth, medianInf, expandingN, growthVals.length, debtRank, latestYear)}
+    ${renderKPITiles(totalGDP, medianGrowth, medianInf, memberExpand, memberTotal, debtRank, latestYear)}
   </div>
 
   <!-- Bar charts -->
@@ -177,7 +181,7 @@ function renderOverview() {
     <div class="panel">
       <div class="panel__head">
         <div><span class="panel__title">Real GDP growth</span><span class="panel__sub">% YoY · ${latestYear}</span></div>
-        <div class="panel__meta">${growthRank.filter(nonEU).length} economies</div>
+        <div class="panel__meta">${growthRank.filter(nonEU).length} countries</div>
       </div>
       <div class="panel__body">
         ${renderGrowthBars(growthRank.filter(nonEU))}
@@ -196,7 +200,7 @@ function renderOverview() {
 
   <!-- Rankings table -->
   <div class="sec-head">
-    <div class="sec-head__title">All economies <span class="count">/ ${tableRows.length}</span><span class="sec-head__sub">click row → country profile</span></div>
+    <div class="sec-head__title">All economies <span class="count">/ ${tableRows.length} countries</span><span class="sec-head__sub">click row → country profile · EU aggregate on Countries page</span></div>
     <div class="sec-head__actions">
       <button class="sec-head__tab active" onclick="overviewSortTable('gdp',this)">By GDP</button>
       <button class="sec-head__tab" onclick="overviewSortTable('growth',this)">By growth</button>
@@ -229,7 +233,7 @@ function renderOverview() {
 
   <!-- Risk register -->
   <div class="sec-head">
-    <div class="sec-head__title">Risk register <span class="count" id="risk-total">/ ${cpiFlags.length + shrinkFlags.length + debtFlags.length}</span><span class="sec-head__sub">automated flags · latest data</span></div>
+    <div class="sec-head__title">Risk register <span class="count" id="risk-total">/ ${cpiFlags.length + shrinkFlags.length + debtFlags.length} flags</span><span class="sec-head__sub">inflation, contraction and debt screens · all screens on Risk flags</span></div>
     <div class="sec-head__actions">
       <button class="sec-head__tab active" onclick="overviewFilterRisk('all',this)">All</button>
       <button class="sec-head__tab" onclick="overviewFilterRisk('high',this)">High</button>
@@ -291,22 +295,22 @@ function renderOverview() {
         </thead>
         <tbody>
           ${[
-            ['GDP, GDP Growth, GDP per Capita', 'World Bank (NY.GDP.*)', '19/19 G20', 'Annual'],
-            ['Inflation (CPI)', 'World Bank (FP.CPI.TOTL.ZG)', '19/19 G20', 'Annual'],
-            ['Unemployment, Youth Unemployment', 'World Bank / ILO modelled', '19/19 G20', 'Annual'],
-            ['Current Account Balance', 'World Bank (BN.CAB.XOKA.GD.ZS)', '19/19 G20', 'Annual'],
-            ['Health Spending', 'World Bank / WHO (SH.XPD.CHEX.GD.ZS)', '19/19 G20', 'Annual'],
-            ['Education Spending', 'World Bank / UNESCO (SE.XPD.TOTL.GD.ZS)', '19/19 G20', 'Annual'],
-            ['Capital Formation, Exports, Manufacturing', 'World Bank National Accounts', '19/19 G20', 'Annual'],
-            ['FDI Inflows', 'World Bank (BX.KLT.DINV.WD.GD.ZS)', '19/19 G20', 'Annual'],
+            ['GDP, GDP Growth, GDP per Capita', 'World Bank (NY.GDP.*)', '19/19 countries', 'Annual'],
+            ['Inflation (CPI)', 'World Bank (FP.CPI.TOTL.ZG)', '19/19 countries', 'Annual'],
+            ['Unemployment, Youth Unemployment', 'World Bank / ILO modelled', '19/19 countries', 'Annual'],
+            ['Current Account Balance', 'World Bank (BN.CAB.XOKA.GD.ZS)', '19/19 countries', 'Annual'],
+            ['Health Spending', 'World Bank / WHO (SH.XPD.CHEX.GD.ZS)', '19/19 countries', 'Annual'],
+            ['Education Spending', 'World Bank / UNESCO (SE.XPD.TOTL.GD.ZS)', '19/19 countries', 'Annual'],
+            ['Capital Formation, Exports, Manufacturing', 'World Bank National Accounts', '19/19 countries', 'Annual'],
+            ['FDI Inflows', 'World Bank (BX.KLT.DINV.WD.GD.ZS)', '19/19 countries', 'Annual'],
             ['Tax Revenue', 'World Bank / IMF GFS (GC.TAX.TOTL.GD.ZS)', '18/19 G20', 'Annual'],
-            ['Gross Government Debt', 'IMF World Economic Outlook (GGXWDG_NGDP)', '19/19 G20', 'Annual'],
-            ['Government Fiscal Balance', 'IMF World Economic Outlook (GGXCNL_NGDP)', '19/19 G20', 'Annual'],
-            ['R&D Expenditure', 'OECD MSTI / World Bank UNESCO (GB.XPD.RSDV.GD.ZS)', '19/19 G20', 'Annual'],
-            ['CO₂ Emissions per Capita', 'World Bank / EDGAR (EN.GHG.CO2.PC.CE.AR5)', '19/19 G20', 'Annual'],
+            ['Gross Government Debt', 'IMF World Economic Outlook (GGXWDG_NGDP)', '19/19 countries', 'Annual'],
+            ['Government Fiscal Balance', 'IMF World Economic Outlook (GGXCNL_NGDP)', '19/19 countries', 'Annual'],
+            ['R&D Expenditure', 'OECD MSTI / World Bank UNESCO (GB.XPD.RSDV.GD.ZS)', '19/19 countries', 'Annual'],
+            ['CO₂ Emissions per Capita', 'World Bank / EDGAR (EN.GHG.CO2.PC.CE.AR5)', '19/19 countries', 'Annual'],
             ['Gini Coefficient', 'World Bank PovcalNet (SI.POV.GINI)', '18/19 G20', 'Periodic'],
-            ['Population', 'World Bank (SP.POP.TOTL)', '19/19 G20', 'Annual'],
-            ['Trade Openness', 'World Bank National Accounts (NE.TRD.GNFS.ZS)', '19/19 G20', 'Annual'],
+            ['Population', 'World Bank (SP.POP.TOTL)', '19/19 countries', 'Annual'],
+            ['Trade Openness', 'World Bank National Accounts (NE.TRD.GNFS.ZS)', '19/19 countries', 'Annual'],
           ].map(([ind, src, cov, freq]) => `
             <tr style="border-bottom:1px solid rgba(0,0,0,.04)">
               <td style="padding:7px 14px;color:var(--text-1)">${ind}</td>
@@ -327,7 +331,7 @@ function renderOverview() {
     <a href="https://data.worldbank.org" target="_blank" rel="noopener">World Bank Open Data</a> (CC BY 4.0) ·
     <a href="https://www.imf.org/external/datamapper" target="_blank" rel="noopener">IMF DataMapper</a> ·
     <a href="https://stats.oecd.org" target="_blank" rel="noopener">OECD MSTI</a>.
-    Fiscal balance and government debt data include IMF projections capped at 2024.
+    Latest reads are capped at 2025; several 2025 values are IMF estimates rather than final outturns. OECD total growth is from the OECD Economic Outlook.
     Series refreshed monthly via automated pipelines (GitHub Actions → Supabase).
   </div>
 
@@ -339,34 +343,63 @@ function renderOverview() {
 </div>`;
 }
 
+// ── G20-wide series helpers (cross-country medians/sums per year) ─────────────
+// Used for the KPI sparklines so each trend line reflects the G20, not a single proxy country.
+function g20YearSeries(key, reducer, minCountries, fromYear) {
+  const isos = window.G20.filter(c => c.iso3 !== 'EUU').map(c => c.iso3);
+  const byYear = {};
+  for (const iso of isos) {
+    for (const d of window.G20Data.getSeries(iso, key, fromYear)) {
+      (byYear[d.year] = byYear[d.year] || []).push(d.value);
+    }
+  }
+  return Object.keys(byYear).map(Number).sort((a, b) => a - b)
+    .filter(y => byYear[y].length >= minCountries)
+    .map(y => ({ year: y, value: reducer(byYear[y]) }));
+}
+const g20Median = (key, from = 2015) => g20YearSeries(key, median, 15, from);
+const g20Sum    = (key, from = 2015) => g20YearSeries(key, a => a.reduce((s, v) => s + v, 0), 19, from);
+function oecdGrowth(year) {
+  const v = window.OECD_AGG?.series?.[String(year)];
+  return typeof v === 'number' ? v : null;
+}
+
 // ── KPI tiles ──────────────────────────────────────────────────────────────────
 function renderKPITiles(totalGDP, medianGrowth, medianInf, expanding, total, debtRank, year) {
-  // Build 10y series for global KPIs from USA + CHN as proxy
-  const usaGDP  = window.G20Data.getSeries('USA', 'GDP', 2015).map(d => d.value / 1e12);
+  const gdpSeries   = g20Sum('GDP').map(d => d.value / 1e12);
+  const growthSer   = g20Median('GDP_GROWTH');
+  const prevGrowth  = growthSer.length > 1 ? growthSer[growthSer.length - 2] : null;
+  const oecdNow     = oecdGrowth(year);
+  const cpiSer      = g20Median('INFLATION');
+  const unempSer    = g20Median('UNEMPLOYMENT');
+  const debtSer     = g20Median('DEBT_GDP');
+  const prevDebt    = debtSer.length > 1 ? debtSer[debtSer.length - 2] : null;
   const medianDebt = median(debtRank.filter(c => c.iso3 !== 'EUU').map(c => c.value));
 
   const tiles = [
     {
       lbl: 'Aggregate GDP', val: (totalGDP/1e12).toFixed(1), unit: 'USD tn',
-      delta: `<span class="d-pos">${expanding} of ${total}</span> expanding`,
-      series: usaGDP, cls: 'pos',
+      delta: `<span class="d-pos">${expanding} of ${total}</span> members expanding`,
+      series: gdpSeries, cls: 'pos',
     },
     {
       lbl: 'Median growth', val: medianGrowth.toFixed(1), unit: '% YoY',
-      delta: `<span class="${medianGrowth >= 2 ? 'd-pos' : medianGrowth >= 0 ? '' : 'd-neg'}">${medianGrowth >= 0 ? '▲' : '▼'} ${Math.abs(medianGrowth).toFixed(1)}%</span> ${year}`,
-      series: window.G20Data.getSeries('USA', 'GDP_GROWTH', 2015).map(d => d.value),
+      delta: (prevGrowth
+        ? `<span class="${medianGrowth >= prevGrowth.value ? 'd-pos' : 'd-warn'}">${medianGrowth >= prevGrowth.value ? '▲' : '▼'} ${Math.abs(medianGrowth - prevGrowth.value).toFixed(1)} pp</span> vs ${prevGrowth.year}`
+        : `<span>${year}</span>`) + (oecdNow !== null ? ` · OECD ${oecdNow.toFixed(1)}%` : ''),
+      series: growthSer.map(d => d.value),
       cls: medianGrowth >= 0 ? 'pos' : 'neg',
     },
     {
       lbl: 'Median CPI', val: medianInf.toFixed(1), unit: '%',
       delta: `<span class="${medianInf <= 4 ? 'd-pos' : 'd-warn'}">${medianInf <= 4 ? 'Moderate' : 'Elevated'}</span> ex. outliers`,
-      series: window.G20Data.getSeries('DEU', 'INFLATION', 2015).map(d => d.value),
+      series: cpiSer.map(d => d.value),
       cls: 'neg',
     },
     {
       lbl: 'Unemployment median', val: '—', unit: '%',
-      delta: `<span class="d-pos">Latest available</span> cross-G20`,
-      series: window.G20Data.getSeries('USA', 'UNEMPLOYMENT', 2015).map(d => d.value),
+      delta: `<span class="d-pos">Latest available</span> G20 median`,
+      series: unempSer.map(d => d.value),
       cls: '',
       computeVal: () => {
         const r = window.G20Data.getRanking('UNEMPLOYMENT').filter(c => c.iso3 !== 'EUU');
@@ -375,8 +408,8 @@ function renderKPITiles(totalGDP, medianGrowth, medianInf, expanding, total, deb
     },
     {
       lbl: 'Debt/GDP median', val: medianDebt.toFixed(0), unit: '%',
-      delta: `<span class="${medianDebt > 90 ? 'd-warn' : 'd-pos'}">Highest since WWII</span> era`,
-      series: window.G20Data.getSeries('JPN', 'DEBT_GDP', 2015).map(d => d.value),
+      delta: prevDebt ? `<span class="${medianDebt > prevDebt.value ? 'd-warn' : 'd-pos'}">${medianDebt > prevDebt.value ? '▲' : '▼'} vs ${prevDebt.value.toFixed(0)}%</span> in ${prevDebt.year}` : 'Latest available',
+      series: debtSer.map(d => d.value),
       cls: medianDebt > 90 ? 'neg' : 'pos',
     },
   ];

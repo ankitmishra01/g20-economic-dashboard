@@ -33,13 +33,6 @@
       </div>
     </div>
 
-    <div class="rail__switch" title="World Bank · IMF · OECD open data">
-      <div class="rail__switch-left">
-        <span class="rail__switch-dot"></span>
-        <span>Public dataset</span>
-      </div>
-      <span class="rail__switch-chev">⌄</span>
-    </div>
 
     <div class="rail__hdr">Browse</div>
     <nav class="rail__nav" id="rail-nav">
@@ -88,18 +81,13 @@
         <span class="sep">/</span>
         <span class="here" id="crumb-page">Overview</span>
       </div>
-      <div class="cmd-search">
-        <svg class="icon" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-          <circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/>
-        </svg>
-        Search country, indicator, or year…
-        <span class="kbd-hint">⌘ K</span>
-      </div>
+      <div class="cmd-spacer" style="flex:1"></div>
       <div class="cmd-actions">
         <div class="live-pill">
           <span class="dot"></span>
           <span id="live-time">Live · —</span>
         </div>
+        <button class="pill-btn" id="present-btn" onclick="togglePresentMode()" aria-pressed="false" title="Larger text and charts for screen sharing">Present</button>
         <button class="ask-btn" id="ask-btn" onclick="toggleAgentDrawer()">
           <svg class="ai-glyph" viewBox="0 0 14 14" fill="currentColor">
             <path d="M7 0l1.5 3.5L12 5 8.5 6.5 7 10 5.5 6.5 2 5l3.5-1.5z"/>
@@ -156,8 +144,8 @@
       <label>Suggested</label>
       <button class="agent-sq" onclick="askSuggested(this)">Show me the G20 fiscal health overview — debt, deficits, and tax revenue.</button>
       <button class="agent-sq" onclick="askSuggested(this)">Compare India, China, and USA economic performance.</button>
-      <button class="agent-sq" onclick="askSuggested(this)">Which economies are showing signs of recession risk?</button>
-      <button class="agent-sq" onclick="askSuggested(this)">Show the G20 youth unemployment rankings.</button>
+      <button class="agent-sq" onclick="askSuggested(this)">Why might India outgrow China next year, and what could derail it?</button>
+      <button class="agent-sq" onclick="askSuggested(this)">If Japan's debt costs rise, what are the implications for the rest of the G20?</button>
     </div>
   </div>
 </aside>
@@ -174,6 +162,8 @@
 <script src="components/ai-economy.js"></script>
 <script src="components/flags.js"></script>
 <script src="components/news.js"></script>
+<script src="components/about.js"></script>
+<script src="components/projections.js"></script>
 <script src="components/insights.js"></script>
 <!-- Forecast model + yield-curve term spread (generated offline) + inference -->
 <script src="forecast-model.js"></script>
