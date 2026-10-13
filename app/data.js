@@ -11,25 +11,36 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
 
   async function loadAllData() {
     // Supabase default page size is 1000 rows — paginate until all rows are fetched.
-    const PAGE = 1000;
-    const rows = [];
-    let offset = 0;
-    while (true) {
-      const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/g20_economic_data?select=country_iso3,indicator_key,year,value&order=year.asc`,
-        {
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'Range': `${offset}-${offset + PAGE - 1}`,
-          },
-        }
-      );
-      if (!r.ok) throw new Error(`Supabase fetch failed: ${r.status}`);
-      const page = await r.json();
-      rows.push(...page);
-      if (page.length < PAGE) break; // last page
-      offset += PAGE;
+    // If Supabase is unreachable (free tier auto-pauses), fall back to the static snapshot.
+    let rows = [];
+    let snapshot = null;
+    try {
+      const PAGE = 1000;
+      let offset = 0;
+      while (true) {
+        const r = await fetch(
+          `${SUPABASE_URL}/rest/v1/g20_economic_data?select=country_iso3,indicator_key,year,value&order=year.asc`,
+          {
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`,
+              'Range': `${offset}-${offset + PAGE - 1}`,
+            },
+          }
+        );
+        if (!r.ok) throw new Error(`Supabase fetch failed: ${r.status}`);
+        const page = await r.json();
+        rows.push(...page);
+        if (page.length < PAGE) break; // last page
+        offset += PAGE;
+      }
+    } catch (err) {
+      console.warn('Supabase unavailable, using static snapshot:', err);
+      const sr = await fetch('data-snapshot.json');
+      if (!sr.ok) throw err;
+      snapshot = await sr.json();
+      rows = snapshot.annual.map(([country_iso3, indicator_key, year, value]) => ({ country_iso3, indicator_key, year, value }));
+      window.G20_SNAPSHOT_AT = snapshot.generatedAt;
     }
 
     // Build nested index
@@ -65,6 +76,15 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
     }
 
     window.G20_DATA = _data;
+
+    if (snapshot) {
+      // Mirror the live path exactly: its un-paginated quarterly fetch returns only the first
+      // 1000 rows (oldest periods), so the headline numbers match whether or not we are offline.
+      // TODO: paginate the live quarterly fetch and drop this slice (changes Overview headline figures).
+      window.G20_QDATA = buildQuarterlyIndex(snapshot.quarterly.slice(0, 1000).map(([country_iso3, indicator_key, period, value]) => ({ country_iso3, indicator_key, period, value })));
+      window.G20_INDICATOR_META = snapshot.meta || [];
+      return _data;
+    }
 
     // Load quarterly data from g20_quarterly_data table (non-blocking; graceful fallback)
     try {
