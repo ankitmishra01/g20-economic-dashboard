@@ -105,10 +105,10 @@ function extractLink(xml) {
   const rss = xml.match(/<link[^>]*>\s*(?:<!\[CDATA\[([\s\S]*?)\]\]>|([^<]*))/i);
   if (rss) {
     const v = (rss[1] !== undefined ? rss[1] : rss[2] || '').trim();
-    if (v.startsWith('http')) return v;
+    if (v.startsWith('http')) return decodeEntities(v);
   }
   const atom = xml.match(/<link[^>]+href=["']([^"']+)["']/i);
-  if (atom && /^https?:\/\//i.test(atom[1])) return atom[1];
+  if (atom && /^https?:\/\//i.test(atom[1])) return decodeEntities(atom[1]);
   const guid = xml.match(/<guid[^>]*>\s*(?:<!\[CDATA\[([\s\S]*?)\]\]>|([^<]*))/i);
   if (guid) {
     const v = (guid[1] !== undefined ? guid[1] : guid[2] || '').trim();
