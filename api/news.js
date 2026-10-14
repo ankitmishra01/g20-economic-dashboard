@@ -108,7 +108,7 @@ function extractLink(xml) {
     if (v.startsWith('http')) return v;
   }
   const atom = xml.match(/<link[^>]+href=["']([^"']+)["']/i);
-  if (atom) return atom[1];
+  if (atom && /^https?:\/\//i.test(atom[1])) return atom[1];
   const guid = xml.match(/<guid[^>]*>\s*(?:<!\[CDATA\[([\s\S]*?)\]\]>|([^<]*))/i);
   if (guid) {
     const v = (guid[1] !== undefined ? guid[1] : guid[2] || '').trim();

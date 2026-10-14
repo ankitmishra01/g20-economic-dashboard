@@ -119,7 +119,7 @@
 
     window.addEventListener('hashchange', () => {
       const h = location.hash.replace('#', '');
-      if (h) navTo(h);
+      if (h && h !== _lastRoute) navTo(h);
     });
 
     // Keyboard shortcuts
@@ -186,7 +186,10 @@
   }
 
   // ── Navigation ────────────────────────────────────────────────────────────
+  let _lastRoute = null;
+  let _mountTimer = null;
   window.navTo = function navTo(page) {
+    _lastRoute = page;
     const isCountry = page.startsWith('country/');
     const navPage = isCountry ? null : page;
 
@@ -224,6 +227,9 @@
       return;
     }
 
+    // Release the previous page's charts before their canvases are replaced
+    if (window.Chart) Object.values(Chart.instances).forEach(c => c.destroy());
+
     if (isCountry) {
       const iso3 = page.split('/')[1];
       root.innerHTML = renderCountryProfile(iso3);
@@ -246,7 +252,8 @@
     window.scrollTo(0, 0);
 
     // Mount charts after DOM is ready
-    setTimeout(() => mountPageCharts(page), 100);
+    clearTimeout(_mountTimer);
+    _mountTimer = setTimeout(() => mountPageCharts(page), 100);
   };
 
   // ── News strip ────────────────────────────────────────────────────────────
