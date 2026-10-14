@@ -150,7 +150,7 @@
 
   async function loadRefreshStamp() {
     try {
-      const r = await fetch('/api/status');
+      const r = await fetch('/api/status', { cache: 'no-cache' });
       const d = await r.json();
       if (d && d.lastRefreshed) { window._dataRefreshedAt = d.lastRefreshed; updateLiveClock(); }
     } catch (e) { /* status is optional; keep the default label */ }
