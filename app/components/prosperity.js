@@ -115,6 +115,7 @@ function mountProsperityChart(mode) {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
+        datalabels: { display: false },
         legend: {
           position: 'bottom',
           labels: { color: theme.tick, font: { ...MONO, size: 10 }, boxWidth: 10, padding: 12 },

@@ -2006,8 +2006,14 @@ html.present .agent-drawer { zoom: 1.1; }
 .outlook-callouts div { background:var(--ink); padding:15px; font-size:13px; line-height:1.45; }
 .outlook-callouts b { color:#fca5a5; font-weight:600; }
 .outlook-table th small { display:block; margin-top:3px; font-weight:400; color:var(--text-3); white-space:nowrap; }
-.outlook-table td { min-width:176px; vertical-align:top; }
-.outlook-table td:first-child { min-width:150px; position:sticky; left:0; z-index:2; background:var(--bg); }
+.projections-page .table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.outlook-table.rank-table thead th, .outlook-table.rank-table tbody td { padding-left:8px; padding-right:8px; }
+.outlook-table td { min-width:112px; vertical-align:top; }
+.outlook-table td:first-child { min-width:104px; position:sticky; left:0; z-index:2; background:var(--bg); }
+.outlook-table .projection-cell { font-size:11px; white-space:normal; }
+.outlook-table .projection-cell small, .outlook-table .projection-arrow { white-space:nowrap; }
+.outlook-table .projection-cell small { font-size:10px; }
+.outlook-table th small { font-size:10px; white-space:normal; }
 .projection-cell { display:block; padding:4px 0; font-family:var(--font-mono); white-space:nowrap; }
 .projection-cell small { color:var(--text-3); }
 .projection-arrow { display:inline-block; margin-left:4px; font-size:10px; }
@@ -2052,7 +2058,7 @@ html.present .agent-drawer { zoom: 1.1; }
   .projection-mini-link { grid-template-columns:1fr auto; gap:8px; padding:10px 0; }
   .projection-mini-link span:nth-child(2) { grid-column:1; }
   .projection-mini-link svg { grid-column:2; grid-row:1 / span 2; width:80px; }
-  .outlook-table td { min-width:164px; }
+  .outlook-table td { min-width:150px; }
 }
 @media (max-width: 900px) {
   .about-grid, .ai-kpi-strip { grid-template-columns: repeat(2, 1fr) !important; }
@@ -2068,4 +2074,98 @@ html.present .agent-drawer { zoom: 1.1; }
   .cmd-actions { flex-shrink: 0; }
   .rank-table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .page-body, .hero__inner { overflow-x: hidden; }
+}
+
+/* ── Demo polish (design review 2026-10-14) ─────────────────────────────────── */
+/* Closed AI drawer: its shadow leaked a white haze down the right edge */
+.agent-drawer:not(.open) { box-shadow: none; }
+
+/* KPI / hero sub-lines: flex split text into ragged columns ("▼ 0.3 / pp") */
+.kpi-tile__delta, .hero__stat-delta { display: block; line-height: 1.45; }
+.kpi-tile__delta svg, .hero__stat-delta svg { vertical-align: -2px; }
+
+/* Country brief: 8 facts fit one row instead of 7 + an orphan */
+.brief-kf { grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); }
+
+/* Outlook table: consistent alignment and a uniform two-line cell */
+.outlook-table.rank-table thead th { text-align: right; vertical-align: bottom; }
+.outlook-table.rank-table thead th:first-child,
+.outlook-table.rank-table tbody td:first-child { text-align: left; }
+.outlook-table .projection-arrow { display: block; margin-left: 0; }
+.outlook-table.rank-table tbody tr:last-child td { border-bottom: none; }
+.projections-page .table-scroll { overflow-x: auto; }
+
+@media (max-width: 640px) {
+  .hero__stats { row-gap: 18px; }
+  .hero__stat:nth-child(3n+1) { padding-left: 0; border-left: none; }
+}
+
+/* Projection league table: header and cell alignment agree */
+#projection-league .rank-table th:nth-child(n+3) { text-align: right; }
+#projection-league .rank-table td:nth-child(-n+2) { text-align: left; }
+#projection-league .rank-table td:first-child,
+#projection-league .rank-table th:first-child { width: 64px; color: var(--text-3); }
+
+/* ── Analysis page ─────────────────────────────────────────────────────── */
+.an-hero {
+  background: var(--ink, #0A0A0A);
+  color: var(--text-on-ink, #F5F5F2);
+  border-radius: 10px;
+  padding: 28px 32px 24px;
+  margin-bottom: 20px;
+}
+.an-hero__eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.65;
+  margin-bottom: 10px;
+}
+.an-hero__title { font-size: 30px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.15; margin: 0 0 10px; }
+.an-hero__sub { font-size: 14px; line-height: 1.6; max-width: 760px; opacity: 0.82; margin: 0 0 18px; }
+.an-toc { display: flex; flex-wrap: wrap; gap: 8px; }
+.an-toc a {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: inherit;
+  text-decoration: none;
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 999px;
+  padding: 5px 12px;
+}
+.an-toc a:hover { background: rgba(255,255,255,0.08); }
+.an-section { scroll-margin-top: 72px; }
+.an-section .panel__head { flex-wrap: wrap; gap: 10px; }
+.an-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 28px; align-items: start; }
+.an-chart { position: relative; width: 100%; }
+.an-text { min-width: 0; }
+.an-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.an-stat { border: 1px solid var(--rule); border-radius: 8px; padding: 10px 12px; background: var(--bg); }
+.an-stat__lbl { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3); letter-spacing: 0.04em; margin-bottom: 6px; }
+.an-stat__val { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; color: var(--text-1); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.an-stat__note { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3); margin-top: 4px; }
+.an-read { font-size: 13.5px; line-height: 1.7; color: var(--text-2); margin: 0 0 16px; max-width: 880px; }
+.an-read b { color: var(--text-1); }
+.an-method {
+  border-top: 1px solid var(--rule);
+  padding: 12px 20px;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--text-3);
+  background: var(--bg-2);
+  border-radius: 0 0 8px 8px;
+}
+.an-table td:first-child { text-align: left; font-family: var(--font-sans, inherit); }
+.an-table tbody tr:hover td { cursor: default; }
+.an-table tr.an-muted td { color: var(--text-3); }
+.an-heat { border-collapse: separate; border-spacing: 2px; font-family: var(--font-mono); font-size: 10.5px; font-variant-numeric: tabular-nums; margin: 0 auto; }
+.an-heat th { font-weight: 500; color: var(--text-3); padding: 2px 4px; white-space: nowrap; }
+.an-heat tbody th { text-align: right; padding-right: 8px; font-family: var(--font-sans, inherit); font-size: 12px; color: var(--text-2); }
+.an-heat td { width: 34px; min-width: 34px; height: 26px; text-align: center; border-radius: 3px; color: var(--text-1); }
+.an-heat td.an-heat__avg { background: var(--bg-2); font-weight: 600; width: 44px; }
+@media (max-width: 900px) {
+  .an-grid { grid-template-columns: 1fr; }
+  .an-hero { padding: 22px 18px; }
+  .an-hero__title { font-size: 24px; }
 }

@@ -119,7 +119,7 @@
 
     window.addEventListener('hashchange', () => {
       const h = location.hash.replace('#', '');
-      if (h) navTo(h);
+      if (h && h !== _lastRoute) navTo(h);
     });
 
     // Keyboard shortcuts
@@ -132,7 +132,7 @@
         return;
       }
       if (e.metaKey || e.ctrlKey || e.altKey) return;
-      const shortcuts = { 'o': 'overview', 'u': 'projections', 'c': 'countries', 'r': 'prosperity', 'a': 'ai-economy', 'p': 'compare', 'f': 'flags', 'n': 'news' };
+      const shortcuts = { 'o': 'overview', 'u': 'projections', 'l': 'analysis', 'c': 'countries', 'r': 'prosperity', 'a': 'ai-economy', 'p': 'compare', 'f': 'flags', 'n': 'news' };
       const target = shortcuts[e.key.toLowerCase()];
       if (target) navTo(target);
     });
@@ -186,7 +186,10 @@
   }
 
   // ── Navigation ────────────────────────────────────────────────────────────
+  let _lastRoute = null;
+  let _mountTimer = null;
   window.navTo = function navTo(page) {
+    _lastRoute = page;
     const isCountry = page.startsWith('country/');
     const navPage = isCountry ? null : page;
 
@@ -224,6 +227,9 @@
       return;
     }
 
+    // Release the previous page's charts before their canvases are replaced
+    if (window.Chart) Object.values(Chart.instances).forEach(c => c.destroy());
+
     if (isCountry) {
       const iso3 = page.split('/')[1];
       root.innerHTML = renderCountryProfile(iso3);
@@ -231,6 +237,7 @@
       switch (page) {
         case 'overview':    root.innerHTML = renderOverview();     break;
         case 'projections': root.innerHTML = renderProjections();  break;
+        case 'analysis':    root.innerHTML = renderAnalysis();     break;
         case 'countries':   root.innerHTML = renderCountries();   break;
         case 'prosperity':  root.innerHTML = renderProsperity();  break;
         case 'ai-economy':  root.innerHTML = renderAIEconomy();   break;
@@ -246,7 +253,8 @@
     window.scrollTo(0, 0);
 
     // Mount charts after DOM is ready
-    setTimeout(() => mountPageCharts(page), 100);
+    clearTimeout(_mountTimer);
+    _mountTimer = setTimeout(() => mountPageCharts(page), 100);
   };
 
   // ── News strip ────────────────────────────────────────────────────────────
@@ -400,6 +408,7 @@
   function mountPageCharts(page) {
     if (page === 'overview')    { mountOverviewCharts(); if (window.mountProjectionSummary) window.mountProjectionSummary(); }
     if (page === 'projections') mountProjections();
+    if (page === 'analysis')    mountAnalysisCharts();
     if (page === 'about' && window.mountProjectionMethodology) window.mountProjectionMethodology();
     if (page === 'prosperity')  mountProsperityChart();
     if (page === 'ai-economy')  mountAIEconomyCharts();

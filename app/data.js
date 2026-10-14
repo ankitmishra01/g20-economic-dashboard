@@ -19,8 +19,9 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
       let offset = 0;
       while (true) {
         const r = await fetch(
-          `${SUPABASE_URL}/rest/v1/g20_economic_data?select=country_iso3,indicator_key,year,value&order=year.asc`,
+          `${SUPABASE_URL}/rest/v1/g20_economic_data?select=country_iso3,indicator_key,year,value&order=year.asc,country_iso3.asc,indicator_key.asc`,
           {
+            signal: AbortSignal.timeout(8000),
             headers: {
               'apikey': SUPABASE_KEY,
               'Authorization': `Bearer ${SUPABASE_KEY}`,
@@ -89,7 +90,7 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
       const qrows = [];
       for (let offset = 0; ; offset += 1000) {
         const qr = await fetch(
-          `${SUPABASE_URL}/rest/v1/g20_quarterly_data?select=country_iso3,indicator_key,period,value&order=period.asc`,
+          `${SUPABASE_URL}/rest/v1/g20_quarterly_data?select=country_iso3,indicator_key,period,value&order=period.asc,country_iso3.asc,indicator_key.asc`,
           { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Range': `${offset}-${offset + 999}` } }
         );
         if (!qr.ok) throw new Error(`quarterly fetch failed: ${qr.status}`);
@@ -122,7 +123,7 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
     const idx = {};
     const latest = {};
     for (const { country_iso3: iso3, indicator_key: key, period, value } of rows) {
-      if (!iso3 || !key || !period) continue;
+      if (!iso3 || !key || !period || value == null) continue;
       if (!idx[iso3]) idx[iso3] = {};
       if (!idx[iso3][key]) idx[iso3][key] = {};
       idx[iso3][key][period] = value;

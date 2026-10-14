@@ -76,6 +76,7 @@ const CATEGORICAL_PALETTE = [
 const NAV_ITEMS = [
   { id: 'overview',   label: 'Overview',         icon: 'home',   key: 'O' },
   { id: 'projections',label: 'Outlook 2026-27',  icon: 'chart',  key: 'U' },
+  { id: 'analysis',   label: 'Analysis',         icon: 'chart',  key: 'L' },
   { id: 'countries',  label: 'Countries',        icon: 'users',  key: 'C' },
   { id: 'prosperity', label: 'Prosperity',       icon: 'globe',     key: 'R' },
   { id: 'ai-economy', label: 'AI Economy',       icon: 'sparkles', key: 'A' },
