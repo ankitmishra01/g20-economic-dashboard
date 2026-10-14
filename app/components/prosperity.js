@@ -8,6 +8,15 @@ const REGION_COLORS = {
   'Africa':      { bg: 'rgba(239,68,68,0.75)',   border: '#ef4444' },
 };
 
+// Growth is a multi-year average: one year is too noisy to describe a trajectory.
+const PROS_GROWTH_FROM = 2023, PROS_GROWTH_TO = 2025;
+function avgGrowth(iso3) {
+  const s = window.G20_DATA?.[iso3]?.GDP_GROWTH || {};
+  const vals = [];
+  for (let y = PROS_GROWTH_FROM; y <= PROS_GROWTH_TO; y++) if (s[y] !== null && s[y] !== undefined) vals.push(+s[y]);
+  return vals.length === PROS_GROWTH_TO - PROS_GROWTH_FROM + 1 ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+}
+
 // Current x-axis metric: 'ppp' (GDP_CAPITA_PPP) or 'nominal' (GDP_CAPITA)
 let _prosperityMode = 'ppp';
 // Tracked chart instance so we can destroy before re-creating on toggle
@@ -17,11 +26,18 @@ function renderProsperity() {
   return `
 <div class="page-body">
   <div class="sec-head">
-    <div class="sec-head__title">Prosperity Map <span class="count">G20</span><span class="sec-head__sub">GDP per capita (PPP) vs growth rate · bubble size = population</span></div>
+    <div class="sec-head__title">Prosperity Map <span class="count">G20</span><span class="sec-head__sub">How rich is each economy per person, and how fast is it growing?</span></div>
     <div class="sec-head__actions">
       <button class="sec-head__tab active" onclick="prosperityToggleX(this,'ppp')">PPP</button>
       <button class="sec-head__tab" onclick="prosperityToggleX(this,'nominal')">Nominal</button>
     </div>
+  </div>
+
+  <div class="pros-guide mb-20">
+    <div><b>Across</b> income per person, adjusted for living costs (PPP). Further right = richer.</div>
+    <div><b>Up</b> average real GDP growth over ${PROS_GROWTH_FROM}–${PROS_GROWTH_TO}. Higher = growing faster.</div>
+    <div><b>Dashed lines</b> G20 medians, splitting the map into four groups.</div>
+    <div><b>Bubble size</b> population.</div>
   </div>
 
   <div class="panel mb-20">
@@ -45,7 +61,7 @@ function renderProsperity() {
     </div>
     <div class="panel">
       <div class="panel__head">
-        <div><span class="panel__title">Growth vs Income</span><span class="panel__sub">2024 · quadrant analysis</span></div>
+        <div><span class="panel__title">The four groups</span><span class="panel__sub">split at the G20 medians</span></div>
       </div>
       <div class="panel__body" id="quadrant-table"></div>
     </div>
@@ -69,7 +85,8 @@ function mountProsperityChart(mode) {
   // Build bubble data
   const data = window.G20.filter(nonEU).map(c => {
     const inc    = window.G20Data.getLatest(c.iso3, metricKey, { annualOnly: true });
-    const growth = window.G20Data.getLatest(c.iso3, 'GDP_GROWTH', { annualOnly: true });
+    const g = avgGrowth(c.iso3);
+    const growth = g === null ? null : { value: g, year: `${PROS_GROWTH_FROM}–${String(PROS_GROWTH_TO).slice(2)} avg` };
     const pop    = window.G20Data.getLatest(c.iso3, 'POPULATION', { annualOnly: true });
     if (!inc || !growth) return null;
     return {
@@ -104,9 +121,10 @@ function mountProsperityChart(mode) {
   // Compute median growth + median income for quadrant lines (median adapts to the
   // active metric so quadrants stay meaningful whether PPP or nominal is selected)
   const allGrowth = data.map(d => d.y).sort((a, b) => a - b);
-  const medGrowth = allGrowth[Math.floor(allGrowth.length / 2)];
+  const mid = (arr) => arr.length % 2 ? arr[(arr.length - 1) / 2] : (arr[arr.length / 2 - 1] + arr[arr.length / 2]) / 2;
+  const medGrowth = mid(allGrowth);
   const allInc    = data.map(d => d.x).sort((a, b) => a - b);
-  const medPPP    = allInc[Math.floor(allInc.length / 2)];
+  const medPPP    = mid(allInc);
 
   _prosperityChartInst = new Chart(canvas.getContext('2d'), {
     type: 'bubble',
@@ -134,7 +152,7 @@ function mountProsperityChart(mode) {
               const m = ctx.raw._meta;
               const lines = [
                 `  ${tipLabel}: $${Math.round(m.ppp / 1000)}K (${m.pppYear})`,
-                `  Growth: ${A.fmtSignedPct(m.growth)} (${m.growthYear})`,
+                `  Growth: ${A.fmtSignedPct(m.growth)} a year (${m.growthYear})`,
               ];
               if (m.pop) lines.push(`  Pop: ${(m.pop / 1e6).toFixed(0)}M`);
               return lines;
@@ -150,13 +168,40 @@ function mountProsperityChart(mode) {
           ticks: { ...TICK, callback: v => '$' + (v / 1000).toFixed(0) + 'K' },
         },
         y: {
-          title: { display: true, text: 'GDP Growth Rate (%)', color: theme.tick, font: { ...MONO, size: 10 } },
+          grace: '18%',
+          title: { display: true, text: `Avg. real GDP growth ${PROS_GROWTH_FROM}–${PROS_GROWTH_TO} (%)`, color: theme.tick, font: { ...MONO, size: 10 } },
           grid: { color: theme.grid },
           ticks: { ...TICK, callback: v => A.fmtSignedPct(v) },
         },
       },
     },
     plugins: [{
+      // G20 median crosshair and quadrant names, drawn under the bubbles
+      beforeDatasetsDraw(chart) {
+        const { ctx: c2, chartArea: a, scales: { x, y } } = chart;
+        const mx = x.getPixelForValue(medPPP), my = y.getPixelForValue(medGrowth);
+        c2.save();
+        c2.strokeStyle = theme.tick; c2.lineWidth = 1; c2.setLineDash([5, 4]);
+        c2.beginPath(); c2.moveTo(mx, a.top); c2.lineTo(mx, a.bottom); c2.moveTo(a.left, my); c2.lineTo(a.right, my); c2.stroke();
+        c2.setLineDash([]);
+        c2.font = '600 11px Inter Tight, system-ui, sans-serif';
+        c2.fillStyle = theme.text2; c2.globalAlpha = 0.75;
+        c2.textBaseline = 'top'; c2.textAlign = 'left';
+        c2.fillText('CATCHING UP · poorer, growing faster', a.left + 8, a.top + 6);
+        c2.textAlign = 'right';
+        c2.fillText('RICH AND GROWING', a.right - 8, a.top + 6);
+        c2.textBaseline = 'bottom';
+        c2.fillText('RICH, SLOW-GROWING', a.right - 8, a.bottom - 6);
+        c2.textAlign = 'left';
+        c2.fillText('FALLING BEHIND · poorer, growing slower', a.left + 8, a.bottom - 6);
+        c2.globalAlpha = 1; c2.font = '10px JetBrains Mono, monospace'; c2.fillStyle = theme.tick;
+        c2.textAlign = 'left'; c2.textBaseline = 'bottom';
+        c2.fillText(`G20 median ${A.fmtSignedPct(medGrowth)}`, a.left + 8, my - 3);
+        c2.textBaseline = 'top';
+        c2.fillText(`median $${Math.round(medPPP / 1000)}K`, mx + 4, a.top + 24);
+        c2.restore();
+      },
+    }, {
       // Draw country name labels on each bubble
       afterDatasetsDraw(chart) {
         const ctx2 = chart.ctx;
@@ -206,17 +251,18 @@ function mountProsperityChart(mode) {
 
   // Quadrant analysis table
   const quadrants = [
-    { label: 'High Income + Growth', cls: 'v-pos', test: d => d.ppp >= medPPP && d.y >= medGrowth },
-    { label: 'Catching Up',          cls: '',       test: d => d.ppp < medPPP  && d.y >= medGrowth },
-    { label: 'Stagnating',           cls: 'v-warn', test: d => d.ppp >= medPPP && d.y < medGrowth  },
-    { label: 'Challenged',           cls: 'v-neg',  test: d => d.ppp < medPPP  && d.y < medGrowth  },
+    { label: 'Rich and growing',   cls: 'v-pos',  desc: 'Above-median income and above-median growth.', test: d => d.ppp >= medPPP && d.y >= medGrowth },
+    { label: 'Catching up',        cls: '',       desc: 'Poorer, but growing faster than the median, so the income gap is closing.', test: d => d.ppp < medPPP  && d.y >= medGrowth },
+    { label: 'Rich, slow-growing', cls: 'v-warn', desc: 'High income but below-median growth, typical of ageing advanced economies.', test: d => d.ppp >= medPPP && d.y < medGrowth  },
+    { label: 'Falling behind',     cls: 'v-neg',  desc: 'Below-median income and growth, so the gap with richer peers is widening.', test: d => d.ppp < medPPP  && d.y < medGrowth  },
   ];
   document.getElementById('quadrant-table').innerHTML = quadrants.map(q => {
     const countries = data.filter(q.test);
     return `
     <div style="padding:10px 14px;border-bottom:1px solid var(--rule)">
-      <div class="panel__title ${q.cls}" style="font-size:11px;margin-bottom:6px">${q.label}</div>
-      <div style="font-size:12px;color:var(--text-2);line-height:1.6">${countries.map(d => A.escapeText(d.name)).join(' · ') || '—'}</div>
+      <div class="panel__title ${q.cls}" style="font-size:11px;margin-bottom:2px">${q.label}</div>
+      <div style="font-size:11.5px;color:var(--text-3);margin-bottom:6px">${q.desc}</div>
+      <div style="font-size:12px;color:var(--text-2);line-height:1.6">${countries.sort((a, b) => b.y - a.y).map(d => `${A.escapeText(d.name)} <span style="font-family:var(--font-mono);font-size:10.5px;color:var(--text-3)">${A.fmtSignedPct(d.y)}</span>`).join(' · ') || '—'}</div>
     </div>`;
   }).join('');
 }

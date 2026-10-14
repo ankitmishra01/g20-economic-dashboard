@@ -12,7 +12,7 @@ const ALL_COUNTRIES = [
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Cache-Control', 'public, max-age=3600, stale-while-revalidate=600');
+  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=600');
 
   try {
     // Paginate to get all rows (Supabase default limit is 1000)

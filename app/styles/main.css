@@ -2169,3 +2169,45 @@ html.present .agent-drawer { zoom: 1.1; }
   .an-hero { padding: 22px 18px; }
   .an-hero__title { font-size: 24px; }
 }
+
+/* ── Country profile: position in the G20 ──────────────────────────────── */
+.pos-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap: 4px 36px; padding: 18px 22px 8px; }
+.pos-group { margin-bottom: 14px; }
+.pos-group__title {
+  font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-3); padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid var(--rule);
+}
+.pos-row { display: grid; grid-template-columns: 150px minmax(0, 1fr) 150px; align-items: center; gap: 14px; padding: 9px 0; }
+.pos-row + .pos-row { border-top: 1px dashed var(--rule); }
+.pos-lbl { font-size: 12.5px; color: var(--text-1); }
+.pos-track { position: relative; height: 30px; }
+.pos-line { position: absolute; left: 0; right: 0; top: 11px; height: 6px; border-radius: 3px; background: var(--bg-2); border: 1px solid var(--rule); }
+.pos-med { position: absolute; top: 6px; width: 2px; height: 16px; margin-left: -1px; background: var(--text-3); border-radius: 1px; }
+.pos-dot {
+  position: absolute; top: 7px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%;
+  background: var(--text-1); border: 2px solid var(--bg); box-shadow: 0 0 0 1px var(--text-1);
+}
+.pos-dot.is-good { background: var(--pos); box-shadow: 0 0 0 1px var(--pos); }
+.pos-dot.is-bad { background: var(--neg); box-shadow: 0 0 0 1px var(--neg); }
+.pos-end { position: absolute; top: 21px; font-family: var(--font-mono); font-size: 9.5px; color: var(--text-3); white-space: nowrap; }
+.pos-end--lo { left: 0; }
+.pos-end--hi { right: 0; }
+.pos-val { display: flex; flex-direction: column; align-items: flex-end; font-variant-numeric: tabular-nums; }
+.pos-val b { font-size: 14px; font-weight: 600; color: var(--text-1); }
+.pos-val span { font-family: var(--font-mono); font-size: 10px; color: var(--text-3); margin-top: 2px; text-align: right; }
+.pos-legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--text-1); margin: 0 4px 0 12px; vertical-align: -1px; }
+.pos-legend-dot.is-good { background: var(--pos); }
+.pos-legend-dot.is-bad { background: var(--neg); }
+.pos-legend-med { display: inline-block; width: 2px; height: 12px; background: var(--text-3); margin: 0 4px 0 12px; vertical-align: -2px; }
+@media (max-width: 640px) {
+  .pos-grid { grid-template-columns: 1fr; padding: 14px; }
+  .pos-row { grid-template-columns: 1fr 110px; }
+  .pos-track { grid-column: 1 / -1; order: 3; }
+}
+.pos-grid + .standing-legend { flex-wrap: wrap; gap: 6px 0; padding: 4px 22px 16px; }
+
+/* ── Prosperity: reading guide ─────────────────────────────────────────── */
+.pros-guide { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.pros-guide > div { border: 1px solid var(--rule); border-radius: 8px; padding: 10px 12px; font-size: 12px; line-height: 1.5; color: var(--text-2); background: var(--bg); }
+.pros-guide b { display: block; font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-3); margin-bottom: 3px; }
+@media (max-width: 900px) { .pros-guide { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

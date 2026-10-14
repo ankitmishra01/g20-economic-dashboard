@@ -54,11 +54,16 @@ function renderCountryProfile(iso3) {
   const country = G20.find(c => c.iso3 === iso3);
   if (!country) return `<div class="page-body"><div class="loading-spinner"><span>Country not found: ${A.escapeText(iso3)}</span></div></div>`;
 
-  const gdp    = window.G20Data.getLatest(iso3, 'GDP');
-  const gr     = window.G20Data.getLatest(iso3, 'GDP_GROWTH');
-  const inf    = window.G20Data.getLatest(iso3, 'INFLATION');
-  const une    = window.G20Data.getLatest(iso3, 'UNEMPLOYMENT');
-  const debt   = window.G20Data.getLatest(iso3, 'DEBT_GDP');
+  // Headline figures use one annual basis so they agree with the outlook,
+  // rankings and G20 comparisons further down; the latest quarter is shown
+  // separately and labelled as such.
+  const ANNUAL = { annualOnly: true };
+  const gdp    = window.G20Data.getLatest(iso3, 'GDP', ANNUAL);
+  const gr     = window.G20Data.getLatest(iso3, 'GDP_GROWTH', ANNUAL);
+  const inf    = window.G20Data.getLatest(iso3, 'INFLATION', ANNUAL);
+  const une    = window.G20Data.getLatest(iso3, 'UNEMPLOYMENT', ANNUAL);
+  const debt   = window.G20Data.getLatest(iso3, 'DEBT_GDP', ANNUAL);
+  const qGr    = window.G20Data.getLatest(iso3, 'GDP_GROWTH');
   const cap    = window.G20Data.getLatest(iso3, 'GDP_CAPITA');
   const ca     = window.G20Data.getLatest(iso3, 'CURRENT_ACC');
   const health = window.G20Data.getLatest(iso3, 'HEALTH_EXP');
@@ -118,7 +123,7 @@ function renderCountryProfile(iso3) {
         ${une?.value !== undefined ? `<div><div class="profile-hero__stat-lbl">Unemp.</div><div class="profile-hero__stat-val">${une.value.toFixed(1)}%</div></div>` : ''}
         ${dv !== undefined ? `<div><div class="profile-hero__stat-lbl">Debt/GDP</div><div class="profile-hero__stat-val" style="${dv > 100 ? 'color:var(--warn-on-ink)' : ''}">${dv.toFixed(0)}%</div></div>` : ''}
       </div>
-      ${vintage || commentaryDate ? `<div style="font-family:var(--font-mono);font-size:10px;color:rgba(245,245,242,0.4);margin-top:10px">${vintage ? `Data ${vintage}` : ''}${vintage && commentaryDate ? ' · ' : ''}${commentaryDate ? `Analysis ${commentaryDate}` : ''}</div>` : ''}
+      ${vintage || commentaryDate ? `<div style="font-family:var(--font-mono);font-size:10px;color:rgba(245,245,242,0.55);margin-top:10px">${vintage ? `Annual data ${vintage}` : ''}${qGr?.isQuarterly ? ` · Latest quarter ${qGr.period.replace(/(\d{4})Q(\d)/, 'Q$2 $1')}: ${A.fmtSignedPct(qGr.value)} y/y growth` : ''}${commentaryDate ? ` · Analysis ${commentaryDate}` : ''}</div>` : ''}
     </div>
   </div>
 </section>
@@ -132,21 +137,7 @@ function renderCountryProfile(iso3) {
   <div id="country-projection-outlook" class="projection-mini panel mb-20"><span>Loading 2026 to 2028 outlook…</span></div>
 
   <div class="sec-head" style="margin-top:4px">
-    <div class="sec-head__title">Key indicators</div>
-  </div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:20px">
-    ${renderMiniKPI('GDP per Capita', cap?.value ? '$' + (cap.value/1000).toFixed(0) + 'K' : '—', cap?.year, '', 'WB')}
-    ${renderMiniKPI('Current Acct', ca?.value !== undefined ? A.fmtSignedPct(ca.value).replace('%', '% GDP') : '—', ca?.year, ca?.value < -2 ? 'v-warn' : '', 'WB')}
-    ${renderMiniKPI('Fiscal Balance', fiscal?.value !== undefined ? A.fmtSignedPct(fiscal.value).replace('%', '% GDP') : '—', fiscal?.year, fiscal?.value < -6 ? 'v-warn' : '', 'IMF')}
-    ${renderMiniKPI('Tax Revenue', tax?.value !== undefined ? tax.value.toFixed(1) + '% GDP' : '—', tax?.year, '', 'WB')}
-    ${renderMiniKPI('Health Spending', health?.value !== undefined ? health.value.toFixed(1) + '% GDP' : '—', health?.year, '', 'WB')}
-    ${renderMiniKPI('R&D Spending', rd?.value !== undefined ? rd.value.toFixed(2) + '% GDP' : '—', rd?.year, '', 'OECD')}
-    ${renderMiniKPI('Youth Unemp.', youth?.value !== undefined ? youth.value.toFixed(1) + '%' : '—', youth?.year, youth?.value > 25 ? 'v-warn' : '', 'WB')}
-    ${renderMiniKPI('Education', educ?.value !== undefined ? educ.value.toFixed(1) + '% GDP' : '—', educ?.year, '', 'WB')}
-  </div>
-
-  <div class="sec-head" style="margin-top:4px">
-    <div class="sec-head__title">vs G20 median</div>
+    <div class="sec-head__title">Where ${A.escapeText(country.name)} sits in the G20<span class="sec-head__sub">latest annual value · each bar runs from the G20 lowest to highest · tick = G20 median</span></div>
   </div>
   <div class="panel mb-20">
     ${renderStanding(iso3)}
@@ -176,62 +167,80 @@ function renderMiniKPI(label, value, year, cls, source) {
 
 // ── Standing chart (vs G20 median) ───────────────────────────────────────────
 function renderStanding(iso3) {
-  const keys = [
-    { key: 'GDP_GROWTH',   label: 'Growth',        unit: '%',     factor: 1 },
-    { key: 'INFLATION',    label: 'Inflation',     unit: '%',     factor: 1 },
-    { key: 'UNEMPLOYMENT', label: 'Unemp.',        unit: '%',     factor: 1 },
-    { key: 'DEBT_GDP',     label: 'Govt Debt',     unit: '%',     factor: 1 },
-    { key: 'FISCAL_BAL',   label: 'Fiscal Bal.',   unit: '% GDP', factor: 1 },
-    { key: 'HEALTH_EXP',   label: 'Health',        unit: '% GDP', factor: 1 },
-    { key: 'YOUTH_UNEMP',  label: 'Youth Unemp.',  unit: '%',     factor: 1 },
-    { key: 'CAPITAL_FORM', label: 'Investment',    unit: '% GDP', factor: 1 },
-    { key: 'EDUC_EXP',     label: 'Education',     unit: '% GDP', factor: 1 },
-    { key: 'EXPORTS_GDP',  label: 'Exports',       unit: '% GDP', factor: 1 },
-    { key: 'TAX_REVENUE',  label: 'Tax Revenue',   unit: '% GDP', factor: 1 },
+  const GROUPS = [
+    { title: 'Growth and prices', keys: [
+      { key: 'GDP_GROWTH',     label: 'Real GDP growth',     fmt: v => A.fmtSignedPct(v), good: 'high' },
+      { key: 'INFLATION',      label: 'Inflation (CPI)',     fmt: v => v.toFixed(1) + '%', good: 'low' },
+      { key: 'GDP_CAPITA_PPP', label: 'GDP per capita, PPP', fmt: v => '$' + Math.round(v / 1000) + 'K', good: 'high' },
+    ] },
+    { title: 'Labour market', keys: [
+      { key: 'UNEMPLOYMENT',   label: 'Unemployment',        fmt: v => v.toFixed(1) + '%', good: 'low' },
+      { key: 'YOUTH_UNEMP',    label: 'Youth unemployment',  fmt: v => v.toFixed(1) + '%', good: 'low' },
+      { key: 'FEMALE_LFP',     label: 'Female participation', fmt: v => v.toFixed(1) + '%', good: 'high' },
+    ] },
+    { title: 'Public finances', keys: [
+      { key: 'DEBT_GDP',       label: 'Government debt',     fmt: v => v.toFixed(0) + '% GDP', good: 'low' },
+      { key: 'FISCAL_BAL',     label: 'Fiscal balance',      fmt: v => A.fmtSignedPct(v) + ' GDP', good: 'high' },
+      { key: 'TAX_REVENUE',    label: 'Tax revenue',         fmt: v => v.toFixed(1) + '% GDP' },
+    ] },
+    { title: 'Trade and investment', keys: [
+      { key: 'CURRENT_ACC',    label: 'Current account',     fmt: v => A.fmtSignedPct(v) + ' GDP' },
+      { key: 'EXPORTS_GDP',    label: 'Exports',             fmt: v => v.toFixed(1) + '% GDP' },
+      { key: 'CAPITAL_FORM',   label: 'Investment',          fmt: v => v.toFixed(1) + '% GDP' },
+    ] },
+    { title: 'People and innovation', keys: [
+      { key: 'HEALTH_EXP',     label: 'Health spending',     fmt: v => v.toFixed(1) + '% GDP' },
+      { key: 'EDUC_EXP',       label: 'Education spending',  fmt: v => v.toFixed(1) + '% GDP' },
+      { key: 'RD_EXP',         label: 'R&D spending',        fmt: v => v.toFixed(2) + '% GDP', good: 'high' },
+    ] },
   ];
+  const ordinal = n => n + (['th', 'st', 'nd', 'rd'][(n % 100 > 10 && n % 100 < 14) ? 0 : n % 10] || 'th');
 
-  const rows = keys.map(({ key, label, unit }) => {
+  const row = ({ key, label, fmt, good }) => {
     const rank = window.G20Data.getRanking(key).filter(c => c.iso3 !== 'EUU');
-    if (!rank.length) return null;
+    const me = rank.findIndex(c => c.iso3 === iso3);
+    if (rank.length < 3 || me < 0) return '';
     const vals = rank.map(c => c.value);
     const med = median(vals);
-    const countryVal = window.G20Data.getLatest(iso3, key)?.value;
-    if (countryVal === undefined || countryVal === null) return null;
-    const minVal = Math.min(...vals);
-    const maxVal = Math.max(...vals);
-    const range  = maxVal - minVal || 1;
-    const pctCountry = ((countryVal - minVal) / range) * 100;
-    const pctMedian  = ((med - minVal) / range) * 100;
-    return { label, unit, countryVal, med, pctCountry, pctMedian };
-  }).filter(Boolean);
+    const v = rank[me].value, yr = rank[me].year;
+    const lo = Math.min(...vals), hi = Math.max(...vals), span = hi - lo || 1;
+    const pos = (x) => (((x - lo) / span) * 100).toFixed(1);
+    const better = good ? (good === 'high' ? v > med : v < med) : null;
+    const dotCls = better === null ? '' : better ? ' is-good' : ' is-bad';
+    const n = rank.length, r = me + 1;
+    const rankTxt = r === 1 ? 'highest in G20' : r === n ? 'lowest in G20' : `${ordinal(r)} highest of ${n}`;
+    const tip = `${label}: ${fmt(v)} (${yr}). G20 median ${fmt(med)}; range ${fmt(lo)} to ${fmt(hi)}.`;
+    return `
+      <div class="pos-row" title="${A.escapeAttr(tip)}">
+        <div class="pos-lbl">${label}</div>
+        <div class="pos-track" role="img" aria-label="${A.escapeAttr(tip + ' ' + rankTxt + '.')}">
+          <span class="pos-end pos-end--lo">${fmt(lo)}</span>
+          <span class="pos-line"></span>
+          <span class="pos-med" style="left:${pos(med)}%"></span>
+          <span class="pos-dot${dotCls}" style="left:${pos(v)}%"></span>
+          <span class="pos-end pos-end--hi">${fmt(hi)}</span>
+        </div>
+        <div class="pos-val"><b>${fmt(v)}</b><span>${rankTxt} · ${yr}</span></div>
+      </div>`;
+  };
 
-  if (!rows.length) return '<div class="panel__body"><span style="color:var(--text-3);font-size:12px">Insufficient data</span></div>';
-
-  return `
-    <div class="standing-grid">
-      ${rows.map(r => `
-        <div class="standing-row">
-          <div class="standing-lbl">${r.label}</div>
-          <div class="standing-bars">
-            <div class="standing-bar-wrap">
-              <div class="standing-bar-fill standing-bar-country" style="width:${Math.min(Math.max(r.pctCountry, 2), 100).toFixed(1)}%"></div>
-            </div>
-            <div class="standing-bar-wrap">
-              <div class="standing-bar-fill standing-bar-median" style="width:${Math.min(Math.max(r.pctMedian, 2), 100).toFixed(1)}%"></div>
-            </div>
-          </div>
-          <div class="standing-val">${r.countryVal.toFixed(1)}${r.unit}</div>
-        </div>`).join('')}
-    </div>
+  const body = GROUPS.map(g => {
+    const rows = g.keys.map(row).join('');
+    return rows ? `<div class="pos-group"><div class="pos-group__title">${g.title}</div>${rows}</div>` : '';
+  }).join('');
+  if (!body) return '<div class="panel__body"><span style="color:var(--text-3);font-size:12px">Insufficient data</span></div>';
+  return `<div class="pos-grid">${body}</div>
     <div class="standing-legend">
-      <span class="standing-legend-dot" style="background:var(--ink)"></span> This country
-      <span class="standing-legend-dot" style="background:var(--text-4)"></span> G20 median
+      <span class="pos-legend-dot is-good"></span> better than G20 median
+      <span class="pos-legend-dot is-bad"></span> worse than median
+      <span class="pos-legend-dot"></span> no better or worse direction
+      <span class="pos-legend-med"></span> G20 median
     </div>`;
 }
 
 // ── Key facts strip (shown above analysis sections) ───────────────────────────
 function renderKeyFacts(iso3) {
-  const get = key => window.G20Data.getLatest(iso3, key);
+  const get = key => window.G20Data.getLatest(iso3, key, { annualOnly: true });
   const gdp    = get('GDP');
   const gr     = get('GDP_GROWTH');
   const inf    = get('INFLATION');
