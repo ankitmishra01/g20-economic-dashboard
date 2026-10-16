@@ -31,12 +31,9 @@ test('comparison is URL-shareable and reports sparse coverage', () => {
   assert.match(source, /observedObservations/, 'default comparison must exclude estimates and forecasts');
 });
 
-test('homepage coverage and releases come from the observation repository', () => {
+test('homepage restores the original dashboard as the default experience', () => {
   const source = read('src/app/page.tsx');
-  assert.match(source, /observedObservations\.filter/);
-  assert.match(source, /new Set\(observedObservations/);
-  assert.doesNotMatch(source, /87%|Oct 24|Policy rate/);
-  assert.match(source, /observedObservations/, 'homepage claims must use observed values only');
+  assert.match(source, /redirect\("\/legacy\/index\.html"\)/);
 });
 
 test('pulse surfaces calculate latest periods from observed values only', () => {
@@ -45,7 +42,7 @@ test('pulse surfaces calculate latest periods from observed values only', () => 
 });
 
 test('public decision surfaces use the live Supabase repository', () => {
-  for (const route of ['page.tsx', 'pulse/page.tsx', 'countries/page.tsx', 'compare/page.tsx', 'calendar/page.tsx', 'indicators/page.tsx']) {
+  for (const route of ['pulse/page.tsx', 'countries/page.tsx', 'compare/page.tsx', 'calendar/page.tsx', 'indicators/page.tsx']) {
     assert.match(read(`src/app/${route}`), /@\/lib\/live-repository/);
   }
   const layout = read('src/app/layout.tsx');
