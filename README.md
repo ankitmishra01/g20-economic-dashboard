@@ -1,8 +1,8 @@
 # Global Economic Intelligence
 
-A release-aware economic intelligence workspace for policy, strategy, and market decisions. The product expands the original G20 Economic Monitor into a global architecture while preserving the proven dashboard at [`/legacy/index.html`](https://g20-gamma.vercel.app/legacy/index.html).
+A release-aware economic intelligence workspace for policy, strategy, and market decisions. The product expands the original G20 Economic Monitor into a global architecture while preserving the proven dashboard at [`/legacy/index.html`](https://global-economic-intelligence.vercel.app/legacy/index.html).
 
-Production: [g20-gamma.vercel.app](https://g20-gamma.vercel.app) · Repository: [ankitmishra01/global-economic-intelligence](https://github.com/ankitmishra01/global-economic-intelligence)
+Production: [global-economic-intelligence.vercel.app](https://global-economic-intelligence.vercel.app) · Repository: [ankitmishra01/global-economic-intelligence](https://github.com/ankitmishra01/global-economic-intelligence)
 
 The core promise is precise: official observations, estimates, and forecasts are never presented as the same thing. Every surfaced value carries a period, status, source, vintage, and coverage context.
 
