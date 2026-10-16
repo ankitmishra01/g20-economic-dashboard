@@ -1,0 +1,21 @@
+name: Market and health checks
+on:
+  schedule:
+    - cron: "17 */6 * * 1-5"
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify public health and supported sources
+        run: |
+          curl --fail --retry 3 "${{ vars.PRODUCTION_URL }}/api/v1/health"
+          curl --fail --retry 3 "${{ vars.PRODUCTION_URL }}/api/v1/pulse"
+      - name: Report failed probe
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh issue create --repo "$GITHUB_REPOSITORY" --title "Market/health probe failed" --body "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
