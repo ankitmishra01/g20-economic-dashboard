@@ -4,11 +4,44 @@
 
 const SUPABASE_URL = 'https://qozknjenyhewmkapsizk.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
+const { summarizeIndicators } = require('../lib/economic-domain.cjs');
 
 const ALL_COUNTRIES = [
   'USA','GBR','CAN','DEU','FRA','ITA','JPN','AUS','KOR',
   'CHN','IND','BRA','MEX','ARG','RUS','SAU','ZAF','IDN','TUR',
 ];
+
+function buildStatusPayload(allRows, options = {}) {
+  const countries = options.countries || ALL_COUNTRIES;
+  const now = options.now || new Date();
+  const indicators = summarizeIndicators(allRows, { countries, now });
+  let lastRefreshed = null;
+
+  for (const row of allRows) {
+    if (row.fetched_at && (!lastRefreshed || row.fetched_at > lastRefreshed)) lastRefreshed = row.fetched_at;
+  }
+
+  for (const indicator of Object.values(indicators)) {
+    indicator.latestYear = indicator.latestObservedPeriod
+      ? Number(String(indicator.latestObservedPeriod).slice(0, 4))
+      : null;
+    indicator.isStale = ['stale', 'failed', 'unavailable'].includes(indicator.freshness.state);
+  }
+
+  const allHealthy = Object.values(indicators).every(
+    indicator => indicator.covered >= Math.min(17, countries.length)
+      && !indicator.isStale
+      && indicator.missing.length <= 2,
+  );
+
+  return {
+    healthy: allHealthy,
+    totalRows: allRows.length,
+    lastRefreshed,
+    indicators,
+    checkedAt: now.toISOString(),
+  };
+}
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -38,39 +71,10 @@ module.exports = async function handler(req, res) {
       offset += PAGE;
     }
 
-    // Aggregate: indMap[indicator][country] = latestYear
-    const indMap = {};
-    let lastRefreshed = null;
-    for (const { country_iso3: c, indicator_key: k, year, fetched_at } of allRows) {
-      if (!indMap[k]) indMap[k] = {};
-      if (!indMap[k][c] || year > indMap[k][c]) indMap[k][c] = year;
-      if (!lastRefreshed || fetched_at > lastRefreshed) lastRefreshed = fetched_at;
-    }
-
-    const indicators = {};
-    for (const [k, countries] of Object.entries(indMap)) {
-      const covered    = Object.keys(countries);
-      const latestYear = Math.max(...Object.values(countries));
-      indicators[k] = {
-        covered:    covered.length,
-        latestYear,
-        missing:    ALL_COUNTRIES.filter(c => !countries[c]),
-        isStale:    latestYear < 2021,
-      };
-    }
-
-    const allHealthy = Object.values(indicators).every(
-      i => i.covered >= 17 && !i.isStale && i.missing.length <= 2
-    );
-
-    return res.status(200).json({
-      healthy: allHealthy,
-      totalRows: allRows.length,
-      lastRefreshed,
-      indicators,
-      checkedAt: new Date().toISOString(),
-    });
+    return res.status(200).json(buildStatusPayload(allRows));
   } catch (e) {
     return res.status(500).json({ healthy: false, error: e.message });
   }
 };
+
+module.exports.buildStatusPayload = buildStatusPayload;

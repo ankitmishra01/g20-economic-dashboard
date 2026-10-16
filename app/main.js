@@ -100,7 +100,7 @@
     try {
       await window.G20Data.loadAllData();
       _dataLoaded = true;
-      document.getElementById('data-status').textContent = window.G20_SNAPSHOT_AT ? 'offline snapshot' : 'read-only · live';
+      document.getElementById('data-status').textContent = window.G20_SNAPSHOT_AT ? 'offline snapshot' : 'official observations';
 
       // Update period label from actual data
       const gdpRank = window.G20Data.getRanking('GDP');
@@ -144,15 +144,28 @@
   function updateLiveClock() {
     const el = document.getElementById('live-time');
     if (!el) return;
-    const iso = window._dataRefreshedAt;
-    el.textContent = iso ? `Data refreshed ${iso.slice(0, 10)}` : 'Live data';
+    const status = window._dataStatus;
+    const iso = status?.lastRefreshed;
+    if (!iso) {
+      el.textContent = 'Checking data freshness';
+      return;
+    }
+    const observedPeriods = Object.values(status.indicators || {})
+      .map(indicator => indicator.latestObservedPeriod)
+      .filter(Boolean)
+      .sort();
+    const latestObserved = observedPeriods.at(-1);
+    const date = new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    el.textContent = latestObserved
+      ? `Latest observed period ${latestObserved} · fetched ${date}`
+      : `Data fetched ${date}`;
   }
 
   async function loadRefreshStamp() {
     try {
       const r = await fetch('/api/status', { cache: 'no-cache' });
       const d = await r.json();
-      if (d && d.lastRefreshed) { window._dataRefreshedAt = d.lastRefreshed; updateLiveClock(); }
+      if (d && d.lastRefreshed) { window._dataStatus = d; updateLiveClock(); }
     } catch (e) { /* status is optional; keep the default label */ }
   }
 
