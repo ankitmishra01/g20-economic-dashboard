@@ -26,7 +26,7 @@ export async function evaluateAlertRules() {
     collectPages(async (from, to) => { const result = await client.from("economic_observations").select("series_id,country_iso3,period,value,fetched_at,vintage_date").in("observation_status", ["actual", "preliminary"]).order("period", { ascending: false }).order("vintage_date", { ascending: false }).range(from, to); if (result.error) throw result.error; return result.data ?? []; }),
   ]);
   if (ruleError || itemError) throw ruleError ?? itemError;
-  const rules = ruleData as Rule[]; const items = itemData as Item[]; const facts = latestSourceVintages(factData as unknown as Fact[]) as Fact[]; const events = [];
+  const rules = ruleData as Rule[]; const items = itemData as Item[]; const facts = (latestSourceVintages(factData as unknown as Fact[]) as Fact[]).sort((a, b) => b.period.localeCompare(a.period)); const events = [];
   for (const rule of rules) {
     const scopes = rule.country_iso3 || rule.series_id ? [{ country_iso3: rule.country_iso3, series_id: rule.series_id }] : items.filter((item) => item.watchlist_id === rule.watchlist_id);
     for (const scope of scopes) {

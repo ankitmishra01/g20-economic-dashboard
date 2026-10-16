@@ -64,6 +64,11 @@ test('versioned APIs prefer Supabase facts with a documented snapshot fallback',
   assert.match(source, /fallback/i);
 });
 
+test('public surfaces read the database latest-vintage view', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src/lib/live-repository.ts'), 'utf8');
+  assert.match(source, /from\("latest_economic_observations"\)/);
+});
+
 test('Supabase fact reads continue until the final partial page', async () => {
   const pages = [[1, 2], [3, 4], [5]]; const calls = [];
   const rows = await collectPages(async (from, to) => { calls.push([from, to]); return pages.shift() ?? []; }, { pageSize: 2, maxRows: 10 });

@@ -21,7 +21,7 @@ export async function liveObservations(): Promise<EconomicObservation[]> {
   const client = publicClient();
   if (!client) return fallbackObservations;
   let data: unknown[];
-  try { data = await collectPages(async (from, to) => { const result = await client.from("economic_observations").select("series_id,country_iso3,period,value,vintage_date,observation_status,released_at,fetched_at,indicator_series!inner(key,label,unit,source_name,source_url,frequency,coverage_tier)").order("period", { ascending: false }).order("vintage_date", { ascending: false }).range(from, to); if (result.error) throw result.error; return result.data ?? []; }); } catch { return fallbackObservations; }
+  try { data = await collectPages(async (from, to) => { const result = await client.from("latest_economic_observations").select("series_id,country_iso3,period,value,vintage_date,observation_status,released_at,fetched_at,indicator_series!inner(key,label,unit,source_name,source_url,frequency,coverage_tier)").order("period", { ascending: false }).range(from, to); if (result.error) throw result.error; return result.data ?? []; }); } catch { return fallbackObservations; }
   if (!data.length) return fallbackObservations;
   return latestSourceVintages(data as unknown as ObservationRow[]).flatMap((row) => { const series = Array.isArray(row.indicator_series) ? row.indicator_series[0] : row.indicator_series; if (!series) return []; return [{ seriesId: row.series_id, country: row.country_iso3, indicator: series.key, period: row.period, value: row.value, frequency: series.frequency, status: row.observation_status, vintage: row.vintage_date, source: series.source_name, sourceUrl: series.source_url, releasedAt: row.released_at, fetchedAt: row.fetched_at }]; });
 }
