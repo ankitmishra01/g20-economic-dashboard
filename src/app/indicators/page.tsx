@@ -1,2 +1,3 @@
-import { RoutePlaceholder } from "@/components/route-placeholder";
-export default function IndicatorsPage() { return <RoutePlaceholder title="Indicators" />; }
+import { PageHeader } from "@/components/page-header";
+import { indicators, observations } from "@/lib/repository";
+export default function IndicatorsPage() { return <div className="page"><PageHeader eyebrow="Data dictionary" title="Indicators" description="Definitions, official provenance, cadence and actual supported coverage." /><div className="directory directory--indicators">{indicators.map((indicator) => { const countries = new Set(observations.filter((row) => row.indicator === indicator.key).map((row) => row.country)).size; return <a href={indicator.source_url ?? "#"} target="_blank" rel="noreferrer" key={indicator.key}><span className="directory__code">{indicator.key}</span><div><strong>{indicator.label}</strong><small>{indicator.description}</small></div><span>{countries} economies · {indicator.frequency}</span><b>{indicator.source_name} ↗</b></a>; })}</div></div>; }

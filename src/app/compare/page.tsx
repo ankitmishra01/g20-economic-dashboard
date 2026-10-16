@@ -1,2 +1,8 @@
-import { RoutePlaceholder } from "@/components/route-placeholder";
-export default function ComparePage() { return <RoutePlaceholder title="Compare" />; }
+import { PageHeader } from "@/components/page-header";
+import { g20Countries, indicators, observations } from "@/lib/repository";
+export default async function ComparePage({ searchParams }: { searchParams: Promise<Record<string,string|string[]|undefined>> }) {
+  const query = await searchParams; const indicator = typeof query.indicator === "string" ? query.indicator.toUpperCase() : "GDP_GROWTH"; const selected = typeof query.country === "string" ? query.country.split(",").map((v) => v.toUpperCase()) : ["USA","CAN","GBR","DEU","IND"];
+  const rows = observations.filter((row) => row.indicator === indicator && selected.includes(String(row.country))).sort((a,b) => String(b.period).localeCompare(String(a.period)));
+  const latest = [...new Map(rows.map((row) => [row.country, row])).values()]; const missing = selected.filter((iso3) => !latest.some((row) => row.country === iso3)); const meta = indicators.find((item) => item.key === indicator);
+  return <div className="page"><PageHeader eyebrow="Shareable cross-country workbench" title={`Compare ${meta?.label ?? indicator}`} description={`URL filters preserve this view. ${missing.length ? `Sparse coverage: no supported value for ${missing.join(", ")}.` : "All selected countries have supported observations."}`} /><form className="filter-bar" action="/compare"><label>Indicator<select name="indicator" defaultValue={indicator}>{indicators.map((item) => <option value={item.key} key={item.key}>{item.label}</option>)}</select></label><label>Countries<input name="country" defaultValue={selected.join(",")} /></label><button>Apply</button></form><div className="rankings">{latest.sort((a,b) => Number(b.value)-Number(a.value)).map((row,index) => <article key={String(row.country)}><span>{index+1}</span><strong>{g20Countries.find((c) => c.iso3 === row.country)?.name ?? row.country}</strong><b>{Number(row.value).toFixed(2)} {meta?.unit}</b><small>{row.period} · {row.source} · actual</small></article>)}</div></div>;
+}
