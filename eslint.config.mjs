@@ -5,5 +5,5 @@ import nextTs from "eslint-config-next/typescript";
 export default defineConfig([
   ...nextVitals,
   ...nextTs,
-  globalIgnores([".next/**", "public/legacy/**", "api/**", "sync/**", "tests/**", "lib/**/*.cjs"]),
+  globalIgnores([".next/**", ".vercel/**", "public/legacy/**", "api/**", "sync/**", "tests/**", "lib/**/*.cjs"]),
 ]);
