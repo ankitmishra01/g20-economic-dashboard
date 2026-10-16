@@ -1,0 +1,14 @@
+name: Release-sensitive refresh
+on:
+  schedule:
+    - cron: "23 7 * * 1-5"
+  workflow_dispatch:
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger protected release ingestion
+        run: curl --fail --retry 3 -H "Authorization: Bearer $CRON_SECRET" "$PRODUCTION_URL/api/cron/ingest"
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}

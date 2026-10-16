@@ -78,7 +78,7 @@ function fitRidge(samples) {
 }
 
 function loadTermSpread() {
-  const source = fs.readFileSync(path.join(__dirname, '../app/term-spread.js'), 'utf8');
+  const source = fs.readFileSync(path.join(__dirname, '../public/legacy/term-spread.js'), 'utf8');
   const match = source.match(/window\.G20_TERM_SPREAD\s*=\s*([\s\S]*);\s*$/);
   return match ? JSON.parse(match[1]) : {};
 }
@@ -270,14 +270,14 @@ function validateOutput(data) {
 async function main() {
   console.log('Loading G20 panel from Supabase');
   const { panel, vintage } = await loadPanel();
-  const oecd = JSON.parse(fs.readFileSync(path.join(__dirname, '../app/oecd-aggregate.json'), 'utf8'));
+  const oecd = JSON.parse(fs.readFileSync(path.join(__dirname, '../public/legacy/oecd-aggregate.json'), 'utf8'));
   const data = trainProjectionEngine(panel, { dataVintage: vintage, termSpread: loadTermSpread(), oecdSeries: oecd.series });
   validateOutput(data);
   console.log('\nIndicator       H  Model MAE  Naive MAE  Skill    80% coverage  Method');
   for (const r of data.backtest) console.log(`${r.indicator.padEnd(15)} ${String(r.horizon).padStart(1)}  ${r.mae.toFixed(2).padStart(9)}  ${r.naiveMae.toFixed(2).padStart(9)}  ${(r.skillPct.toFixed(1) + '%').padStart(7)}  ${(r.coverage80.toFixed(1) + '%').padStart(12)}  ${r.status}`);
-  const out = path.join(__dirname, '../app/projections.json');
+  const out = path.join(__dirname, '../public/legacy/projections.json');
   fs.writeFileSync(out, JSON.stringify(data) + '\n');
-  const historyPath = path.join(__dirname, '../app/projection-history.json');
+  const historyPath = path.join(__dirname, '../public/legacy/projection-history.json');
   let history = { schemaVersion: 1, vintages: [] };
   try { history = JSON.parse(fs.readFileSync(historyPath, 'utf8')); } catch (_) {}
   const historyVintage = { generatedDate: data.generatedDate, dataVintage: data.dataVintage, projectionOriginYear: data.projectionOriginYear, projections: data.projections };

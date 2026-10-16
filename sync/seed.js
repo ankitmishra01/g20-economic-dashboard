@@ -125,6 +125,16 @@ async function upsert(rows) {
   }
 }
 
+async function syncNormalizedFacts() {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/sync_normalized_from_legacy`, {
+    method: 'POST',
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
+    body: '{}',
+  });
+  if (!response.ok) throw new Error(`normalized fact sync failed (${response.status}): ${await response.text()}`);
+  return response.json();
+}
+
 // ── World Bank ────────────────────────────────────────────────────────────────
 
 async function fetchWB(indicatorKey, wbCode) {
@@ -689,6 +699,10 @@ async function main() {
     console.log(`  ⚠ g20_indicators metadata skipped: ${e.message}`);
     console.log('  → Run the schema.sql migration in Supabase to create the table.');
   }
+
+  process.stdout.write('Synchronizing normalized fact model…');
+  const normalized = await syncNormalizedFacts();
+  console.log(` ${Number(normalized.observations ?? 0).toLocaleString()} observations ✓`);
 
   if (failures > 0) process.exit(1); // signal failure to GitHub Actions
 }

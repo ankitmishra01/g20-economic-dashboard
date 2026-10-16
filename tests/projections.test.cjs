@@ -43,8 +43,8 @@ test('zero scenario shock reproduces the baseline exactly', () => {
 });
 
 test('shipped projection artifact has the versioned schema and finite ordered intervals', () => {
-  const file = path.join(ROOT, 'app/projections.json');
-  assert.ok(fs.existsSync(file), 'app/projections.json must exist');
+  const file = path.join(ROOT, 'public/legacy/projections.json');
+  assert.ok(fs.existsSync(file), 'public/legacy/projections.json must exist');
   const data = JSON.parse(fs.readFileSync(file, 'utf8'));
   assert.equal(data.schemaVersion, 1);
   assert.match(data.generatedDate, /^\d{4}-\d{2}-\d{2}$/);
@@ -60,7 +60,7 @@ test('shipped projection artifact has the versioned schema and finite ordered in
 });
 
 test('no skill fits explicitly use the naive baseline', () => {
-  const data = JSON.parse(fs.readFileSync(path.join(ROOT, 'app/projections.json'), 'utf8'));
+  const data = JSON.parse(fs.readFileSync(path.join(ROOT, 'public/legacy/projections.json'), 'utf8'));
   for (const row of data.backtest.filter(r => r.noSkill)) {
     assert.equal(row.shippedMethod, 'naive last value baseline');
     assert.match(row.status, /no skill/i);
@@ -68,7 +68,7 @@ test('no skill fits explicitly use the naive baseline', () => {
 });
 
 test('debt path follows the documented debt dynamics identity', () => {
-  const data = JSON.parse(fs.readFileSync(path.join(ROOT, 'app/projections.json'), 'utf8'));
+  const data = JSON.parse(fs.readFileSync(path.join(ROOT, 'public/legacy/projections.json'), 'utf8'));
   const by = new Map(data.projections.map(r => [`${r.iso3}|${r.indicator}|${r.year}`, r]));
   for (const row of data.projections.filter(r => r.indicator === 'DEBT_GDP' && r.identity)) {
     const prior = row.horizon === 1 ? row.identity.startDebt : by.get(`${row.iso3}|DEBT_GDP|${row.year - 1}`).point;
@@ -82,6 +82,6 @@ test('debt path follows the documented debt dynamics identity', () => {
 test('workflow retrains and commits projection artifacts', () => {
   const workflow = fs.readFileSync(path.join(ROOT, '.github/workflows/refresh.yml'), 'utf8');
   assert.match(workflow, /node sync\/train-projections\.js/);
-  assert.match(workflow, /app\/projections\.json/);
-  assert.match(workflow, /app\/projection-history\.json/);
+  assert.match(workflow, /public\/legacy\/projections\.json/);
+  assert.match(workflow, /public\/legacy\/projection-history\.json/);
 });
