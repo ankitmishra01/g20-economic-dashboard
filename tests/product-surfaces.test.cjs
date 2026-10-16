@@ -26,4 +26,13 @@ test('comparison is URL-shareable and reports sparse coverage', () => {
   assert.match(source, /searchParams/);
   assert.match(source, /missing|sparse/i);
   assert.match(source, /indicator/);
+  assert.match(source, /row\.frequency === frequency/, 'comparison must not rank annual and quarterly observations together');
+  assert.match(source, /name="frequency"/);
+});
+
+test('homepage coverage and releases come from the observation repository', () => {
+  const source = read('src/app/page.tsx');
+  assert.match(source, /observations\.filter/);
+  assert.match(source, /new Set\(observations/);
+  assert.doesNotMatch(source, /87%|Oct 24|Policy rate/);
 });
