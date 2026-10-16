@@ -32,3 +32,28 @@ test('restriction migration enforces read-only public access', () => {
   const sql = fs.readFileSync(path.join(migrationDir, migrationName), 'utf8');
   assertReadOnlyPolicy(sql, migrationName);
 });
+
+test('global intelligence schema preserves provenance and vintages', () => {
+  const sql = fs.readFileSync(path.join(ROOT, 'sync/schema.sql'), 'utf8');
+  for (const table of ['countries', 'country_collections', 'collection_members', 'indicator_series', 'economic_releases', 'economic_observations', 'ingestion_job_runs']) {
+    assert.match(sql, new RegExp(`CREATE TABLE IF NOT EXISTS ${table}`, 'i'), `${table} table must exist`);
+  }
+  assert.match(sql, /observation_status[\s\S]+CHECK[\s\S]+'forecast'/i);
+  assert.match(sql, /frequency[\s\S]+CHECK[\s\S]+'daily'/i);
+  assert.match(sql, /UNIQUE\s*\(series_id, country_iso3, period, vintage_date\)/i);
+  assert.match(sql, /released_at\s+TIMESTAMPTZ/i);
+  assert.match(sql, /fetched_at\s+TIMESTAMPTZ/i);
+});
+
+test('personal workflow tables enforce owner-scoped RLS and delivery deduplication', () => {
+  const sql = fs.readFileSync(path.join(ROOT, 'sync/schema.sql'), 'utf8');
+  for (const table of ['profiles', 'watchlists', 'watchlist_items', 'alert_rules', 'brief_preferences', 'brief_deliveries']) {
+    assert.match(sql, new RegExp(`CREATE TABLE IF NOT EXISTS ${table}`, 'i'), `${table} table must exist`);
+    assert.match(sql, new RegExp(`ALTER TABLE ${table} ENABLE ROW LEVEL SECURITY`, 'i'), `${table} must enable RLS`);
+  }
+  assert.match(sql, /auth\.uid\(\)\)\s*=\s*user_id/i);
+  assert.match(sql, /UNIQUE\s+NULLS\s+NOT\s+DISTINCT\s*\(user_id, watchlist_id, period_start, cadence\)/i);
+  assert.match(sql, /WITH \(security_invoker\s*=\s*true\)/i);
+  assert.match(sql, /UNIQUE\s*\(id, user_id\)/i, 'watchlists must expose an owner-bound key');
+  assert.match(sql, /FOREIGN KEY\s*\(watchlist_id, user_id\)\s*REFERENCES watchlists\s*\(id, user_id\)/i, 'child rows must reference a watchlist owned by the same user');
+});
