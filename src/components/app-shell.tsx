@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { Route } from "next";
 import { usePathname } from "next/navigation";
 import { primaryNavigation } from "@/lib/navigation";
 import { CommandPalette } from "@/components/command-palette";
@@ -14,7 +15,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <span className="brand__mark">GE</span>
           <span><strong>Global Economic Intelligence</strong><small>Signals for consequential decisions</small></span>
         </Link>
-        <div className="masthead__meta"><span className="source-state"><i /> Official-source monitor</span><CommandPalette /></div>
+        <div className="masthead__meta"><span className="source-state"><i /> Official-source monitor</span><Link className="account-link" href={"/account" as Route}>Watchlists</Link><CommandPalette /></div>
       </header>
       <div className="shell__body">
         <aside className="rail">
