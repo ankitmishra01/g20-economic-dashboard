@@ -1,5 +1,5 @@
-// Writes app/data-snapshot.json: a static copy of the three Supabase tables the
-// dashboard reads. app/data.js falls back to it when Supabase is unreachable
+// Writes public/legacy/data-snapshot.json: a static copy of the three Supabase tables the
+// dashboard reads. public/legacy/data.js falls back to it when Supabase is unreachable
 // (e.g. the free-tier project auto-pauses), so the site still renders.
 // Uses the public read-only key; no secrets involved.
 const fs = require('fs');

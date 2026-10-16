@@ -195,7 +195,7 @@ One year error and coverage:
 | Fiscal balance | 1.68 points | 1.82 points | 79.6% |
 | Current account | 1.50 points | 1.50 points | 80.2% |
 
-The complete 30 row table, including RMSE and shock excluded results, is stored in `app/projections.json` and rendered automatically on the About page. Frontend copy must not hardcode it.
+The complete 30 row table, including RMSE and shock excluded results, is stored in `public/legacy/projections.json` and rendered automatically on the About page. Frontend copy must not hardcode it.
 
 ## Scenario layer
 
@@ -383,8 +383,8 @@ node sync/train-projections.js
 Expected outputs:
 
 - 30 backtest rows in the terminal
-- `app/projections.json`
-- an updated date in `app/projection-history.json`
+- `public/legacy/projections.json`
+- an updated date in `public/legacy/projection-history.json`
 
 Optional read only overrides:
 
@@ -435,7 +435,7 @@ find app api sync -name '*.js' -print0 | xargs -0 -n1 node --check
 ### Artifact size
 
 ```bash
-wc -c app/projections.json
+wc -c public/legacy/projections.json
 ```
 
 The target is below about 300 KB. The current artifact is about 134 KB.
@@ -465,11 +465,11 @@ It seeds Supabase, refreshes the term spread, retrains both forecast systems, ve
 Committed generated files:
 
 ```text
-app/term-spread.js
-app/forecast-model.js
-app/forecast-history.json
-app/projections.json
-app/projection-history.json
+public/legacy/term-spread.js
+public/legacy/forecast-model.js
+public/legacy/forecast-history.json
+public/legacy/projections.json
+public/legacy/projection-history.json
 ```
 
 A failed projection gate exits before the artifact commit.
@@ -487,8 +487,8 @@ vercel deploy --prebuilt --prod --scope ankitmishra01s-projects
 Verify production:
 
 ```bash
-curl -I https://g20-gamma.vercel.app/projections.json
-curl -sS https://g20-gamma.vercel.app/projections.json | node -e \
+curl -I https://g20-gamma.vercel.public/legacy/projections.json
+curl -sS https://g20-gamma.vercel.public/legacy/projections.json | node -e \
   "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const x=JSON.parse(s);console.log(x.schemaVersion,x.generatedDate,x.projections.length)})"
 ```
 
@@ -527,7 +527,7 @@ It validates input length, applies timeouts, tries configured providers and neve
 
 ## Generated artifact reference
 
-### `app/projections.json`
+### `public/legacy/projections.json`
 
 | Field | Meaning |
 |---|---|
@@ -568,13 +568,13 @@ Projection row shape:
 
 Values change with each vintage. Consumers must read the artifact rather than hardcode them.
 
-### `app/projection-history.json`
+### `public/legacy/projection-history.json`
 
 Stores up to 24 dated vintages. A rerun on the same date replaces that date instead of duplicating it.
 
 ### Existing forecast artifacts
 
-`app/forecast-model.js` and `app/forecast-history.json` contain the separate one year growth and recession system used by the forecast strip.
+`public/legacy/forecast-model.js` and `public/legacy/forecast-history.json` contain the separate one year growth and recession system used by the forecast strip.
 
 ## Project structure
 

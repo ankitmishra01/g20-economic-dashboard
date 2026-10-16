@@ -32,10 +32,10 @@ jobs:
 
       - name: Refresh yield-curve term spread + retrain forecast model
         run: |
-          node sync/fetch-term-spread.js   # keyless FRED -> app/term-spread.js (committed static asset)
-          node sync/train-forecast.js      # -> app/forecast-model.js (+ app/forecast-history.json)
-          node sync/train-projections.js   # -> app/projections.json (+ app/projection-history.json)
-          node sync/snapshot.js            # -> app/data-snapshot.json (offline fallback if Supabase pauses)
+          node sync/fetch-term-spread.js   # keyless FRED -> public/legacy/term-spread.js (committed static asset)
+          node sync/train-forecast.js      # -> public/legacy/forecast-model.js (+ public/legacy/forecast-history.json)
+          node sync/train-projections.js   # -> public/legacy/projections.json (+ public/legacy/projection-history.json)
+          node sync/snapshot.js            # -> public/legacy/data-snapshot.json (offline fallback if Supabase pauses)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
@@ -44,7 +44,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         run: |
-          # Publishable key is read-only and already public in app/data.js
+          # Publishable key is read-only and already public in public/legacy/data.js
           KEY="sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG"
           BASE="${SUPABASE_URL:-https://qozknjenyhewmkapsizk.supabase.co}"
           latest=$(curl -sS -H "apikey: $KEY" "$BASE/rest/v1/g20_economic_data?select=fetched_at&order=fetched_at.desc&limit=1" | python3 -c 'import sys,json; print(json.load(sys.stdin)[0]["fetched_at"])')
@@ -62,7 +62,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add app/term-spread.js app/forecast-model.js app/forecast-history.json app/projections.json app/projection-history.json app/data-snapshot.json
+          git add public/legacy/term-spread.js public/legacy/forecast-model.js public/legacy/forecast-history.json public/legacy/projections.json public/legacy/projection-history.json public/legacy/data-snapshot.json
           if git diff --staged --quiet; then
             echo "No changes to commit."
           else

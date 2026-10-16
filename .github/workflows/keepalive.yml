@@ -18,7 +18,7 @@ jobs:
       - name: Query Supabase REST API
         run: |
           # Publishable (anon) key — read-only, and already committed in the repo
-          # (app/data.js). No secret needed.
+          # (public/legacy/data.js). No secret needed.
           KEY="sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG"
           URL="https://qozknjenyhewmkapsizk.supabase.co/rest/v1/g20_indicators?select=key&limit=1"
           echo "Pinging $URL"

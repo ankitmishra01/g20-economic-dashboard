@@ -1,10 +1,12 @@
 .vercel
 .DS_Store
 node_modules/
+.next/
+*.tsbuildinfo
 .env*
 .gstack/
 .worktrees/
 
 # forecast outputs are committed (read by the static frontend)
-!app/forecast-model.js
-!app/forecast-history.json
+!public/legacy/forecast-model.js
+!public/legacy/forecast-history.json
