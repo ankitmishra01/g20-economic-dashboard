@@ -57,3 +57,11 @@ test('personal workflow tables enforce owner-scoped RLS and delivery deduplicati
   assert.match(sql, /UNIQUE\s*\(id, user_id\)/i, 'watchlists must expose an owner-bound key');
   assert.match(sql, /FOREIGN KEY\s*\(watchlist_id, user_id\)\s*REFERENCES watchlists\s*\(id, user_id\)/i, 'child rows must reference a watchlist owned by the same user');
 });
+
+test('rollout seeds the global fact model and enables owner-scoped Realtime tables', () => {
+  const migrations = fs.readdirSync(path.join(ROOT, 'supabase/migrations')).filter((file) => file.endsWith('.sql')).map((file) => fs.readFileSync(path.join(ROOT, 'supabase/migrations', file), 'utf8')).join('\n');
+  assert.match(migrations, /INSERT INTO indicator_series/i);
+  assert.match(migrations, /INSERT INTO economic_observations/i);
+  assert.match(migrations, /supabase_realtime/i);
+  assert.match(migrations, /watchlist_items/i);
+});

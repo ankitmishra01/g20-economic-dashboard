@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { serverEnv } from "@/lib/env";
+import { applyResponseCookies } from "../../../lib/cookie-safety.cjs";
 
 export async function createSupabaseServerClient() {
   const env = serverEnv();
@@ -11,7 +12,7 @@ export async function createSupabaseServerClient() {
   return createServerClient(url, key, {
     cookies: {
       getAll: () => store.getAll(),
-      setAll: (values) => values.forEach(({ name, value, options }) => store.set(name, value, options)),
+      setAll: (values) => applyResponseCookies(values, store),
     },
   });
 }

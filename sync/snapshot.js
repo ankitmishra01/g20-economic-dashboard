@@ -4,6 +4,7 @@
 // Uses the public read-only key; no secrets involved.
 const fs = require('fs');
 const path = require('path');
+const { snapshotDestination } = require('../lib/project-paths.cjs');
 
 const BASE = process.env.SUPABASE_URL || 'https://qozknjenyhewmkapsizk.supabase.co';
 const KEY = process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
@@ -43,7 +44,7 @@ async function fetchAll(table, select, order) {
     quarterly: quarterly.map(r => [r.country_iso3, r.indicator_key, r.period, r.value]),
     meta,
   };
-  const file = path.join(__dirname, '..', 'app', 'data-snapshot.json');
+  const file = snapshotDestination(__dirname);
   fs.writeFileSync(file + '.tmp', JSON.stringify(snap));
   fs.renameSync(file + '.tmp', file);
   console.log(`Snapshot written: ${annual.length} annual, ${quarterly.length} quarterly, ${meta.length} indicators`);

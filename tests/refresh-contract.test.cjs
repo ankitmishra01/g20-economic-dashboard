@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { requireServiceRoleKey, stampRows } = require('../sync/refresh-utils');
+const { snapshotDestination } = require('../lib/project-paths.cjs');
 
 test('rejects a missing service-role key', () => {
   assert.throws(() => requireServiceRoleKey({}), /SUPABASE_SERVICE_ROLE_KEY/);
@@ -41,6 +42,7 @@ test('seed requires a service-role key and stamps every write payload', () => {
   assert.doesNotMatch(source, /sb_publishable_/);
   assert.match(source, /stampRows\(rows, 'fetched_at', RUN_TIMESTAMP\)/);
   assert.match(source, /stampRows\(META, 'updated_at', RUN_TIMESTAMP\)/);
+  assert.match(source, /rpc\/sync_normalized_from_legacy/, 'scheduled source refresh must update the normalized fact model');
 });
 
 const seedSource = () => fs.readFileSync(path.join(__dirname, '../sync/seed.js'), 'utf8');
@@ -80,4 +82,11 @@ test('refresh workflow alerts on failure and verifies the write', () => {
   assert.match(wf, /issues: write/);
   assert.match(wf, /if: failure\(\)/);
   assert.match(wf, /Verify the refresh really wrote to the database/);
+});
+
+test('snapshot refresh writes to the deployed legacy asset directory', () => {
+  assert.equal(
+    snapshotDestination('/repo/sync'),
+    path.normalize('/repo/public/legacy/data-snapshot.json'),
+  );
 });

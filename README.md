@@ -8,14 +8,14 @@ The core promise is precise: official observations, estimates, and forecasts are
 
 | Route | Purpose |
 |---|---|
-| `/` | “What changed” decision brief |
+| `/` | “What changed” decision brief plus auto-refreshing official market references |
 | `/pulse` | Latest supported growth, inflation, labour, and fiscal signals |
 | `/countries` | Country discovery with explicit coverage tiers |
 | `/countries/[iso3]` | Country evidence, provenance, and observed status |
 | `/indicators` | Definitions, cadence, sources, and coverage |
 | `/calendar` | Release ledger and source cadence |
 | `/compare` | URL-shareable cross-country comparisons with sparse-data warnings |
-| `/account` | Optional owner-scoped watchlists |
+| `/account` | Owner-scoped watchlists, items, alerts, and brief preferences |
 | `/legacy/index.html` | Preserved original G20 dashboard |
 
 ## Data coverage and freshness
@@ -37,9 +37,9 @@ The API returns coverage metadata and separates `actual`, `preliminary`, `estima
 - Next.js 16 App Router, React 19, TypeScript, and server-rendered public routes.
 - Supabase Postgres for countries, collections, series, releases, observation vintages, ingestion jobs, and private workflows.
 - Row Level Security keeps public economic data read-only and user data owner-scoped.
-- Versioned `/api/v1` routes provide bounded cursor pagination and explicit provenance.
+- Versioned `/api/v1` routes read the normalized Supabase fact model first, provide bounded cursor pagination and explicit provenance, and fall back to the committed last-valid snapshot during database outages.
 - A committed last-valid snapshot protects the public experience during source or database failures.
-- GitHub Actions split structural refreshes from weekday market/health probes.
+- GitHub Actions split structural, release-sensitive, model, snapshot, and weekday market/health work by cadence.
 - Vercel runs the Next.js application and a protected brief schedule on Fluid Compute.
 
 See [API reference](docs/api.md), [data dictionary](docs/data-dictionary.md), and [operations runbook](docs/operations.md).
@@ -87,7 +87,7 @@ supabase db push --include-all
 supabase db lint --linked --level warning --fail-on error
 ```
 
-The October 2026 migration adds global metadata, source releases, immutable vintages, ingestion runs, watchlists, alert rules, brief preferences, and idempotent delivery records. Child workflow records use owner-bound composite foreign keys in addition to RLS.
+The October 2026 migrations add global metadata, source releases, immutable vintages, ingestion runs, watchlists, alert rules and events, brief preferences, and idempotent delivery records. They backfill the normalized fact model from the validated legacy tables, expose a service-role-only legacy-to-normalized refresh function, and enable owner-filtered Realtime invalidation for personal workflows. Child workflow records use owner-bound composite foreign keys in addition to RLS.
 
 ## Versioned API
 
@@ -95,13 +95,17 @@ The public contract is available under `/api/v1`:
 
 - `countries`, `collections`, and `indicators`
 - `observations?country=USA,CAN&indicator=GDP_GROWTH&status=actual&limit=50`
-- `releases`, `pulse`, and `health`
+- `releases`, `pulse`, `health`, and `market`
 
 List endpoints return `{ data, meta }`, enforce a maximum page size of 500, and include `nextCursor` where another page exists. Invalid queries return a structured `INVALID_QUERY` response.
 
+`GET /api/cron/ingest?indicator=GDP_GROWTH` is a `CRON_SECRET`-protected World Bank ingestion path. It validates official rows, preserves prior vintages, writes normalized observations in batches, and records success or failure in `ingestion_job_runs`.
+
+`GET /api/v1/market` fetches ECB euro reference rates and the FRED US 10-year Treasury series from their official endpoints. The homepage checks it every five minutes, while clearly retaining the sources' daily/reference cadence rather than presenting the values as tick data.
+
 ## Personal workflows and email
 
-Supabase magic links provide optional accounts. Watchlist writes derive ownership from `auth.getUser()` and never trust a submitted user ID. Daily and weekly briefs are deterministic and retain evidence links.
+Supabase magic links provide optional accounts. Watchlists, monitored countries or series, alert rules, and brief preferences derive ownership from `auth.getUser()` and never trust a submitted user ID. Owner-filtered Realtime events refresh the account workspace. Daily and weekly brief workers reserve idempotent delivery records, resolve current watchlist evidence, and retain evidence links.
 
 Email is not mocked. Delivery remains `not_configured` unless a real Resend integration supplies `RESEND_API_KEY` and `BRIEF_EMAIL_ENABLED=true`. This keeps the public product useful without creating paid spend or implying delivery that did not happen.
 

@@ -13,6 +13,11 @@ test('Vercel config uses Next.js, cache policy, and a protected brief schedule',
   assert.equal(fs.existsSync(path.join(root, 'vercel.json')), false);
 });
 
+test('Vercel source uploads exclude local build output', () => {
+  const ignore = fs.readFileSync(path.join(root, '.vercelignore'), 'utf8');
+  assert.match(ignore, /^\.next\/?$/m);
+});
+
 test('README documents setup, Supabase, data truth, legacy route, and rollback', () => {
   const readme = read('README.md');
   for (const term of ['Supabase', 'actual', 'forecast', '/legacy/index.html', 'npm run build', 'Rollback']) assert.match(readme, new RegExp(term, 'i'));

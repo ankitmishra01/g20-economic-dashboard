@@ -1,11 +1,13 @@
 import { PageHeader } from "@/components/page-header";
 import { FreshnessBadge } from "@/components/freshness-badge";
-import { annual, quarterly } from "@/lib/repository";
+import { liveObservations } from "@/lib/live-repository";
 
 const signalKeys = ["GDP_GROWTH", "INFLATION", "UNEMPLOYMENT", "DEBT_GDP"];
-export default function PulsePage() {
+export const dynamic = "force-dynamic";
+export default async function PulsePage() {
+  const observedObservations = (await liveObservations()).filter((row) => row.status === "actual" || row.status === "preliminary");
   const signals = signalKeys.map((key) => {
-    const rows = [...quarterly, ...annual].filter((row) => row.indicator === key).sort((a,b) => String(b.period).localeCompare(String(a.period)));
+    const rows = observedObservations.filter((row) => row.indicator === key).sort((a,b) => String(b.period).localeCompare(String(a.period)));
     const latestPeriod = rows[0]?.period;
     const current = rows.filter((row) => row.period === latestPeriod);
     const values = current.map((row) => Number(row.value)).filter(Number.isFinite).sort((a,b) => a-b);

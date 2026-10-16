@@ -23,3 +23,15 @@ test('operator runbook and source-specific schedules exist', () => {
   assert.ok(fs.existsSync(path.join(root, '.github/workflows/market-refresh.yml')));
   assert.ok(fs.existsSync(path.join(root, 'src/app/api/cron/briefs/route.ts')));
 });
+
+test('refresh scheduling separates release, structural, model, snapshot, and market jobs', () => {
+  const workflows = fs.readdirSync(path.join(root, '.github/workflows')).join('\n');
+  for (const job of ['release', 'structural', 'model', 'snapshot', 'market']) assert.match(workflows, new RegExp(job, 'i'));
+});
+
+test('scheduled model refresh persists generated artifacts', () => {
+  const workflow = read('.github/workflows/model-refresh.yml');
+  assert.match(workflow, /contents: write/);
+  for (const artifact of ['term-spread.js', 'forecast-model.js', 'forecast-history.json', 'projections.json', 'projection-history.json']) assert.match(workflow, new RegExp(artifact.replace('.', '\\.')));
+  assert.match(workflow, /git push/);
+});

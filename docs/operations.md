@@ -10,6 +10,10 @@ The system separates update cadence by economic meaning. Market and public-healt
 4. Re-run the relevant market, release, structural, model, snapshot, or brief job independently.
 5. Open an incident when country coverage drops or delivery failures increase.
 
+## Protected jobs
+
+Call `/api/cron/ingest?indicator=GDP_GROWTH` with `Authorization: Bearer $CRON_SECRET` to run an allow-listed World Bank backfill. The adapter creates an `ingestion_job_runs` row before fetching, writes immutable daily vintages without deleting the last valid data, and closes the run as succeeded or failed. The daily `/api/cron/briefs` job processes only preferences due for the current UTC hour and relies on the delivery uniqueness constraint to prevent duplicate email.
+
 ## Synthetic probes
 
 The free GitHub workflow checks the public health and pulse endpoints. It is also Checkly-ready: configure GET checks for `/`, `/api/v1/health`, `/countries/USA`, and `/legacy/index.html`, expecting HTTP 200 and an observed-only marker in the API response.

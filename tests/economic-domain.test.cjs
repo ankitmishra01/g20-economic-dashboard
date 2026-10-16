@@ -4,10 +4,19 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
+  classifySnapshotObservation,
   classifyFreshness,
   formatObservationLabel,
   summarizeIndicators,
 } = require('../lib/economic-domain.cjs');
+
+test('IMF WEO estimates and future projections are never labeled as actuals', () => {
+  const context = { generatedAt: '2026-10-16T00:00:00Z', frequency: 'annual' };
+  assert.equal(classifySnapshotObservation({ source: 'IMF WEO', period: '2024', ...context }), 'actual');
+  assert.equal(classifySnapshotObservation({ source: 'IMF WEO', period: '2025', ...context }), 'estimate');
+  assert.equal(classifySnapshotObservation({ source: 'IMF WEO', period: '2027', ...context }), 'forecast');
+  assert.equal(classifySnapshotObservation({ source: 'World Bank', period: '2027', ...context }), 'forecast');
+});
 const statusHandler = require('../api/status.js');
 
 test('forecast years never advance latest observed coverage', () => {
