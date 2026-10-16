@@ -2,7 +2,7 @@ name: Offline snapshot refresh
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: ["Structural economic refresh"]
+    workflows: ["Forecast model refresh"]
     types: [completed]
 permissions:
   contents: write

@@ -96,3 +96,10 @@ test('public Realtime refreshes are release-scoped and coalesced', () => {
   assert.match(source, /table: "economic_releases"/);
   assert.match(source, /setTimeout/);
 });
+
+test('brief and alert workers use latest vintages across paginated facts', () => {
+  for (const file of ['src/lib/brief-worker.ts', 'src/lib/alert-worker.ts']) {
+    const source = fs.readFileSync(path.resolve(__dirname, '..', file), 'utf8');
+    assert.match(source, /collectPages/); assert.match(source, /latestSourceVintages/); assert.match(source, /vintage_date/);
+  }
+});

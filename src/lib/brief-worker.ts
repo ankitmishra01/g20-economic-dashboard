@@ -3,10 +3,12 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { deliverBrief } from "@/lib/delivery";
 import { buildBrief } from "../../lib/briefs.cjs";
 import { briefPeriodStart, isBriefDue } from "../../lib/brief-schedule.cjs";
+import { collectPages } from "../../lib/paginated-source.cjs";
+import { latestSourceVintages } from "../../lib/live-data.cjs";
 
 type Preference = { user_id: string; watchlist_id: string | null; cadence: string; delivery_hour: number; delivery_weekday: number | null; email_enabled: boolean };
 type Item = { country_iso3: string | null; series_id: string | null };
-type Observation = { country_iso3: string; series_id: string; period: string; value: number | string; indicator_series: { key: string; source_name: string; source_url: string | null } | Array<{ key: string; source_name: string; source_url: string | null }> };
+type Observation = { country_iso3: string; series_id: string; period: string; value: number | string; vintage_date: string; indicator_series: { key: string; source_name: string; source_url: string | null } | Array<{ key: string; source_name: string; source_url: string | null }> };
 
 const escapeHtml = (value: unknown) => String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
 
@@ -21,8 +23,8 @@ export async function processDueBriefs(now = new Date()) {
     try {
       const { data: itemData, error: itemError } = await client.from("watchlist_items").select("country_iso3,series_id").eq("user_id", preference.user_id).eq("watchlist_id", preference.watchlist_id); if (itemError) throw itemError;
       const items = itemData as Item[]; const countries = new Set(items.flatMap((item) => item.country_iso3 ? [item.country_iso3] : [])); const seriesIds = new Set(items.flatMap((item) => item.series_id ? [item.series_id] : []));
-      const { data: observationData, error: observationError } = await client.from("economic_observations").select("country_iso3,series_id,period,value,indicator_series!inner(key,source_name,source_url)").in("observation_status", ["actual", "preliminary"]).order("period", { ascending: false }).limit(1000); if (observationError) throw observationError;
-      const seen = new Set<string>(); const evidence = (observationData as unknown as Observation[]).flatMap((row) => { const series = Array.isArray(row.indicator_series) ? row.indicator_series[0] : row.indicator_series; const matches = (!countries.size || countries.has(row.country_iso3)) && (!seriesIds.size || seriesIds.has(row.series_id)); const key = `${row.country_iso3}|${row.series_id}`; if (!matches || !series || seen.has(key)) return []; seen.add(key); return [{ country: row.country_iso3, indicator: series.key, period: row.period, value: row.value, source: series.source_name, sourceUrl: series.source_url }]; });
+      const observationData = await collectPages(async (from, to) => { const result = await client.from("economic_observations").select("country_iso3,series_id,period,value,vintage_date,indicator_series!inner(key,source_name,source_url)").in("observation_status", ["actual", "preliminary"]).order("period", { ascending: false }).order("vintage_date", { ascending: false }).range(from, to); if (result.error) throw result.error; return result.data ?? []; });
+      const seen = new Set<string>(); const evidence = latestSourceVintages(observationData as unknown as Observation[]).flatMap((row: Observation) => { const series = Array.isArray(row.indicator_series) ? row.indicator_series[0] : row.indicator_series; const matches = (!countries.size || countries.has(row.country_iso3)) && (!seriesIds.size || seriesIds.has(row.series_id)); const key = `${row.country_iso3}|${row.series_id}`; if (!matches || !series || seen.has(key)) return []; seen.add(key); return [{ country: row.country_iso3, indicator: series.key, period: row.period, value: row.value, source: series.source_name, sourceUrl: series.source_url }]; });
       const brief = buildBrief(evidence, { cadence: preference.cadence, periodStart }); const { data: authData, error: authError } = await client.auth.admin.getUserById(preference.user_id); if (authError || !authData.user?.email) throw authError ?? new Error("Brief recipient has no email");
       const html = `<h1>${escapeHtml(brief.subject)}</h1><p>${escapeHtml(brief.summary)}</p><ul>${brief.evidence.map((item) => `<li><a href="${escapeHtml(item.url ?? "#")}">${escapeHtml(item.label)}</a>: ${escapeHtml(item.value)} · ${escapeHtml(item.source)}</li>`).join("")}</ul>`;
       const sent = await deliverBrief({ to: authData.user.email, subject: brief.subject, html }); if (sent.status !== "sent") throw new Error("Email delivery is not configured");

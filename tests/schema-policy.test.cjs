@@ -65,3 +65,11 @@ test('rollout seeds the global fact model and enables owner-scoped Realtime tabl
   assert.match(migrations, /supabase_realtime/i);
   assert.match(migrations, /watchlist_items/i);
 });
+
+test('canonical refresh upserts series and syncs annual and quarterly facts', () => {
+  const schema = fs.readFileSync(path.join(ROOT, 'sync/schema.sql'), 'utf8');
+  assert.match(schema, /INSERT INTO indicator_series/);
+  assert.match(schema, /g20_economic_data/);
+  assert.match(schema, /g20_quarterly_data/);
+  assert.match(schema, /'quarterly'/);
+});

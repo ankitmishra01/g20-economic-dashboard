@@ -1,9 +1,11 @@
 import "server-only";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { collectPages } from "../../lib/paginated-source.cjs";
+import { latestSourceVintages } from "../../lib/live-data.cjs";
 
 type Rule = { id: string; user_id: string; watchlist_id: string | null; country_iso3: string | null; series_id: string | null; comparator: string; threshold: number | null };
 type Item = { watchlist_id: string; country_iso3: string | null; series_id: string | null };
-type Fact = { series_id: string; country_iso3: string; period: string; value: number | string; fetched_at: string };
+type Fact = { series_id: string; country_iso3: string; period: string; value: number | string; fetched_at: string; vintage_date: string };
 
 function triggered(rule: Rule, current: Fact, previous?: Fact) {
   const value = Number(current.value); const threshold = Number(rule.threshold);
@@ -18,13 +20,13 @@ function triggered(rule: Rule, current: Fact, previous?: Fact) {
 
 export async function evaluateAlertRules() {
   const client = createSupabaseAdminClient(); if (!client) return { evaluated: 0, triggered: 0, status: "not_configured" as const };
-  const [{ data: ruleData, error: ruleError }, { data: itemData, error: itemError }, { data: factData, error: factError }] = await Promise.all([
+  const [{ data: ruleData, error: ruleError }, { data: itemData, error: itemError }, factData] = await Promise.all([
     client.from("alert_rules").select("id,user_id,watchlist_id,country_iso3,series_id,comparator,threshold").eq("is_active", true),
     client.from("watchlist_items").select("watchlist_id,country_iso3,series_id"),
-    client.from("economic_observations").select("series_id,country_iso3,period,value,fetched_at").in("observation_status", ["actual", "preliminary"]).order("period", { ascending: false }).limit(10_000),
+    collectPages(async (from, to) => { const result = await client.from("economic_observations").select("series_id,country_iso3,period,value,fetched_at,vintage_date").in("observation_status", ["actual", "preliminary"]).order("period", { ascending: false }).order("vintage_date", { ascending: false }).range(from, to); if (result.error) throw result.error; return result.data ?? []; }),
   ]);
-  if (ruleError || itemError || factError) throw ruleError ?? itemError ?? factError;
-  const rules = ruleData as Rule[]; const items = itemData as Item[]; const facts = factData as Fact[]; const events = [];
+  if (ruleError || itemError) throw ruleError ?? itemError;
+  const rules = ruleData as Rule[]; const items = itemData as Item[]; const facts = latestSourceVintages(factData as unknown as Fact[]) as Fact[]; const events = [];
   for (const rule of rules) {
     const scopes = rule.country_iso3 || rule.series_id ? [{ country_iso3: rule.country_iso3, series_id: rule.series_id }] : items.filter((item) => item.watchlist_id === rule.watchlist_id);
     for (const scope of scopes) {
