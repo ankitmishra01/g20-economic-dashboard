@@ -84,7 +84,13 @@ function serverContext(country, scope) {
   }
   const { label, members } = scopeMembers(scope);
   const base = members && latest ? buildLatestScopeContext(latest, members, { label }) : buildScopeContext(index, G20, { label: 'G20' });
-  return [base, buildRealtimeContext(realtime)].filter(Boolean).join('\n\n');
+  // Scope questions also get the scope's policy rates and the computed "What changed" items.
+  const isos = members ? members.map((m) => m.iso3) : G20.map((c) => c.iso3);
+  const inScope = (iso) => isos.includes(iso);
+  const nameOf = (iso) => byIso3.get(iso)?.name || iso;
+  const { whatChanged } = loadGlobal();
+  return [base, buildRealtimeContext(realtime, null, { members: isos, nameOf }), whatChanged ? buildBriefContext(whatChanged, inScope) : '']
+    .filter(Boolean).join('\n\n');
 }
 
 // Narration of "What changed" for one scope: built only from the computed items.
