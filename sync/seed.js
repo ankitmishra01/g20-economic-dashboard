@@ -636,9 +636,17 @@ async function main() {
     console.log('  → Run the schema.sql migration in Supabase to create the table.');
   }
 
+  // The normalized fact model (PR #11) is dormant: its countries table only holds the
+  // G20, so global rows fail its foreign keys. The legacy tables above are the system
+  // of record, so a failed normalized sync is a warning, never a failed refresh.
   process.stdout.write('Synchronizing normalized fact model…');
-  const normalized = await syncNormalizedFacts();
-  console.log(` ${Number(normalized.observations ?? 0).toLocaleString()} observations ✓`);
+  try {
+    const normalized = await syncNormalizedFacts();
+    console.log(` ${Number(normalized.observations ?? 0).toLocaleString()} observations ✓`);
+  } catch (e) {
+    console.log(` skipped (${e.message.slice(0, 160)})`);
+    console.log(`::warning::Normalized fact sync skipped (dormant model): ${e.message.slice(0, 160)}`);
+  }
 
   if (failures > 0 || hardErrors > 0) process.exit(1); // signal failure to GitHub Actions
 }
