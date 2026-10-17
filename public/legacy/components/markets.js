@@ -80,9 +80,12 @@
     if (!rt || !rt.markets) { el.hidden = true; return; }
     const dates = [...Object.values(rt.markets).map(x => x.date), rt.fx?.date].filter(Boolean).sort();
     const latest = dates.at(-1);
+    // Two copies side by side so the ticker loops seamlessly (scrolls right to left);
+    // the second copy is hidden from screen readers.
+    const items = stripItems(rt).join('');
     el.innerHTML = `
       <div class="news-strip__lbl"><span class="news-strip__dot"></span>Markets · daily</div>
-      <div class="news-strip__track mkt-track">${stripItems(rt).join('')}</div>
+      <div class="mkt-viewport"><div class="news-strip__track mkt-track"><span class="mkt-group">${items}</span><span class="mkt-group mkt-loop" aria-hidden="true">${items}</span></div></div>
       <div class="mkt-asof" title="Official daily reference data from FRED (U.S. Treasury, EIA, Federal Reserve, Cboe) and the ECB; not tick-by-tick prices.">${freshBadge(latest)}</div>`;
     el.hidden = false;
   };
