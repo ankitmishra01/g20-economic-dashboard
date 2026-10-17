@@ -3,6 +3,7 @@
 // ── Countries grid ────────────────────────────────────────────────────────────
 function renderCountries() {
   const inG20 = !window.Scope || Scope.isG20();
+  if (typeof _coShowAll !== 'undefined') _coShowAll = false;
   const regions = [...new Set(G20.map(c => c.region).filter(Boolean))].sort();
   const incomes = [...new Set(G20.map(c => c.incomeLevel).filter(Boolean))].sort();
   return `
@@ -14,6 +15,7 @@ function renderCountries() {
         <input id="co-search" type="search" placeholder="Search ${G20.length} economies…" oninput="countriesFilter()" aria-label="Search economies">
         ${regions.length > 1 ? `<select id="co-region" onchange="countriesFilter()" aria-label="Region"><option value="">All regions</option>${regions.map(r => `<option>${A.escapeText(r)}</option>`).join('')}</select>` : ''}
         ${incomes.length > 1 ? `<select id="co-income" onchange="countriesFilter()" aria-label="Income group"><option value="">All income groups</option>${incomes.map(r => `<option>${A.escapeText(r)}</option>`).join('')}</select>` : ''}
+        <select id="co-sort" onchange="countriesFilter()" aria-label="Sort economies"><option value="gdp">Largest GDP first</option><option value="name">Name A–Z</option><option value="growth">Fastest growth</option><option value="cpi">Highest inflation</option></select>
         <span class="filter-bar__count" id="co-count">${G20.length} shown</span>
       </div>`}
       <div class="country-grid" id="country-grid">
@@ -26,7 +28,7 @@ function renderCountries() {
           const growthClass = gv === undefined ? '' : gv >= 2 ? 'good' : gv < 0 ? 'bad' : '';
           const infClass    = inf?.value > 8 ? 'bad' : inf?.value > 4 ? 'warn' : '';
           return `
-            <div class="co-card" ${A.navRowAttrs(c.iso3, c.name)} data-name="${A.escapeAttr(c.name.toLowerCase())} ${c.iso3.toLowerCase()}" data-region="${A.escapeAttr(c.region || '')}" data-income="${A.escapeAttr(c.incomeLevel || '')}">
+            <div class="co-card" ${A.navRowAttrs(c.iso3, c.name)} data-name="${A.escapeAttr(c.name.toLowerCase())} ${c.iso3.toLowerCase()}" data-region="${A.escapeAttr(c.region || '')}" data-income="${A.escapeAttr(c.incomeLevel || '')}" data-gdp="${gdp?.value ?? ''}" data-growth="${gv ?? ''}" data-cpi="${inf?.value ?? ''}">
               <div class="co-card__head">
                 <div class="co-flag" style="background-image:url('https://flagcdn.com/${c.code.toLowerCase()}.svg');background-size:cover;background-position:center;"></div>
                 <div>
@@ -55,6 +57,7 @@ function renderCountries() {
             </div>`;
         }).join('')}
       </div>
+      ${inG20 ? '' : `<div class="co-more" id="co-more" hidden><button class="pill-btn" onclick="countriesShowAll()">Show all</button></div>`}
     </div>`;
 }
 
@@ -68,18 +71,37 @@ function tierPill(iso3) {
 }
 window.tierPill = tierPill;
 
+// Wider scopes: sorted (largest GDP first by default) and paged, 48 cards then "Show all".
+const CO_PAGE = 48;
+let _coShowAll = false;
+window.countriesShowAll = function () { _coShowAll = true; window.countriesFilter(); };
 window.countriesFilter = function () {
+  const grid = document.getElementById('country-grid');
+  if (!grid) return;
   const q = (document.getElementById('co-search')?.value || '').trim().toLowerCase();
   const reg = document.getElementById('co-region')?.value || '';
   const inc = document.getElementById('co-income')?.value || '';
-  let shown = 0;
-  document.querySelectorAll('#country-grid .co-card').forEach(card => {
+  const sort = document.getElementById('co-sort')?.value;
+  const cards = [...grid.querySelectorAll('.co-card')];
+  if (sort) {
+    const num = (el, k) => { const v = el.dataset[k]; return v === '' || v == null ? -Infinity : +v; };
+    const cmp = { gdp: (a, b) => num(b, 'gdp') - num(a, 'gdp'), growth: (a, b) => num(b, 'growth') - num(a, 'growth'),
+      cpi: (a, b) => num(b, 'cpi') - num(a, 'cpi'), name: (a, b) => a.dataset.name.localeCompare(b.dataset.name) }[sort];
+    if (cmp) cards.sort(cmp).forEach(c => grid.appendChild(c));
+  }
+  const filtering = !!(q || reg || inc);
+  let match = 0, shown = 0;
+  for (const card of cards) {
     const ok = (!q || card.dataset.name.includes(q)) && (!reg || card.dataset.region === reg) && (!inc || card.dataset.income === inc);
-    card.style.display = ok ? '' : 'none';
-    if (ok) shown++;
-  });
+    if (ok) match++;
+    const visible = ok && (_coShowAll || filtering || !sort || match <= CO_PAGE);
+    card.style.display = visible ? '' : 'none';
+    if (visible) shown++;
+  }
   const count = document.getElementById('co-count');
-  if (count) count.textContent = `${shown} shown`;
+  if (count) count.textContent = shown < match ? `${shown} of ${match} shown` : `${match} shown`;
+  const more = document.getElementById('co-more');
+  if (more) { more.hidden = shown >= match; const b = more.querySelector('button'); if (b) b.textContent = `Show all ${match} economies`; }
 };
 
 // ── Country profile ───────────────────────────────────────────────────────────

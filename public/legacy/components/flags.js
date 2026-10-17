@@ -185,7 +185,7 @@ function renderFlags() {
       <div><span class="panel__title">Risk matrix</span><span class="panel__sub">${G20.length} economies × ${dims.length} indicators · annual, ${refYear} · FX and policy daily</span></div>
       <span class="panel__meta fx-hide-sm">${groupByRegion ? 'grouped by region · ' : ''}sorted by severity-weighted flags</span>
     </div>
-    <div class="table-scroll fx-scroll">
+    <div class="table-scroll fx-scroll${groupByRegion ? ' fx-scroll--tall' : ''}">
       <table class="fx-matrix">
         <thead>
           <tr>
@@ -239,8 +239,8 @@ function renderFlags() {
         <div class="fx-item fx-item--head" aria-hidden="true">
           <span>Economy</span><span>Indicator</span><span class="fx-r">Value</span><span class="fx-r">Threshold</span><span class="fx-r">Year</span><span>Why it matters</span>
         </div>
-        ${list.map(f => `
-          <div class="fx-item" ${A.navRowAttrs(f.country.iso3, f.country.name)}>
+        ${list.map((f, i) => `
+          <div class="fx-item${groupByRegion && i >= 10 ? ' fx-item--more' : ''}" ${A.navRowAttrs(f.country.iso3, f.country.name)}>
             <span class="fx-item__country">${flagImg(f.country)}<span class="fx-item__name">${A.escapeText(f.country.name)}</span></span>
             <span class="fx-item__ind">${A.escapeText(f.dim.short)} <span class="fx-item__unit">(${A.escapeText(f.dim.unit)})</span></span>
             <span class="fx-r fx-item__val fx-val--${sev}">${flagFmt(f.value, f.dim)}${f.dim.unit === 'bp' ? 'bp' : '%'}<span class="fx-item__gap">${f.gap.toFixed(f.dim.unit === 'bp' ? 0 : 1)} ${f.dim.unit === 'bp' ? 'bp' : 'pp'} ${f.dim.cfg.dir === 'above' ? 'above' : 'below'}</span></span>
@@ -249,6 +249,7 @@ function renderFlags() {
             <span class="fx-item__why">${A.escapeText(f.dim.why)}</span>
           </div>`).join('')}
       </div>
+      ${groupByRegion && list.length > 10 ? `<div class="co-more"><button class="pill-btn" onclick="this.closest('.fx-group').classList.add('fx-group--all');this.parentElement.remove()">Show all ${list.length} ${FLAG_SEV[sev].label.toLowerCase()}-severity flags</button></div>` : ''}
     </div>`;
   };
 
@@ -266,7 +267,7 @@ function renderFlags() {
   <div class="sec-head"><div class="sec-head__title">Country × risk matrix<span class="sec-head__sub">value shown in each cell, coloured by severity</span></div></div>
   ${matrix}
 
-  <div class="sec-head"><div class="sec-head__title">Flag detail <span class="count">/ ${allFlags.length}</span><span class="sec-head__sub">grouped by severity · largest breach relative to threshold first</span></div></div>
+  <div class="sec-head"><div class="sec-head__title">Flag detail <span class="count">/ ${allFlags.length}</span><span class="sec-head__sub">grouped by severity · largest breach relative to threshold first${groupByRegion ? ' · top 10 per severity, expand for all' : ''}</span></div></div>
   ${allFlags.length ? `${group('high')}${group('medium')}${group('low')}` : `<div class="panel"><div class="panel__body fx-empty">No thresholds breached in the latest annual data.</div></div>`}
 </div>`;
 }

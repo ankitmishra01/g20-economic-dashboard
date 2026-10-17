@@ -158,7 +158,10 @@ function mountCompareCharts() {
     return;
   }
 
-  const COLORS = window.CATEGORICAL_PALETTE;
+  // The first palette colour is near-black ink; in dark mode it disappears on the dark
+  // panel, so swap it for the dark theme's ink.
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const COLORS = window.CATEGORICAL_PALETTE.map((c, i) => (i === 0 && dark ? 'rgba(242,240,236,1)' : c));
   const theme = A.chartTheme();
 
   const unit = meta?.unit ? ' ' + meta.unit : '';

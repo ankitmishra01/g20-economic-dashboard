@@ -115,3 +115,64 @@
 
   window.loadRealtime = load;
 })();
+
+// ── Quick search: jump to any economy's profile from anywhere ("/" or the header button) ──
+(function () {
+  let sel = 0, hits = [];
+  const all = () => (window.COUNTRY_REGISTRY?.countries || []);
+  const flag = c => c.iso2 ? `<span class="bar-row__flag" style="background-image:url('https://flagcdn.com/${c.iso2.toLowerCase()}.svg');background-size:cover;background-position:center"></span>` : '';
+  function search(q) {
+    q = q.trim().toLowerCase();
+    const list = all();
+    if (!q) return [...list].sort((a, b) => (window.G20Data?.getLatest(b.iso3, 'GDP')?.value || 0) - (window.G20Data?.getLatest(a.iso3, 'GDP')?.value || 0)).slice(0, 8);
+    const score = c => {
+      const n = c.name.toLowerCase();
+      if (c.iso3.toLowerCase() === q || (c.iso2 || '').toLowerCase() === q) return 0;
+      if (n.startsWith(q)) return 1;
+      if (n.split(/[\s,()-]+/).some(w => w.startsWith(q))) return 2;
+      if (n.includes(q)) return 3;
+      if ((c.region || '').toLowerCase().includes(q)) return 4;
+      return 9;
+    };
+    return list.map(c => [score(c), c]).filter(([s]) => s < 9).sort((a, b) => a[0] - b[0] || a[1].name.localeCompare(b[1].name)).slice(0, 8).map(([, c]) => c);
+  }
+  function paint() {
+    const el = document.getElementById('qs-list');
+    if (!el) return;
+    el.innerHTML = hits.length ? hits.map((c, i) => `
+      <div class="qs__item${i === sel ? ' active' : ''}" role="option" aria-selected="${i === sel}" data-i="${i}" onmousedown="event.preventDefault();quickSearchGo(${i})">
+        ${flag(c)}<span class="qs__name">${A.escapeText(c.name)}</span><span class="qs__meta">${A.escapeText(c.iso3)} · ${A.escapeText(c.region || '')}</span>
+      </div>`).join('') : '<div class="qs__empty">No economy matches.</div>';
+  }
+  window.quickSearchGo = function (i) {
+    const c = hits[i]; if (!c) return;
+    closeQuickSearch();
+    navTo(`country/${c.iso3}`);
+  };
+  window.openQuickSearch = function () {
+    const box = document.getElementById('qs'), bd = document.getElementById('qs-backdrop'), inp = document.getElementById('qs-input');
+    if (!box) return;
+    box.hidden = false; bd.hidden = false; inp.value = ''; sel = 0; hits = search(''); paint(); inp.focus();
+  };
+  window.closeQuickSearch = function () {
+    const box = document.getElementById('qs'), bd = document.getElementById('qs-backdrop');
+    if (box) box.hidden = true; if (bd) bd.hidden = true;
+  };
+  document.addEventListener('DOMContentLoaded', () => {
+    const inp = document.getElementById('qs-input');
+    if (inp) {
+      inp.addEventListener('input', () => { sel = 0; hits = search(inp.value); paint(); });
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'ArrowDown') { sel = Math.min(hits.length - 1, sel + 1); paint(); e.preventDefault(); }
+        else if (e.key === 'ArrowUp') { sel = Math.max(0, sel - 1); paint(); e.preventDefault(); }
+        else if (e.key === 'Enter') { quickSearchGo(sel); e.preventDefault(); }
+        else if (e.key === 'Escape') { closeQuickSearch(); e.preventDefault(); }
+      });
+    }
+    document.addEventListener('keydown', e => {
+      const tag = document.activeElement?.tagName;
+      if (e.key === '/' && tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT' && !e.metaKey && !e.ctrlKey) { e.preventDefault(); openQuickSearch(); }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openQuickSearch(); }
+    });
+  });
+})();

@@ -32,6 +32,9 @@ const MONO = { family: "'JetBrains Mono', 'Geist Mono', monospace" };
 // Functions, not constants: Chart.js option colors are static once a chart is
 // created, so these must be re-resolved from CSS custom properties fresh at
 // each mount — including a dark-mode-triggered remount.
+// Wider scopes (160+ economies): charts show a readable subset; the full list stays in the tables.
+const AI_WIDE = () => !!(window.Scope && !Scope.isG20());
+const AI_HAS_EXPOSURE = c => AI_LABOR_EXPOSURE[c.name] != null;
 function tick() { return { font: { ...MONO, size: 11 }, color: A.chartTheme().tick }; }
 function chartGrid() { return A.chartTheme().grid; }
 function tt() {
@@ -110,7 +113,7 @@ function renderAIEconomy() {
 
   <!-- Section 1: AI Readiness Rankings -->
   <div class="sec-head">
-    <div class="sec-head__title">AI Readiness <span class="sec-head__sub">5 dimensions · Infrastructure · Talent · Governance · Investment · Econ. Readiness</span></div>
+    <div class="sec-head__title">AI Readiness <span class="sec-head__sub">5 dimensions · Infrastructure · Talent · Governance · Investment · Econ. Readiness${AI_WIDE() ? ' · top 25 by score' : ''}</span></div>
   </div>
   <div class="panel mb-20">
     <div class="panel__body" style="padding:16px 20px">
@@ -120,7 +123,7 @@ function renderAIEconomy() {
 
   <!-- Section 2: 2028 Trajectory + Risers/Fallers -->
   <div class="sec-head">
-    <div class="sec-head__title">2028 Trajectory <span class="sec-head__sub">projected score change from current</span></div>
+    <div class="sec-head__title">2028 Trajectory <span class="sec-head__sub">projected score change from current${AI_WIDE() ? ' · 12 biggest risers and 8 biggest fallers' : ''}</span></div>
   </div>
   <div class="row-2 mb-20">
     <div class="panel">
@@ -138,7 +141,7 @@ function renderAIEconomy() {
 
   <!-- Section 3: Displacement vs Readiness (money shot) -->
   <div class="sec-head">
-    <div class="sec-head__title">Displacement Risk vs AI Readiness <span class="sec-head__sub">flag size = GDP per capita PPP · x = AI job exposure (IMF 2024) · y = AI readiness · quadrant lines at 40% exposure and a score of 60</span></div>
+    <div class="sec-head__title">Displacement Risk vs AI Readiness <span class="sec-head__sub">flag size = GDP per capita PPP · x = AI job exposure (IMF 2024) · y = AI readiness · quadrant lines at 40% exposure and a score of 60 · only economies covered by the IMF exposure estimates</span></div>
   </div>
   <div class="panel mb-20">
     <div class="panel__body" style="padding:16px 20px">
@@ -258,7 +261,7 @@ function renderAIEconomyEditorial(aiData, g20sorted) {
   });
 
   // Paragraph 1 — The Divide
-  const p1 = `The ${PEER()} AI landscape is bifurcated along familiar economic lines. The five leading economies (${top5.map(c => `<strong>${A.escapeText(c.name)}</strong>`).join(', ')}) average ${top5avg}/100 on the AI Trajectory Index, while the bottom five (${bottom5.map(c => A.escapeText(c.name)).join(', ')}) average just ${bot5avg}/100. That ${gap}-point gap reflects decades of divergent investment in digital infrastructure, STEM pipelines, and technology governance frameworks. The ${PEER()} median stands at ${medScore}/100, with ${g20sorted.filter(c => c.ai.total_score >= medScore).length} of 19 economies at or above that threshold.`;
+  const p1 = `The ${PEER()} AI landscape is bifurcated along familiar economic lines. The five leading economies (${top5.map(c => `<strong>${A.escapeText(c.name)}</strong>`).join(', ')}) average ${top5avg}/100 on the AI Trajectory Index, while the bottom five (${bottom5.map(c => A.escapeText(c.name)).join(', ')}) average just ${bot5avg}/100. That ${gap}-point gap reflects decades of divergent investment in digital infrastructure, STEM pipelines, and technology governance frameworks. The ${PEER()} median stands at ${medScore}/100, with ${g20sorted.filter(c => c.ai.total_score >= medScore).length} of ${g20sorted.length} economies at or above that threshold.`;
 
   // Paragraph 2 — The Risk Zone
   let p2;
@@ -278,7 +281,7 @@ function renderAIEconomyEditorial(aiData, g20sorted) {
   // Paragraph 4 — The Productivity Lag
   let p4;
   if (growthOutliers.length > 0) {
-    const outlierText = growthOutliers.map(c => {
+    const outlierText = growthOutliers.slice(0, 4).map(c => {
       const g = window.G20Data.getLatest(c.iso3, 'GDP_GROWTH', { annualOnly: true });
       return `<strong>${A.escapeText(c.name)}</strong> (${g.value.toFixed(1)}% GDP growth at ${c.ai.total_score}/100 AI readiness)`;
     }).join(' and ');
@@ -327,6 +330,7 @@ function mountReadinessChart(sorted) {
   const canvas = document.getElementById('ai-readiness-chart');
   if (!canvas) return;
 
+  if (AI_WIDE()) sorted = sorted.slice(0, 25);
   const labels = sorted.map(c => c.name);
   const dims = ['infrastructure', 'talent', 'governance', 'investment', 'economic_readiness'];
 
@@ -388,7 +392,8 @@ function mountTrajectoryChart(sorted) {
 
   // Change = projected 2028 score minus current score, so the bar, label and table always agree.
   const delta = scoreDelta;
-  const byTraj = [...sorted].sort((a, b) => delta(b) - delta(a));
+  let byTraj = [...sorted].sort((a, b) => delta(b) - delta(a));
+  if (AI_WIDE() && byTraj.length > 20) byTraj = [...byTraj.slice(0, 12), ...byTraj.slice(-8)]; // biggest risers + fallers
 
   const existing = Chart.getChart(canvas); if (existing) existing.destroy();
   new Chart(canvas.getContext('2d'), {
@@ -458,6 +463,7 @@ function mountScatterChart(sorted) {
 
   // Preload flag images (PNG raster — reliable in canvas, unlike SVG) so we can
   // draw country flags instead of plain bubbles. Cached on window across renders.
+  sorted = sorted.filter(AI_HAS_EXPOSURE); // never plot a default exposure
   preloadFlags(sorted);
 
   const regions = [...new Set(sorted.map(c => c.region))];
@@ -472,7 +478,7 @@ function mountScatterChart(sorted) {
         // hover hit-radius, kept in step with the drawn flag so tooltips line up.
         const flagW = ppp?.value ? Math.max(20, Math.min(34, Math.sqrt(ppp.value / 1000) * 3.6)) : 24;
         return {
-          x: AI_LABOR_EXPOSURE[c.name] ?? 35,
+          x: AI_LABOR_EXPOSURE[c.name],
           y: c.ai.total_score,
           r: flagW / 2,
           _meta: { name: c.name, iso3: c.iso3, code: c.code, score: c.ai.total_score, exposure: AI_LABOR_EXPOSURE[c.name], ppp: ppp?.value, flagW },
@@ -748,9 +754,16 @@ function mountGrowthChart(sorted) {
         ctx2.textAlign = 'left';
         ctx2.textBaseline = 'middle';
         const ds = chart.getDatasetMeta(0);
+        let show = null;
+        if (AI_WIDE()) {
+          const gdp = iso => window.G20Data.getLatest(iso, 'GDP', { annualOnly: true })?.value || 0;
+          const big = [...points].sort((a, b) => gdp(b._meta.iso3) - gdp(a._meta.iso3)).slice(0, 15);
+          const ext = [...points].sort((a, b) => Math.abs(b.y) - Math.abs(a.y)).slice(0, 4);
+          show = new Set([...big, ...ext].map(d => d._meta.iso3));
+        }
         ds.data.forEach((pt, i) => {
           const d = points[i];
-          if (!d) return;
+          if (!d || (show && !show.has(d._meta.iso3))) return;
           ctx2.fillText(d._meta.iso3, pt.x + 9, pt.y);
         });
         ctx2.restore();
@@ -797,8 +810,8 @@ function renderRiskTable(sorted) {
   const el = document.getElementById('ai-risk-table');
   if (!el) return;
 
-  const classified = sorted.map(c => {
-    const exp = AI_LABOR_EXPOSURE[c.name] ?? 35;
+  const classified = sorted.filter(AI_HAS_EXPOSURE).map(c => {
+    const exp = AI_LABOR_EXPOSURE[c.name];
     const score = c.ai.total_score;
     let zone, cls;
     if (exp >= 40 && score < 60)       { zone = 'Risk Zone';     cls = 'ai-risk-zone'; }

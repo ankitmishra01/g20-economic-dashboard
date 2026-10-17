@@ -239,10 +239,10 @@
           <div class="nw-stats">
             <div><span class="nw-stats__n">${S.articles.length}</span><span class="nw-stats__l">headlines</span></div>
             <div><span class="nw-stats__n">${freshCount}</span><span class="nw-stats__l">last 3 h</span></div>
-            <div><span class="nw-stats__n">${new Set(S.articles.flatMap(a => a.countries)).size}</span><span class="nw-stats__l">G20 members</span></div>
+            <div><span class="nw-stats__n">${new Set(S.articles.flatMap(a => a.countries)).size}</span><span class="nw-stats__l">economies</span></div>
           </div>
           <div class="nw-pulse__h">Countries <span class="nw-muted">· click to filter</span></div>
-          ${cRows || '<div class="nw-muted">No G20 members mentioned.</div>'}
+          ${cRows || '<div class="nw-muted">No economies mentioned.</div>'}
           <div class="nw-pulse__h">Topics</div>
           ${tRows || '<div class="nw-muted">No topics detected.</div>'}
         </div>
