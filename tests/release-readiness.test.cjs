@@ -5,10 +5,10 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
 
-test('Vercel config uses Next.js, cache policy, and a protected brief schedule', () => {
+test('Vercel config uses Next.js and cache policy, with the retired brief cron switched off', () => {
   const config = read('vercel.ts');
   assert.match(config, /framework:\s*["']nextjs/);
-  assert.match(config, /api\/cron\/briefs/);
+  assert.match(config, /crons:\s*\[\s*\]/);
   assert.match(config, /cacheControl/);
   assert.equal(fs.existsSync(path.join(root, 'vercel.json')), false);
 });

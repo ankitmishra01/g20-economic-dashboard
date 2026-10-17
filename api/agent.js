@@ -1,5 +1,10 @@
 // AI analyst proxy: keeps provider API keys out of the browser.
-// POST /api/agent  { question: string, context: string }
+// POST /api/agent  { question: string, country?: ISO3, scope?: 'g20' }
+//
+// The data context is built here from the published snapshot
+// (public/legacy/data-snapshot.json + projections.json); any numbers a client
+// sends are ignored. Requests must come from an allowed origin (lib/cors.cjs)
+// and are rate limited per client (lib/rate-limit.cjs).
 //
 // Provider order (first key found wins):
 //   1. GEMINI_API_KEY    Google AI Studio free tier (default model gemini-flash-latest)
@@ -7,8 +12,30 @@
 // Optional: AI_MODEL overrides the model id for whichever provider is used.
 // Set keys in Vercel project environment variables, never in code.
 
+const { isAllowedOrigin } = require('../lib/cors.cjs');
+const { createRateLimiter, clientKey } = require('../lib/rate-limit.cjs');
+const { indexSnapshot, buildScopeContext, buildCountryContext } = require('../lib/agent-context.cjs');
+const G20 = require('../lib/g20.cjs');
+
 const MAX_QUESTION = 500;
 const MAX_CONTEXT = 20000;
+const limiter = createRateLimiter({ limit: Number(process.env.AGENT_RATE_LIMIT || 10), windowMs: 60_000 });
+
+let cachedIndex = null;
+let cachedProjections = null;
+function loadData() {
+  if (!cachedIndex) {
+    cachedIndex = indexSnapshot(require('../public/legacy/data-snapshot.json'));
+    try { cachedProjections = require('../public/legacy/projections.json'); } catch (_) { cachedProjections = null; }
+  }
+  return { index: cachedIndex, projections: cachedProjections };
+}
+
+function serverContext(country) {
+  const { index, projections } = loadData();
+  if (country && G20.some((c) => c.iso3 === country)) return buildCountryContext(index, projections, country, G20);
+  return buildScopeContext(index, G20, { label: 'G20' });
+}
 const TIMEOUT_MS = 12000; // per attempt
 // Free-tier Gemini models each have their own quota, so try them in order.
 const GEMINI_CHAIN = ['gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-3.1-flash-lite'];
@@ -67,12 +94,27 @@ async function callAnthropic(key, model, userMessage, signal) {
 }
 
 module.exports = async function handler(req, res) {
+  const origin = req.headers?.origin;
+  res.setHeader('Vary', 'Origin');
+  if (!isAllowedOrigin(origin)) return res.status(403).json({ code: 'FORBIDDEN_ORIGIN', error: 'Requests are only accepted from the dashboard' });
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Methods', 'POST');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    return res.status(204).end();
+  }
   if (req.method !== 'POST') return res.status(405).end();
-  res.setHeader('Access-Control-Allow-Origin', '*');
 
-  const { question, context } = req.body || {};
+  const gate = limiter(clientKey(req));
+  if (!gate.allowed) {
+    res.setHeader('Retry-After', String(Math.ceil((gate.retryAfterMs || 60_000) / 1000)));
+    return res.status(429).json({ code: 'RATE_LIMITED', error: 'Too many questions in a short time. Try again in a minute.' });
+  }
+
+  const { question, country } = req.body || {};
   if (!question || typeof question !== 'string') return res.status(400).json({ error: 'question is required' });
   if (question.length > MAX_QUESTION) return res.status(400).json({ error: `question is limited to ${MAX_QUESTION} characters` });
+  const iso3 = typeof country === 'string' && /^[A-Z]{3}$/.test(country) ? country : null;
 
   const geminiKey = process.env.GEMINI_API_KEY;
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
@@ -81,7 +123,7 @@ module.exports = async function handler(req, res) {
     return res.status(503).json({ code: 'NO_AI_KEY', error: 'No AI provider key is configured (set GEMINI_API_KEY or ANTHROPIC_API_KEY)' });
   }
 
-  const ctx = typeof context === 'string' ? context.slice(0, MAX_CONTEXT) : '';
+  const ctx = serverContext(iso3).slice(0, MAX_CONTEXT);
   const userMessage = ctx ? `Live data snapshot:\n${ctx}\n\nQuestion: ${question}` : `Question: ${question}`;
 
   const provider = geminiKey ? 'gemini' : 'anthropic';

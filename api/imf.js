@@ -1,11 +1,12 @@
 // IMF data endpoint — now reads from Supabase (seeded by sync/seed.js).
 // Kept for debugging: GET /api/imf?indicator=DEBT_GDP
 
+const { applyCors } = require('../lib/cors.cjs');
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://qozknjenyhewmkapsizk.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_KEY || 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
 
 module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  applyCors(req, res); // allow-listed origins only (lib/cors.cjs)
   res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600');
 
   const { indicator = 'DEBT_GDP' } = req.query;

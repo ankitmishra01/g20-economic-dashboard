@@ -2,6 +2,7 @@
 // GET /api/status — returns row counts, latest year per indicator, missing countries.
 // No auth needed — read-only, useful for debugging and monitoring.
 
+const { applyCors } = require('../lib/cors.cjs');
 const SUPABASE_URL = 'https://qozknjenyhewmkapsizk.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
 const { summarizeIndicators } = require('../lib/economic-domain.cjs');
@@ -44,7 +45,7 @@ function buildStatusPayload(allRows, options = {}) {
 }
 
 module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  applyCors(req, res); // allow-listed origins only (lib/cors.cjs)
   res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=600');
 
   try {

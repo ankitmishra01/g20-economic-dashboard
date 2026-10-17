@@ -2,6 +2,7 @@
 // Fetches G20/global economy feeds, parses XML, filters by keyword, returns JSON.
 // Vercel caches the response for 15 min at the edge.
 
+const { applyCors } = require('../lib/cors.cjs');
 const FEEDS = [
   { url: 'https://feeds.bbci.co.uk/news/business/rss.xml',           name: 'BBC Business',    filter: false },
   { url: 'https://www.imf.org/en/News/rss?type=pressreleases',        name: 'IMF',             filter: false },
@@ -22,7 +23,7 @@ const ECON_KEYWORDS = [
 ];
 
 module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  applyCors(req, res); // allow-listed origins only (lib/cors.cjs)
   res.setHeader('Cache-Control', 'public, max-age=900, stale-while-revalidate=300');
 
   try {
