@@ -33,11 +33,13 @@ jobs:
         run: node sync/realtime.js
       - name: Build What changed (data/what-changed.json)
         run: node sync/what-changed.js
+      - name: AI Trajectory Index scores by ISO3 (data/ai-index.json)
+        run: node sync/ai-index.js
       - name: Commit realtime.json and What changed if they changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add public/legacy/data/realtime.json public/legacy/data/what-changed.json public/legacy/data/previous
+          git add public/legacy/data/realtime.json public/legacy/data/what-changed.json public/legacy/data/previous public/legacy/data/ai-index.json public/legacy/data/ai-index
           if git diff --staged --quiet; then echo "No change"; exit 0; fi
           git commit -m "chore: refresh daily market data [skip ci]"
           .github/scripts/push-with-retry.sh

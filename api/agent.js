@@ -20,7 +20,7 @@ const fs = require('fs');
 const path = require('path');
 const {
   indexSnapshot, buildScopeContext, buildCountryContext,
-  buildLatestScopeContext, buildLatestCountryContext, buildRealtimeContext, buildBriefContext,
+  buildLatestScopeContext, buildLatestCountryContext, buildRealtimeContext, buildBriefContext, buildAiIndexContext,
 } = require('../lib/agent-context.cjs');
 const G20 = require('../lib/g20.cjs');
 const REGISTRY = require('../public/legacy/countries.json');
@@ -54,6 +54,7 @@ function loadGlobal() {
       latest: attempt(() => require('../public/legacy/data/latest.json')),
       realtime: attempt(() => require('../public/legacy/data/realtime.json')),
       whatChanged: attempt(() => require('../public/legacy/data/what-changed.json')),
+      aiIndex: attempt(() => require('../public/legacy/data/ai-index.json')),
     };
   }
   return cachedGlobal;
@@ -81,12 +82,12 @@ function scopeMembers(scope) {
 
 function serverContext(country, scope) {
   const { index, projections } = loadData();
-  const { latest, realtime } = loadGlobal();
+  const { latest, realtime, aiIndex } = loadGlobal();
   if (country && G20.some((c) => c.iso3 === country)) {
-    return [buildCountryContext(index, projections, country, G20), buildRealtimeContext(realtime, country)].filter(Boolean).join('\n\n');
+    return [buildCountryContext(index, projections, country, G20), buildRealtimeContext(realtime, country), buildAiIndexContext(aiIndex, country)].filter(Boolean).join('\n\n');
   }
   if (country && byIso3.has(country) && latest) {
-    return [buildLatestCountryContext(latest, countryShard(country), byIso3.get(country)), buildRealtimeContext(realtime, country)].filter(Boolean).join('\n\n');
+    return [buildLatestCountryContext(latest, countryShard(country), byIso3.get(country)), buildRealtimeContext(realtime, country), buildAiIndexContext(aiIndex, country)].filter(Boolean).join('\n\n');
   }
   const { label, members } = scopeMembers(scope);
   const base = members && latest ? buildLatestScopeContext(latest, members, { label }) : buildScopeContext(index, G20, { label: 'G20' });

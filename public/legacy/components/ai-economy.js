@@ -1,5 +1,7 @@
 // AI Economy page — powered by AI Trajectory Index (github.com/ankitmishra01/ai-trajectory-index)
 
+// Same-origin copy refreshed by sync/ai-index.js (live ATI scores keyed by ISO3); GitHub baseline as fallback.
+const AI_INDEX_URL = 'data/ai-index.json';
 const AI_TRAJECTORY_URL = 'https://raw.githubusercontent.com/ankitmishra01/ai-trajectory-index/main/data/countries.json';
 
 // IMF AI labour exposure: % of jobs highly exposed to AI displacement
@@ -11,6 +13,13 @@ const AI_LABOR_EXPOSURE = {
   'Saudi Arabia': 36, 'Brazil': 35, 'Mexico': 32, 'Turkey': 30,
   'South Africa': 29, 'India': 28, 'Indonesia': 26,
 };
+
+// The same IMF figures keyed by ISO3, so lookups work under every scope's display names.
+const AI_EXPOSURE_ISO3 = {
+  USA: 60, CAN: 57, GBR: 55, JPN: 54, FRA: 53, AUS: 53, DEU: 52, ITA: 50, KOR: 48, RUS: 42,
+  CHN: 40, ARG: 37, SAU: 36, BRA: 35, MEX: 32, TUR: 30, ZAF: 29, IND: 28, IDN: 26,
+};
+const exposureOf = c => (c && c.iso3 && AI_EXPOSURE_ISO3[c.iso3] != null ? AI_EXPOSURE_ISO3[c.iso3] : null);
 
 const DIM_LABELS = {
   infrastructure:     'Infrastructure',
@@ -34,7 +43,7 @@ const MONO = { family: "'JetBrains Mono', 'Geist Mono', monospace" };
 // each mount — including a dark-mode-triggered remount.
 // Wider scopes (160+ economies): charts show a readable subset; the full list stays in the tables.
 const AI_WIDE = () => !!(window.Scope && !Scope.isG20());
-const AI_HAS_EXPOSURE = c => AI_LABOR_EXPOSURE[c.name] != null;
+const AI_HAS_EXPOSURE = c => exposureOf(c) != null;
 function tick() { return { font: { ...MONO, size: 11 }, color: A.chartTheme().tick }; }
 function chartGrid() { return A.chartTheme().grid; }
 function tt() {
@@ -48,18 +57,42 @@ function tt() {
 }
 
 // ── Data fetch ────────────────────────────────────────────────────────────────
+async function loadAIIndex() {
+  // ISO3 -> ATI record, plus metadata for the "as of" note. Shared with country profiles and Ask AI.
+  if (window._aiIndex) return window._aiIndex;
+  try {
+    const r = await fetch(AI_INDEX_URL, { cache: 'no-cache', signal: AbortSignal.timeout(8000) });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const j = await r.json();
+    window._aiIndex = { countries: j.countries || {}, asOf: j.asOf, generatedAt: j.generatedAt, source: j.source, usingLiveData: j.usingLiveData, coverage: j.coverage };
+  } catch (_) {
+    // Fallback: ATI's published baseline file (carries iso3 since the index added ISO codes).
+    const r = await fetch(AI_TRAJECTORY_URL, { signal: AbortSignal.timeout(10000) });
+    if (!r.ok) throw new Error('AI Trajectory fetch failed');
+    const { countries } = await r.json();
+    const byIso = {};
+    (countries || []).forEach(c => { if (c.iso3) byIso[c.iso3] = { ...c, data_source: 'baseline' }; });
+    window._aiIndex = { countries: byIso, asOf: null, source: 'static', usingLiveData: false, coverage: null };
+  }
+  return window._aiIndex;
+}
+
 async function loadAITrajectoryData() {
-  if (window._aiTrajectoryData) return window._aiTrajectoryData;
-  const r = await fetch(AI_TRAJECTORY_URL, { signal: AbortSignal.timeout(10000) });
-  if (!r.ok) throw new Error('AI Trajectory fetch failed');
-  const { countries } = await r.json();
-  const G20_NAMES = new Set(window.G20.map(c => c.name));
-  const g20Data = countries.filter(c => G20_NAMES.has(c.name));
-  // Build lookup by name
+  // Keyed by the scope's display name for the page code below, but matched by ISO3,
+  // so names like "Viet Nam", "Türkiye" or "United Arab Emirates" never drop out.
+  const idx = await loadAIIndex();
   const byName = {};
-  g20Data.forEach(c => { byName[c.name] = c; });
-  window._aiTrajectoryData = byName;
+  (window.G20 || []).forEach(c => { const rec = c.iso3 && idx.countries[c.iso3]; if (rec) byName[c.name] = rec; });
   return byName;
+}
+
+function aiIndexNote() {
+  const idx = window._aiIndex;
+  if (!idx) return '';
+  const when = idx.asOf ? new Date(idx.asOf).toISOString().slice(0, 10) : null;
+  const kind = idx.usingLiveData ? 'live scores' : 'published baseline scores';
+  const share = idx.coverage?.live_indicator_share != null ? ` · ${Math.round(idx.coverage.live_indicator_share)}% of indicators live` : '';
+  return `${kind}${when ? ` as of ${when}` : ''}${share}`;
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
@@ -171,7 +204,8 @@ function renderAIEconomy() {
     <h4>Data sources</h4>
     AI readiness scores and 2028 trajectory from
     <a href="https://ai-trajectory-index.vercel.app" target="_blank" rel="noopener">AI Trajectory Index</a>,
-    covering 186 countries scored across Infrastructure, Talent, Governance, Investment, and Economic Readiness.
+    covering 186 economies scored across Infrastructure, Talent, Governance, Investment, and Economic Readiness, matched to this dashboard by ISO3 code
+    (<span id="ai-index-asof">loading…</span>). Economies the index does not cover are left out rather than estimated.
     AI labour exposure (% jobs highly exposed) from IMF Working Paper "Artificial Intelligence and the Future of Work" (2024).
     GDP growth and GDP per capita PPP from World Bank Open Data via Supabase.
   </div>
@@ -196,6 +230,13 @@ async function mountAIEconomyCharts() {
       if (el) el.parentNode.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-4);font-size:12px;font-family:var(--font-mono)">AI Trajectory data unavailable</div>';
     });
     return;
+  }
+
+  const asofEl = document.getElementById('ai-index-asof');
+  if (asofEl) {
+    const inScope = window.G20.filter(c => c.iso3 !== 'EUU');
+    const covered = inScope.filter(c => aiData[c.name]).length;
+    asofEl.textContent = `${aiIndexNote()} · ${covered} of ${inScope.length} economies in scope covered`;
   }
 
   // Build sorted G20 list
@@ -252,7 +293,7 @@ function renderAIEconomyEditorial(aiData, g20sorted) {
   const watchList  = trajSorted.slice(-3).reverse();
 
   const riskZone = g20sorted.filter(c =>
-    (AI_LABOR_EXPOSURE[c.name] ?? 35) >= 40 && c.ai.total_score < 60
+    (exposureOf(c) ?? -1) >= 40 && c.ai.total_score < 60
   );
 
   const growthOutliers = g20sorted.filter(c => {
@@ -268,7 +309,7 @@ function renderAIEconomyEditorial(aiData, g20sorted) {
   if (riskZone.length === 0) {
     p2 = `The displacement risk analysis reveals no ${PEER()} economy in the danger quadrant, where high AI job exposure combines with low institutional readiness, at current trajectory. However, several emerging-market members sit close to the threshold. As AI adoption accelerates in services and light manufacturing through 2027, readiness investment will determine whether the ${PEER()}'s developing economies manage the workforce transition or absorb it as structural unemployment.`;
   } else {
-    const rzNames = riskZone.map(c => `<strong>${A.escapeText(c.name)}</strong> (${AI_LABOR_EXPOSURE[c.name]}% exposure, ${c.ai.total_score}/100 readiness)`);
+    const rzNames = riskZone.map(c => `<strong>${A.escapeText(c.name)}</strong> (${exposureOf(c)}% exposure, ${c.ai.total_score}/100 readiness)`);
     p2 = `The displacement risk analysis flags ${riskZone.length} ${PEER()} ${riskZone.length === 1 ? 'economy' : 'economies'} in the risk quadrant, where AI job exposure exceeds 40% and readiness scores fall below 60: ${rzNames.join('; ')}. These economies face compressed timelines, with automation reaching their workforces faster than the institutional infrastructure needed to retrain and redeploy affected workers. Unless readiness investment accelerates materially before 2027, structural displacement rather than cyclical unemployment becomes the more likely outcome.`;
   }
 
@@ -478,10 +519,10 @@ function mountScatterChart(sorted) {
         // hover hit-radius, kept in step with the drawn flag so tooltips line up.
         const flagW = ppp?.value ? Math.max(20, Math.min(34, Math.sqrt(ppp.value / 1000) * 3.6)) : 24;
         return {
-          x: AI_LABOR_EXPOSURE[c.name],
+          x: exposureOf(c),
           y: c.ai.total_score,
           r: flagW / 2,
-          _meta: { name: c.name, iso3: c.iso3, code: c.code, score: c.ai.total_score, exposure: AI_LABOR_EXPOSURE[c.name], ppp: ppp?.value, flagW },
+          _meta: { name: c.name, iso3: c.iso3, code: c.code, score: c.ai.total_score, exposure: exposureOf(c), ppp: ppp?.value, flagW },
         };
       }),
       // Bubble itself is invisible — the flag is drawn on top in afterDatasetsDraw.
@@ -811,7 +852,7 @@ function renderRiskTable(sorted) {
   if (!el) return;
 
   const classified = sorted.filter(AI_HAS_EXPOSURE).map(c => {
-    const exp = AI_LABOR_EXPOSURE[c.name];
+    const exp = exposureOf(c);
     const score = c.ai.total_score;
     let zone, cls;
     if (exp >= 40 && score < 60)       { zone = 'Risk Zone';     cls = 'ai-risk-zone'; }
