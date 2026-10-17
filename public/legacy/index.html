@@ -3,8 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>G20 Economic Monitor</title>
-  <meta name="description" content="Live G20 economic data — GDP, inflation, unemployment, debt, and more. Powered by World Bank, IMF, and OECD open data.">
+  <title>G20 Monitor · Global economic intelligence for 217 economies</title>
+  <meta name="description" content="Live macro data, central bank policy rates, FX and AI readiness for 217 economies, with what changed and why it matters. Official data from the World Bank, IMF, OECD, BIS, ECB and FRED.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://g20-gamma.vercel.app/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="G20 Monitor">
+  <meta property="og:title" content="G20 Monitor · Global economic intelligence for 217 economies">
+  <meta property="og:description" content="Live macro data, policy rates, FX and AI readiness for 217 economies, with what changed and why it matters.">
+  <meta property="og:url" content="https://g20-gamma.vercel.app/">
+  <meta property="og:image" content="https://g20-gamma.vercel.app/og/default">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://g20-gamma.vercel.app/og/default">
 
   <!-- Fallback font while Geist loads from @font-face in CSS -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,6 +26,7 @@
   <link rel="stylesheet" href="styles/main.css">
   <link rel="stylesheet" href="styles/news.css">
   <link rel="stylesheet" href="styles/flags.css">
+  <link rel="stylesheet" href="styles/print.css">
 
   <!-- Apply saved theme before paint to avoid flash -->
   <script>(function(){var t=new URLSearchParams(location.search).get('theme');try{if(t==='dark'||t==='light')localStorage.setItem('g20-theme',t);}catch(e){}if((t||localStorage.getItem('g20-theme'))==='dark')document.getElementById('html-root').setAttribute('data-theme','dark');})();</script>
@@ -96,6 +109,10 @@
           <span id="live-time">Live · —</span>
         </div>
         <button class="pill-btn qs-btn" id="qs-btn" onclick="openQuickSearch()" title="Find any economy (press /)" aria-haspopup="dialog"><span class="qs-btn__lbl">Find economy</span><kbd class="qs-kbd">/</kbd></button>
+        <div class="share-wrap">
+          <button class="pill-btn share-btn" id="share-btn" onclick="toggleShareMenu()" aria-haspopup="menu" aria-expanded="false" title="Share this view or download a one-page brief"><span class="share-btn__lbl">Share</span></button>
+          <div class="share-menu" id="share-menu" role="menu" hidden></div>
+        </div>
         <button class="pill-btn" id="present-btn" onclick="togglePresentMode()" aria-pressed="false" title="Larger text and charts for screen sharing">Present</button>
         <button class="ask-btn" id="ask-btn" onclick="toggleAgentDrawer()">
           <svg class="ai-glyph" viewBox="0 0 14 14" fill="currentColor">
@@ -183,6 +200,7 @@
 <script src="components/markets.js"></script>
 <script src="components/whatchanged.js"></script>
 <script src="components/tour.js"></script>
+<script src="components/share.js"></script>
 <!-- Forecast model + yield-curve term spread (generated offline) + inference -->
 <script src="forecast-model.js"></script>
 <script src="term-spread.js"></script>

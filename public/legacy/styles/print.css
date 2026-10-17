@@ -1,0 +1,56 @@
+/* ── Share menu (header) ─────────────────────────────────────────────────────── */
+.share-wrap { position: relative; display: inline-flex; }
+.share-menu { position: absolute; top: calc(100% + 8px); right: 0; width: 300px; z-index: 92; background: var(--bg); border: 1px solid var(--rule); border-radius: 8px; box-shadow: 0 18px 48px rgba(0,0,0,0.25); padding: 6px; }
+.share-menu[hidden] { display: none; }
+.share-menu__head { padding: 8px 10px 6px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.share-menu__item { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; padding: 8px 10px; border: 0; border-radius: 6px; background: none; color: var(--text-1); font: inherit; font-size: 13px; text-align: left; text-decoration: none; cursor: pointer; }
+.share-menu__item:hover, .share-menu__item:focus-visible { background: var(--bg-3); outline: none; }
+.share-menu__meta { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+@media (max-width: 640px) { .share-btn__lbl { display: none; } .share-btn::before { content: "↗"; font-size: 13px; } }
+
+/* ── One-page brief ──────────────────────────────────────────────────────────── */
+.print-brief { display: none; }
+/* On-screen preview (?print=brief): the brief replaces the dashboard. */
+body.print-preview > *:not(#print-brief) { display: none !important; }
+body.print-preview #print-brief { display: block; max-width: 794px; margin: 24px auto; padding: 32px 36px; background: #fff; color: #0A0A0A; box-shadow: 0 2px 24px rgba(0,0,0,0.12); }
+
+.print-brief { font-family: var(--font-sans, 'Inter Tight', Arial, sans-serif); color: #0A0A0A; font-size: 10pt; line-height: 1.45; }
+.print-brief .pb-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5pt solid #0A0A0A; padding-bottom: 6pt; }
+.print-brief .pb-brand { display: flex; align-items: center; gap: 8pt; }
+.print-brief .pb-mark { display: inline-flex; align-items: center; justify-content: center; width: 26pt; height: 26pt; border-radius: 5pt; background: #0A0A0A; color: #F5F5F2; font-weight: 700; font-size: 9pt; }
+.print-brief .pb-brand strong { display: block; font-size: 11pt; }
+.print-brief .pb-brand em, .print-brief .pb-date { font-style: normal; font-family: var(--font-mono, 'JetBrains Mono', monospace); font-size: 7.4pt; letter-spacing: 0.08em; text-transform: uppercase; color: #555; }
+.print-brief .pb-title { display: flex; align-items: center; gap: 12pt; margin: 12pt 0 4pt; }
+.print-brief .pb-flag { width: 44pt; height: 29pt; object-fit: cover; border-radius: 3pt; border: 0.5pt solid #ddd; }
+.print-brief h1 { margin: 0; font-size: 22pt; line-height: 1.1; letter-spacing: -0.01em; }
+.print-brief .pb-sub { font-family: var(--font-mono, 'JetBrains Mono', monospace); font-size: 8pt; color: #555; margin-top: 2pt; }
+.print-brief .pb-headline { margin: 6pt 0 8pt; font-size: 11pt; font-weight: 600; }
+.print-brief .pb-kpis { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 0.75pt solid #0A0A0A; border-left: 0.5pt solid #ccc; margin: 6pt 0 8pt; }
+.print-brief .pb-kpi { padding: 6pt 8pt; border-right: 0.5pt solid #ccc; border-bottom: 0.5pt solid #ccc; }
+.print-brief .pb-kpi__lbl { font-family: var(--font-mono, 'JetBrains Mono', monospace); font-size: 6.8pt; letter-spacing: 0.08em; text-transform: uppercase; color: #666; }
+.print-brief .pb-kpi__val { font-size: 15pt; font-weight: 600; margin-top: 1pt; }
+.print-brief .pb-kpi__sub { font-family: var(--font-mono, 'JetBrains Mono', monospace); font-size: 7pt; color: #777; }
+.print-brief .pb-markets { display: flex; border: 0.5pt solid #ccc; margin-bottom: 8pt; }
+.print-brief .pb-mk { flex: 1 1 0; padding: 6pt 8pt; border-right: 0.5pt solid #ccc; }
+.print-brief .pb-mk:last-child { border-right: 0; }
+.print-brief .pb-mk span { display: block; font-family: var(--font-mono, 'JetBrains Mono', monospace); font-size: 6.8pt; letter-spacing: 0.08em; text-transform: uppercase; color: #666; }
+.print-brief .pb-mk strong { display: block; font-size: 13pt; }
+.print-brief .pb-mk em { display: block; font-style: normal; font-size: 7.2pt; color: #555; }
+.print-brief .pb-cols { display: grid; grid-template-columns: 1.65fr 1fr; gap: 14pt; }
+.print-brief h2 { font-size: 8pt; font-family: var(--font-mono, 'JetBrains Mono', monospace); letter-spacing: 0.1em; text-transform: uppercase; color: #0A0A0A; border-bottom: 0.5pt solid #0A0A0A; padding-bottom: 2pt; margin: 4pt 0 5pt; }
+.print-brief .pb-text p { margin: 0 0 5pt; text-align: justify; }
+.print-brief ul, .print-brief ol { margin: 0 0 6pt; padding-left: 12pt; }
+.print-brief li { margin-bottom: 3pt; }
+.print-brief li em { font-style: normal; font-family: var(--font-mono, 'JetBrains Mono', monospace); font-size: 7pt; color: #777; }
+.print-brief .pb-muted { color: #777; font-size: 8.5pt; }
+.print-brief .pb-foot { display: flex; justify-content: space-between; gap: 12pt; margin-top: 10pt; padding-top: 5pt; border-top: 0.5pt solid #ccc; font-family: var(--font-mono, 'JetBrains Mono', monospace); font-size: 6.6pt; color: #666; }
+.print-brief .pb-foot span:last-child { white-space: nowrap; color: #0A0A0A; }
+
+@media print {
+  @page { size: auto; margin: 12mm 13mm; }
+  body.printing-brief { background: #fff !important; }
+  body.printing-brief > *:not(#print-brief) { display: none !important; }
+  body.printing-brief #print-brief { display: block !important; max-width: none; margin: 0; padding: 0; box-shadow: none; }
+  .print-brief, .print-brief * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .print-brief .pb-kpis, .print-brief .pb-markets, .print-brief .pb-cols { break-inside: avoid; }
+}
