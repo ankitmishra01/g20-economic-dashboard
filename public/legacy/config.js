@@ -1,27 +1,16 @@
 // G20 country registry, indicator codes, and threshold config.
 
-const G20 = [
-  { code: 'US', iso3: 'USA', name: 'United States',   flag: '🇺🇸', region: 'Americas' },
-  { code: 'GB', iso3: 'GBR', name: 'United Kingdom',  flag: '🇬🇧', region: 'Europe'   },
-  { code: 'CA', iso3: 'CAN', name: 'Canada',          flag: '🇨🇦', region: 'Americas' },
-  { code: 'DE', iso3: 'DEU', name: 'Germany',         flag: '🇩🇪', region: 'Europe'   },
-  { code: 'FR', iso3: 'FRA', name: 'France',          flag: '🇫🇷', region: 'Europe'   },
-  { code: 'IT', iso3: 'ITA', name: 'Italy',           flag: '🇮🇹', region: 'Europe'   },
-  { code: 'JP', iso3: 'JPN', name: 'Japan',           flag: '🇯🇵', region: 'Asia'     },
-  { code: 'AU', iso3: 'AUS', name: 'Australia',       flag: '🇦🇺', region: 'Asia'     },
-  { code: 'KR', iso3: 'KOR', name: 'South Korea',     flag: '🇰🇷', region: 'Asia'     },
-  { code: 'CN', iso3: 'CHN', name: 'China',           flag: '🇨🇳', region: 'Asia'     },
-  { code: 'IN', iso3: 'IND', name: 'India',           flag: '🇮🇳', region: 'Asia'     },
-  { code: 'BR', iso3: 'BRA', name: 'Brazil',          flag: '🇧🇷', region: 'Americas' },
-  { code: 'MX', iso3: 'MEX', name: 'Mexico',          flag: '🇲🇽', region: 'Americas' },
-  { code: 'AR', iso3: 'ARG', name: 'Argentina',       flag: '🇦🇷', region: 'Americas' },
-  { code: 'RU', iso3: 'RUS', name: 'Russia',          flag: '🇷🇺', region: 'Europe'   },
-  { code: 'SA', iso3: 'SAU', name: 'Saudi Arabia',    flag: '🇸🇦', region: 'Middle East' },
-  { code: 'ZA', iso3: 'ZAF', name: 'South Africa',   flag: '🇿🇦', region: 'Africa'   },
-  { code: 'ID', iso3: 'IDN', name: 'Indonesia',       flag: '🇮🇩', region: 'Asia'     },
-  { code: 'TR', iso3: 'TUR', name: 'Turkey',          flag: '🇹🇷', region: 'Europe'   },
-  { code: 'EU', iso3: 'EUU', name: 'European Union',  flag: '🇪🇺', region: 'Europe'   },
-];
+// Dashboard countries come from the generated registry (countries.js, built by
+// sync/registry.js from the World Bank country API). The default scope is the
+// G20 in its original order, names and regions.
+const _flagEmoji = (iso2) => String.fromCodePoint(...[...iso2.toUpperCase()].map(ch => 0x1F1E6 + ch.charCodeAt(0) - 65));
+const G20 = (window.COUNTRY_REGISTRY?.collections?.g20?.members || []).map(m => ({
+  code: m.iso2, iso3: m.iso3, name: m.name, flag: _flagEmoji(m.iso2), region: m.region,
+}));
+
+// Latest year treated as observed data. Later years (for example IMF debt
+// paths to 2031) are projections and never appear as "latest".
+const LATEST_ACTUAL_YEAR = new Date().getFullYear() - 1;
 
 // World Bank indicator codes + display metadata.
 // source field is displayed in KPI tiles and insight responses.
@@ -88,6 +77,11 @@ const NAV_ITEMS = [
 
 // Expose globally for all components.
 window.G20         = G20;
+window.LATEST_ACTUAL_YEAR = LATEST_ACTUAL_YEAR;
+window.COUNTRY_SETS = {
+  advanced: new Set((window.COUNTRY_REGISTRY?.collections?.g20?.members || []).filter(m => m.advanced).map(m => m.iso3)),
+  commodityExporters: new Set((window.COUNTRY_REGISTRY?.collections?.g20?.members || []).filter(m => m.commodityExporter).map(m => m.iso3)),
+};
 window.INDICATORS  = INDICATORS;
 window.FLAGS_CONFIG = FLAGS_CONFIG;
 window.NAV_ITEMS   = NAV_ITEMS;

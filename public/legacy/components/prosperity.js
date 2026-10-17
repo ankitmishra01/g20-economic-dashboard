@@ -9,7 +9,7 @@ const REGION_COLORS = {
 };
 
 // Growth is a multi-year average: one year is too noisy to describe a trajectory.
-const PROS_GROWTH_FROM = 2023, PROS_GROWTH_TO = 2025;
+const PROS_GROWTH_TO = window.LATEST_ACTUAL_YEAR, PROS_GROWTH_FROM = PROS_GROWTH_TO - 2;
 function avgGrowth(iso3) {
   const s = window.G20_DATA?.[iso3]?.GDP_GROWTH || {};
   const vals = [];

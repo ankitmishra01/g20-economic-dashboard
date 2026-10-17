@@ -14,12 +14,15 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
     // If Supabase is unreachable (free tier auto-pauses), fall back to the static snapshot.
     let rows = [];
     let snapshot = null;
+    // Only fetch the countries the dashboard shows. The table now holds every
+    // economy in the registry, so an unfiltered read would download them all.
+    const scopeIso3 = (window.G20 || []).map(c => c.iso3).join(',');
     try {
       const PAGE = 1000;
       let offset = 0;
       while (true) {
         const r = await fetch(
-          `${SUPABASE_URL}/rest/v1/g20_economic_data?select=country_iso3,indicator_key,year,value&order=year.asc,country_iso3.asc,indicator_key.asc`,
+          `${SUPABASE_URL}/rest/v1/g20_economic_data?select=country_iso3,indicator_key,year,value&country_iso3=in.(${scopeIso3})&order=year.asc,country_iso3.asc,indicator_key.asc`,
           {
             signal: AbortSignal.timeout(8000),
             headers: {
@@ -55,8 +58,8 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
     }
 
     // Build _latest: most recent non-null value per country per indicator,
-    // capped at 2025 so IMF forward projections (2026+) don't appear as current data.
-    const LATEST_YEAR_CAP = 2025;
+    // capped at the latest actual year so IMF forward projections never appear as current data.
+    const LATEST_YEAR_CAP = window.LATEST_ACTUAL_YEAR;
     _data._latest = {};
     for (const iso3 of Object.keys(_data)) {
       if (iso3 === '_latest') continue;
@@ -171,16 +174,16 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
     const raw = window.G20_DATA?.[iso3]?.[key] || {};
     return Object.entries(raw)
       .map(([y, v]) => ({ year: parseInt(y, 10), value: v }))
-      .filter(d => d.value !== null && !isNaN(d.value) && (!fromYear || d.year >= fromYear) && d.year <= 2025)
+      .filter(d => d.value !== null && !isNaN(d.value) && (!fromYear || d.year >= fromYear) && d.year <= window.LATEST_ACTUAL_YEAR)
       .sort((a, b) => a.year - b.year);
   }
 
   // Get historical + IMF forecast series [{year, value, isProjection}].
-  // Historical years ≤ 2025 are flagged isProjection: false; 2026+ are IMF forecasts.
+  // Years up to LATEST_ACTUAL_YEAR are flagged isProjection: false; later years are IMF forecasts.
   function getSeriesWithProjections(iso3, key, fromYear) {
     const raw = window.G20_DATA?.[iso3]?.[key] || {};
     return Object.entries(raw)
-      .map(([y, v]) => ({ year: parseInt(y, 10), value: v, isProjection: parseInt(y, 10) > 2025 }))
+      .map(([y, v]) => ({ year: parseInt(y, 10), value: v, isProjection: parseInt(y, 10) > window.LATEST_ACTUAL_YEAR }))
       .filter(d => d.value !== null && !isNaN(d.value) && (!fromYear || d.year >= fromYear))
       .sort((a, b) => a.year - b.year);
   }

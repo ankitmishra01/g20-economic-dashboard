@@ -1,21 +1,37 @@
 #!/usr/bin/env node
-// G20 Economic Dashboard — Supabase data pipeline
-// Fetches World Bank + IMF open data and seeds into Supabase.
-// Run: node sync/seed.js
+// Global economic dashboard — Supabase data pipeline
+// Fetches World Bank + IMF + OECD + FRED open data for every economy in the
+// country registry (public/legacy/countries.json) and seeds Supabase.
+// Run:      node sync/seed.js
+// Dry run:  node sync/seed.js --dry-run   (no credentials needed, no writes;
+//           validates the fetched rows and writes sync/report.json)
 // Requires: Node 18+ (native fetch). No npm install needed.
 // Credentials can be passed via env vars (used by GitHub Actions).
 
+import { createRequire } from 'module';
 import refreshUtils from './refresh-utils.js';
 
+const require = createRequire(import.meta.url);
+const registry = require('../lib/registry.cjs');
+const H = require('../lib/seed-helpers.cjs');
+
+const DRY_RUN = process.argv.includes('--dry-run');
 const { requireServiceRoleKey, stampRows } = refreshUtils;
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://qozknjenyhewmkapsizk.supabase.co';
-const SUPABASE_SERVICE_ROLE_KEY = requireServiceRoleKey();
+const SUPABASE_SERVICE_ROLE_KEY = DRY_RUN ? null : requireServiceRoleKey();
 const RUN_TIMESTAMP = new Date().toISOString();
 
-const G20_ISO3 = [
-  'USA','GBR','CAN','DEU','FRA','ITA','JPN','AUS','KOR',
-  'CHN','IND','BRA','MEX','ARG','RUS','SAU','ZAF','IDN','TUR','EUU',
-];
+// Latest year treated as observed data; later IMF years are projections.
+const LATEST_ACTUAL_YEAR = new Date().getUTCFullYear() - 1;
+
+// Every economy in the registry, plus the EU aggregate (a G20 member the
+// dashboard shows as a comparator; World Bank publishes it as EUU).
+const ALL_ISO3 = new Set([...registry.countryIso3(), 'EUU']);
+const G20_ISO3 = registry.g20Iso3({ includeEU: true });
+
+// Rows written in this run (dry run validates these instead of the database).
+const FETCHED = new Map();
+let HAS_PROJECTION_COLUMN = true;
 
 // OECD member countries that are also G20 members
 const OECD_G20 = ['AUS','CAN','DEU','FRA','GBR','ITA','JPN','KOR','MEX','TUR','USA'];
@@ -51,50 +67,15 @@ const WB_INDICATORS = {
   GINI:           'SI.POV.GINI',          // Gini inequality index (World Bank)
 };
 
-// IMF countries (EUU not available in IMF DataMapper)
-const IMF_COUNTRIES = [
-  'USA','GBR','CAN','DEU','FRA','ITA','JPN','AUS','KOR',
-  'CHN','IND','BRA','MEX','ARG','RUS','SAU','ZAF','IDN','TUR',
-];
+// G20 economies used for the strict coverage checks (EUU excluded: not in IMF).
+const EXPECTED_COUNTRIES = registry.g20Iso3();
 
-// EUU excluded from validation (not in IMF; fewer WB indicators)
-const EXPECTED_COUNTRIES = [
-  'USA','GBR','CAN','DEU','FRA','ITA','JPN','AUS','KOR',
-  'CHN','IND','BRA','MEX','ARG','RUS','SAU','ZAF','IDN','TUR',
-];
-
-const YEARS = '2000:2025';
-const YEAR_END = YEARS.split(':')[1];
+const YEARS = `2000:${LATEST_ACTUAL_YEAR}`;
+const YEAR_END = String(LATEST_ACTUAL_YEAR);
 const CHUNK_SIZE = 500;
 
-// Plausible value ranges for sanity checking
-const RANGES = {
-  GDP:          [1e8,   45e12],  // $100M – $45T (USA 2025 ~$30T; allow headroom)
-  GDP_GROWTH:   [-30,   30],     // % — COVID dip was ~-10% for most; Argentina/Russia edge cases
-  INFLATION:    [-5,    400],    // Argentina hit ~290% in 2023
-  UNEMPLOYMENT: [0,     40],
-  CURRENT_ACC:  [-35,   35],     // % of GDP
-  GDP_CAPITA:   [500,   110000],
-  CO2_CAPITA:   [0,     25],     // tonnes; Australia/Saudi ~15, USA ~14
-  TRADE_GDP:    [0,     200],    // % of GDP; G20 none over 100 except Saudi ~60
-  POPULATION:   [1e6,   2e9],
-  DEBT_GDP:     [0,     350],    // % of GDP; Japan ~260%, some others high
-  HEALTH_EXP:   [1,     25],    // % GDP; USA ~17%, most OECD ~8-12%
-  RD_EXP:       [0,     7],     // % GDP; Korea ~4.9%, most 1-3%
-  GINI:         [20,    70],    // 0-100 index; ZAF ~63, DEN ~28
-  FISCAL_BAL:   [-30,   20],   // % GDP net lending/borrowing; most -10 to +5
-  GDP_CAPITA_PPP:[500, 130000], // PPP-adjusted; LUX >100K, G20 range 5K-90K
-  EXPORTS_GDP:  [5,    80],    // % GDP; SAU ~40%, KOR ~44%, CHN ~20%
-  CAPITAL_FORM: [10,   50],    // % GDP; typical range 15-35%
-  MANUFACTURING:[5,    40],    // % GDP; CHN ~28%, SAU ~10%, USA ~11%
-  FDI_INFLOWS:  [-5,   20],    // % GDP; volatile; can be negative (repatriation)
-  EDUC_EXP:     [1,    10],    // % GDP; typical 4-7%
-  LIFE_EXPECT:  [55,   90],    // years; ZAF ~64, JPN ~84
-  YOUTH_UNEMP:  [3,    60],    // %; ZAF ~55%, SAU ~30%, JPN ~4%
-  FEMALE_LFP:   [15,   80],    // %; SAU ~20%, ZAF~47%, CHN ~60%, CAN ~61%
-  RESEARCHERS:  [0,   10000],  // per million; KOR ~8500, SAU ~300
-  TAX_REVENUE:  [5,    50],    // % GDP; most 15-40%
-};
+// Plausible value ranges for every economy (lib/seed-helpers.cjs).
+const RANGES = H.GLOBAL_RANGES;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -104,9 +85,19 @@ function chunk(arr, size) {
   return out;
 }
 
-async function upsert(rows) {
-  if (!rows.length) return;
-  const stampedRows = stampRows(rows, 'fetched_at', RUN_TIMESTAMP);
+async function upsert(inputRows) {
+  // Drop implausible values (unit or source errors) before they reach the dashboard.
+  const { kept: rows, dropped } = H.splitByRange(inputRows, RANGES);
+  if (dropped.length) {
+    const sample = dropped.slice(0, 3).map(r => `${r.country_iso3} ${r.year}=${r.value}`).join(', ');
+    process.stdout.write(` (dropped ${dropped.length} out-of-range: ${sample}${dropped.length > 3 ? '…' : ''})`);
+  }
+  H.mergeRows(FETCHED, rows);
+  if (DRY_RUN || !rows.length) return;
+  const payload = HAS_PROJECTION_COLUMN
+    ? rows.map(r => ({ ...r, is_projection: r.is_projection === true }))
+    : rows.map(({ is_projection, ...r }) => r);
+  const stampedRows = stampRows(payload, 'fetched_at', RUN_TIMESTAMP);
   for (const batch of chunk(stampedRows, CHUNK_SIZE)) {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/g20_economic_data`, {
       method: 'POST',
@@ -125,6 +116,18 @@ async function upsert(rows) {
   }
 }
 
+// The is_projection column arrives with migration 20261017000000; until it is
+// applied the seed still runs and simply omits the flag.
+async function detectProjectionColumn() {
+  if (DRY_RUN) return true;
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/g20_economic_data?select=is_projection&limit=1`, {
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` },
+  });
+  if (r.ok) return true;
+  console.log('::warning::g20_economic_data.is_projection is missing; apply the latest Supabase migration. Writing without the flag.');
+  return false;
+}
+
 async function syncNormalizedFacts() {
   const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/sync_normalized_from_legacy`, {
     method: 'POST',
@@ -138,31 +141,21 @@ async function syncNormalizedFacts() {
 // ── World Bank ────────────────────────────────────────────────────────────────
 
 async function fetchWB(indicatorKey, wbCode) {
-  const countries = G20_ISO3.join(';');
-  const url = `https://api.worldbank.org/v2/country/${countries}/indicator/${wbCode}?format=json&date=${YEARS}&per_page=2000`;
-
-  const r = await fetchWithRetry(url, {
-    headers: { 'User-Agent': 'G20Dashboard-Seed/1.0' },
-    signal: AbortSignal.timeout(45000),
-  });
-  if (!r.ok) throw new Error(`World Bank API ${r.status} for ${wbCode}`);
-
-  const json = await r.json();
-  if (!Array.isArray(json) || json.length < 2 || !json[1]) {
-    console.warn(`  ⚠ No data returned for ${indicatorKey}`);
-    return [];
+  // country/all returns every economy and aggregate; keep registry economies (+ EUU).
+  const rows = [];
+  for (let page = 1, pages = 1; page <= pages; page++) {
+    const url = `https://api.worldbank.org/v2/country/all/indicator/${wbCode}?format=json&date=${YEARS}&per_page=20000&page=${page}`;
+    const r = await fetchWithRetry(url, { headers: { 'User-Agent': 'G20Dashboard-Seed/1.0' } });
+    if (!r.ok) throw new Error(`World Bank API ${r.status} for ${wbCode}`);
+    const json = await r.json();
+    if (!Array.isArray(json) || json.length < 2 || !json[1]) {
+      if (page === 1) console.warn(`  ⚠ No data returned for ${indicatorKey}`);
+      break;
+    }
+    pages = Number(json[0]?.pages) || 1;
+    rows.push(...H.parseWorldBankRows(json, indicatorKey, ALL_ISO3).map(r => ({ ...r, is_projection: false })));
   }
-
-  return json[1]
-    .filter(d => d.value !== null && d.value !== undefined)
-    .map(d => ({
-      country_iso3:  d.countryiso3code || d.country?.id,
-      indicator_key: indicatorKey,
-      year:          parseInt(d.date, 10),
-      value:         d.value,
-      source:        'worldbank',
-    }))
-    .filter(d => d.country_iso3 && G20_ISO3.includes(d.country_iso3));
+  return rows;
 }
 
 // ── IMF World Economic Outlook (WEO) ─────────────────────────────────────────
@@ -170,66 +163,27 @@ async function fetchWB(indicatorKey, wbCode) {
 // authoritative and timely multi-country source for macro indicators, with 2025
 // estimates available from the April 2026 WEO release.
 
-async function fetchIMFWEO(weoCode, indicatorKey, transform) {
-  const url = `https://www.imf.org/external/datamapper/api/v1/${weoCode}`;
+async function fetchIMFJson(code) {
+  const url = `https://www.imf.org/external/datamapper/api/v1/${code}`;
   const r = await fetchWithRetry(url, {
     headers: { 'User-Agent': 'G20Dashboard-Seed/1.0', 'Accept': 'application/json' },
-    signal: AbortSignal.timeout(45000),
   });
-  if (!r.ok) throw new Error(`IMF WEO ${r.status} for ${weoCode}`);
+  if (!r.ok) throw new Error(`IMF DataMapper ${r.status} for ${code}`);
+  return r.json();
+}
 
-  const json = await r.json();
-  const values = json?.values?.[weoCode] || {};
-  const yearCap = parseInt(YEAR_END, 10); // exclude forward projections (WEO goes to 2030)
-
-  const rows = [];
-  for (const [imfCode, years] of Object.entries(values)) {
-    if (!IMF_COUNTRIES.includes(imfCode)) continue;
-    for (const [yearStr, value] of Object.entries(years)) {
-      const year = parseInt(yearStr, 10);
-      if (year < 2000 || year > yearCap || value === null || value === undefined) continue;
-      const finalValue = transform ? transform(value) : value;
-      rows.push({
-        country_iso3:  imfCode,
-        indicator_key: indicatorKey,
-        year,
-        value:         finalValue,
-        source:        'imf_weo',
-      });
-    }
-  }
-  return rows;
+async function fetchIMFWEO(weoCode, indicatorKey, transform) {
+  // Observed years only (WEO projections run several years ahead).
+  return H.parseImfRows(await fetchIMFJson(weoCode), weoCode, indicatorKey, ALL_ISO3,
+    { latestActualYear: LATEST_ACTUAL_YEAR, transform, source: 'imf_weo' });
 }
 
 // ── IMF DataMapper ────────────────────────────────────────────────────────────
 
 async function fetchIMF() {
-  const url = 'https://www.imf.org/external/datamapper/api/v1/GGXWDG_NGDP';
-  const r = await fetchWithRetry(url, {
-    headers: { 'User-Agent': 'G20Dashboard-Seed/1.0', 'Accept': 'application/json' },
-    signal: AbortSignal.timeout(45000),
-  });
-  if (!r.ok) throw new Error(`IMF API ${r.status}`);
-
-  const json = await r.json();
-  const values = json?.values?.GGXWDG_NGDP || {};
-
-  const rows = [];
-  for (const [imfCode, years] of Object.entries(values)) {
-    if (!IMF_COUNTRIES.includes(imfCode)) continue;
-    for (const [yearStr, value] of Object.entries(years)) {
-      const year = parseInt(yearStr, 10);
-      if (year < 2000 || value === null || value === undefined) continue;
-      rows.push({
-        country_iso3:  imfCode,
-        indicator_key: 'DEBT_GDP',
-        year,
-        value,
-        source: 'imf',
-      });
-    }
-  }
-  return rows;
+  // Debt paths keep IMF projections, flagged is_projection so they are never shown as latest.
+  return H.parseImfRows(await fetchIMFJson('GGXWDG_NGDP'), 'GGXWDG_NGDP', 'DEBT_GDP', ALL_ISO3,
+    { latestActualYear: LATEST_ACTUAL_YEAR, keepProjections: true, source: 'imf' });
 }
 
 // ── OECD ─────────────────────────────────────────────────────────────────────
@@ -300,88 +254,59 @@ async function fetchOECDRD() {
 
 // ── Validation ────────────────────────────────────────────────────────────────
 
-async function validate() {
-  console.log('\n── Data Quality Report ──────────────────────────');
-
-  // Fetch all rows to validate (paginated)
+async function loadDatabaseRows() {
   const PAGE = 1000;
+  const select = HAS_PROJECTION_COLUMN ? 'country_iso3,indicator_key,year,value,is_projection' : 'country_iso3,indicator_key,year,value';
   const allRows = [];
-  let offset = 0;
-  while (true) {
-    const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/g20_economic_data?select=country_iso3,indicator_key,year,value`,
-      {
-        headers: {
-          'apikey': SUPABASE_SERVICE_ROLE_KEY,
-          'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-          'Range': `${offset}-${offset + PAGE - 1}`,
-        },
-      }
-    );
-    const page = await r.json();
-    allRows.push(...page);
-    if (page.length < PAGE) break;
-    offset += PAGE;
-  }
-
-  // Build summary: summary[indicator][country] = { latestYear, latestValue }
-  const summary = {};
-  for (const { country_iso3: c, indicator_key: k, year, value } of allRows) {
-    if (!summary[k]) summary[k] = {};
-    if (!summary[k][c] || year > summary[k][c].latestYear) {
-      summary[k][c] = { latestYear: year, latestValue: value };
-    }
-  }
-
-  const ALL_INDICATORS = [...Object.keys(WB_INDICATORS), 'DEBT_GDP', 'FISCAL_BAL'];
-  const issues = [];
-
-  const report = { generatedAt: new Date().toISOString(), totalRows: allRows.length, indicators: {} };
-
-  for (const ind of ALL_INDICATORS) {
-    const indData = summary[ind] || {};
-    const covered    = EXPECTED_COUNTRIES.filter(c => indData[c]);
-    const missing    = EXPECTED_COUNTRIES.filter(c => !indData[c]);
-    const latestYear = covered.length ? Math.max(...covered.map(c => indData[c].latestYear)) : 0;
-    const [lo, hi]   = RANGES[ind] || [-Infinity, Infinity];
-
-    const outOfRange = covered.filter(c => {
-      const v = indData[c].latestValue;
-      return v < lo || v > hi;
+  for (let offset = 0; ; offset += PAGE) {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/g20_economic_data?select=${select}&order=country_iso3.asc,indicator_key.asc,year.asc`, {
+      headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`, 'Range': `${offset}-${offset + PAGE - 1}` },
     });
-
-    report.indicators[ind] = { covered: covered.length, missing, latestYear, outOfRange };
-
-    // GINI is survey-based and only published every few years — relax thresholds
-    const staleYear    = ind === 'GINI' ? 2015 : 2021;
-    const minCoverage  = ind === 'GINI' ? 10   : 2;     // allow sparser coverage
-    const staleMark = latestYear < staleYear ? ' ⚠ STALE'   : '';
-    const missMark  = missing.length > minCoverage ? ` ⚠ MISSING: ${missing.slice(0,4).join(',')}${missing.length > 4 ? '…' : ''}` : '';
-    const rangeMark = outOfRange.length  ? ` ⚠ OUT-OF-RANGE: ${outOfRange.join(',')}` : '';
-    console.log(`  ${ind.padEnd(14)} covered:${String(covered.length).padStart(2)}/19  latest:${latestYear || '—'}${staleMark}${missMark}${rangeMark}`);
-
-    if (missing.length > minCoverage) issues.push(`${ind}: missing ${missing.join(', ')}`);
-    if (latestYear < staleYear)       issues.push(`${ind}: latest year ${latestYear} — stale`);
-    if (outOfRange.length > 0)        issues.push(`${ind}: out-of-range for ${outOfRange.join(', ')}`);
+    if (!r.ok) throw new Error(`validation read failed (${r.status})`);
+    const page = await r.json();
+    allRows.push(...page.map(row => ({ ...row, is_projection: row.is_projection === true || (!HAS_PROJECTION_COLUMN && row.year > LATEST_ACTUAL_YEAR) })));
+    if (page.length < PAGE) break;
   }
+  return allRows;
+}
 
-  console.log(`\n  Total rows in Supabase: ${allRows.length.toLocaleString()}`);
+// Returns the number of hard errors (missing or stale core G20 coverage).
+async function validate(extra = {}) {
+  console.log(`\n── Data Quality Report${DRY_RUN ? ' (dry run: fetched rows, nothing written)' : ''} ──────────────`);
+  const rows = DRY_RUN ? [...FETCHED.values()] : await loadDatabaseRows();
+  const indicators = [...Object.keys(WB_INDICATORS), 'DEBT_GDP', 'FISCAL_BAL'];
+  const result = H.summarize(rows, { indicators, g20: EXPECTED_COUNTRIES, latestActualYear: LATEST_ACTUAL_YEAR });
+  const tiers = H.coverageTiers(rows, extra.quarterlyCountries || new Set(), indicators.length);
+  const tierCounts = Object.values(tiers).reduce((acc, t) => { acc[t] = (acc[t] || 0) + 1; return acc; }, {});
 
-  if (issues.length) {
-    console.log(`\n  ${issues.length} issue(s) found:`);
-    issues.forEach(i => console.log(`    ⚠ ${i}`));
-  } else {
-    console.log('\n  ✓ All indicators look healthy — good coverage, no stale or out-of-range data.');
+  for (const [ind, r] of Object.entries(result.indicators)) {
+    const miss = r.g20Missing.length ? ` ⚠ G20 missing: ${r.g20Missing.slice(0, 4).join(',')}${r.g20Missing.length > 4 ? '…' : ''}` : '';
+    console.log(`  ${ind.padEnd(14)} rows:${String(r.rows).padStart(6)}  countries:${String(r.countriesCovered).padStart(3)}  G20:${String(r.g20Covered).padStart(2)}/${EXPECTED_COUNTRIES.length}  latest:${r.latestYear || '—'}${miss}`);
   }
+  const projections = rows.filter(r => r.is_projection).length;
+  console.log(`\n  Rows: ${rows.length.toLocaleString()} (${projections.toLocaleString()} flagged as projections) · economies with data: ${result.countries} · tiers ${JSON.stringify(tierCounts)}`);
+  result.warnings.forEach(w => console.log(`  ⚠ ${w}`));
+  result.hardErrors.forEach(e => console.log(`::error::${e}`));
+  if (!result.hardErrors.length) console.log('  ✓ Core G20 coverage is complete and current.');
 
-  // Write report.json for GitHub Actions artifact
   try {
     const fs = await import('fs');
-    fs.writeFileSync(
-      new URL('./report.json', import.meta.url).pathname,
-      JSON.stringify({ ...report, issues }, null, 2)
-    );
+    fs.writeFileSync(new URL('./report.json', import.meta.url).pathname, JSON.stringify({
+      generatedAt: new Date().toISOString(),
+      dryRun: DRY_RUN,
+      latestActualYear: LATEST_ACTUAL_YEAR,
+      totalRows: rows.length,
+      projectionRows: projections,
+      economiesWithData: result.countries,
+      registryEconomies: ALL_ISO3.size,
+      tierCounts,
+      indicators: result.indicators,
+      warnings: result.warnings,
+      hardErrors: result.hardErrors,
+      quarterlyRows: extra.quarterlyRows ?? null,
+    }, null, 2));
   } catch (_) { /* non-fatal if running in an env without fs write access */ }
+  return result.hardErrors.length;
 }
 
 // ── Quarterly data pipeline ───────────────────────────────────────────────────
@@ -405,7 +330,7 @@ function rejectImplausibleQuarterly(rows) {
 
 async function upsertQuarterly(allRows) {
   const rows = rejectImplausibleQuarterly(allRows);
-  if (!rows.length) return;
+  if (DRY_RUN || !rows.length) return;
   const stampedRows = stampRows(rows, 'fetched_at', RUN_TIMESTAMP);
   for (const batch of chunk(stampedRows, CHUNK_SIZE)) {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/g20_quarterly_data`, {
@@ -533,7 +458,7 @@ async function seedIndicatorMetadata() {
     { key: 'INFLATION',      label: 'Inflation',                   unit: '%',        description: 'Average consumer prices, annual % change',                                    source_name: 'IMF WEO',        source_code: 'PCPIPCH',              source_url: 'https://www.imf.org/en/Publications/WEO',                   coverage_note: '19/19 G20 economies' },
     { key: 'UNEMPLOYMENT',   label: 'Unemployment Rate',           unit: '%',        description: 'Unemployment as % of total labour force (ILO modelled)',                     source_name: 'IMF WEO',        source_code: 'LUR',                  source_url: 'https://www.imf.org/en/Publications/WEO',                   coverage_note: '19/19 G20 economies' },
     { key: 'DEBT_GDP',       label: 'Government Debt',             unit: '% of GDP', description: 'General government gross debt as % of GDP',                                  source_name: 'IMF DataMapper', source_code: 'GGXWDG_NGDP',         source_url: 'https://www.imf.org/external/datamapper',                  coverage_note: '19/19 G20 economies' },
-    { key: 'FISCAL_BAL',     label: 'Fiscal Balance',              unit: '% of GDP', description: 'General government net lending / borrowing as % of GDP',                    source_name: 'IMF WEO',        source_code: 'GGXONLB_NGDP',        source_url: 'https://www.imf.org/en/Publications/WEO',                   coverage_note: '19/19 G20 economies' },
+    { key: 'FISCAL_BAL',     label: 'Fiscal Balance',              unit: '% of GDP', description: 'General government net lending / borrowing as % of GDP',                    source_name: 'IMF WEO',        source_code: 'GGXCNL_NGDP',         source_url: 'https://www.imf.org/en/Publications/WEO',                   coverage_note: '19/19 G20 economies' },
     { key: 'CURRENT_ACC',    label: 'Current Account Balance',     unit: '% of GDP', description: 'Current account balance as % of GDP',                                        source_name: 'IMF WEO',        source_code: 'BCA_NGDPD',           source_url: 'https://www.imf.org/en/Publications/WEO',                   coverage_note: '19/19 G20 economies' },
     { key: 'GDP_CAPITA',     label: 'GDP per Capita',              unit: 'USD',      description: 'GDP per capita at current market prices (USD)',                               source_name: 'IMF WEO',        source_code: 'NGDPDPC',             source_url: 'https://www.imf.org/en/Publications/WEO',                   coverage_note: '19/19 G20 economies' },
     { key: 'GDP_CAPITA_PPP', label: 'GDP per Capita (PPP)',        unit: 'USD',      description: 'GDP per capita, PPP — current international $',                              source_name: 'World Bank',     source_code: 'NY.GDP.PCAP.PP.CD',    source_url: 'https://data.worldbank.org/indicator/NY.GDP.PCAP.PP.CD',    coverage_note: '19/19 G20 economies' },
@@ -579,9 +504,12 @@ async function seedIndicatorMetadata() {
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 async function main() {
-  console.log('G20 Dashboard — Supabase seed script');
-  console.log(`Target: ${SUPABASE_URL}`);
-  console.log(`Countries: ${G20_ISO3.length} | Years: ${YEARS}\n`);
+  console.log(`Global economic dashboard — Supabase seed script${DRY_RUN ? ' (DRY RUN: no writes)' : ''}`);
+  console.log(`Target: ${DRY_RUN ? '(none)' : SUPABASE_URL}`);
+  console.log(`Economies: ${ALL_ISO3.size} (registry + EU) | G20 checks: ${EXPECTED_COUNTRIES.length} | Years: ${YEARS}\n`);
+  HAS_PROJECTION_COLUMN = await detectProjectionColumn();
+  let quarterlyRows = 0;
+  const quarterlyCountries = new Set();
 
   let totalRows = 0;
   let failures  = 0;
@@ -616,17 +544,17 @@ async function main() {
     // Non-fatal: WB R&D data already upserted above
   }
 
-  // IMF WEO — overwrites WB values with more current data, adds 2025 estimates.
+  // IMF WEO — overwrites WB values with more current data, adds latest-year estimates.
   // Each WEO indicator is sourced from national statistical offices via IMF.
   const IMF_WEO_INDICATORS = [
     { weo: 'NGDP_RPCH',    key: 'GDP_GROWTH',   label: 'Real GDP growth %'                              },
     { weo: 'PCPIPCH',      key: 'INFLATION',    label: 'CPI avg %'                                      },
     { weo: 'LUR',          key: 'UNEMPLOYMENT', label: 'Unemployment rate'                               },
-    // FISCAL_BAL (GGXONLB_NGDP) is NOT available via the DataMapper API — the existing
-    // database rows (source='imf') were seeded by an earlier pipeline version and remain valid.
+    // General government net lending/borrowing (overall fiscal balance), % of GDP.
+    { weo: 'GGXCNL_NGDP', key: 'FISCAL_BAL',   label: 'Fiscal balance % GDP'                           },
     { weo: 'BCA_NGDPD',   key: 'CURRENT_ACC',  label: 'Current account % GDP'                          },
     { weo: 'NGDPDPC',     key: 'GDP_CAPITA',   label: 'GDP per capita USD'                              },
-    // WEO provides GDP in USD (billions) and population (millions) — 2025 estimates
+    // WEO provides GDP in USD (billions) and population (millions), including latest-year estimates
     { weo: 'NGDPD', key: 'GDP',        label: 'GDP USD billions',      transform: v => v * 1e9 },
     { weo: 'LP',    key: 'POPULATION', label: 'Population (millions)', transform: v => v * 1e6 },
   ];
@@ -667,6 +595,7 @@ async function main() {
     if (rows.length) {
       process.stdout.write(`  → ${rows.length} quarterly rows → upserting…`);
       await upsertQuarterly(rows);
+      quarterlyRows += rows.length; rows.forEach(r => quarterlyCountries.add(r.country_iso3));
       console.log(' ✓');
     } else {
       console.log('  ⚠ No quarterly rows returned (g20_quarterly_data table may not exist yet)');
@@ -683,6 +612,7 @@ async function main() {
       const rows = await fetchFREDQuarterly();
       process.stdout.write(` ${rows.length} rows → upserting…`);
       await upsertQuarterly(rows);
+      quarterlyRows += rows.length; rows.forEach(r => quarterlyCountries.add(r.country_iso3));
       console.log(' ✓');
     } catch (e) {
       console.log(` ✗ ${e.message} (OECD data retained)`);
@@ -690,7 +620,13 @@ async function main() {
     }
   }
 
-  await validate();
+  const hardErrors = await validate({ quarterlyRows, quarterlyCountries });
+
+  if (DRY_RUN) {
+    console.log('\nDry run complete: nothing was written. Report: sync/report.json');
+    if (failures > 0 || hardErrors > 0) process.exit(1);
+    return;
+  }
 
   // Seed indicator metadata table (non-fatal if g20_indicators table not yet created)
   try {
@@ -704,7 +640,7 @@ async function main() {
   const normalized = await syncNormalizedFacts();
   console.log(` ${Number(normalized.observations ?? 0).toLocaleString()} observations ✓`);
 
-  if (failures > 0) process.exit(1); // signal failure to GitHub Actions
+  if (failures > 0 || hardErrors > 0) process.exit(1); // signal failure to GitHub Actions
 }
 
 main().catch(err => {

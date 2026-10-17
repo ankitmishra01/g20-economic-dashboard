@@ -18,7 +18,8 @@ const SUPABASE_URL = process.env.SUPABASE_URL || 'https://qozknjenyhewmkapsizk.s
 const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
 const REC_AUC_GATE = 0.65;
 
-const G20_ISO3 = ['USA','GBR','CAN','DEU','FRA','ITA','JPN','AUS','KOR','CHN','IND','BRA','MEX','ARG','RUS','SAU','ZAF','IDN','TUR'];
+// Modelled economies: the G20 countries from the registry (the EU is an aggregate).
+const G20_ISO3 = require('../lib/registry.cjs').g20Iso3();
 const NAMES = { USA:'United States', GBR:'United Kingdom', CAN:'Canada', DEU:'Germany', FRA:'France', ITA:'Italy', JPN:'Japan', AUS:'Australia', KOR:'South Korea', CHN:'China', IND:'India', BRA:'Brazil', MEX:'Mexico', ARG:'Argentina', RUS:'Russia', SAU:'Saudi Arabia', ZAF:'South Africa', IDN:'Indonesia', TUR:'Turkey' };
 
 const FUND_FEATURES = ['GROWTH','MOMENTUM','FISCAL_BAL','DEBT_GDP','CURRENT_ACC','UNEMPLOYMENT','INFLATION'];
@@ -28,7 +29,7 @@ const LBL = { GROWTH:'GDP growth', MOMENTUM:'Growth momentum (2y)', FISCAL_BAL:'
 async function loadPanel() {
   const PAGE = 1000; const rows = []; let offset = 0;
   while (true) {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/g20_economic_data?select=country_iso3,indicator_key,year,value&order=year.asc`,
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/g20_economic_data?select=country_iso3,indicator_key,year,value&country_iso3=in.(${G20_ISO3.join(',')})&order=year.asc`,
       { headers: { apikey: SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`, Range: `${offset}-${offset + PAGE - 1}` } });
     if (!r.ok) throw new Error(`Supabase fetch failed: ${r.status}`);
     const page = await r.json(); rows.push(...page);

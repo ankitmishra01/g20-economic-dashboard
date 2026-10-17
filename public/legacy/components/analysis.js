@@ -5,7 +5,7 @@
 
 (function () {
   const START = 2000;
-  const END = 2025;             // same cap as data.js LATEST_YEAR_CAP
+  const END = window.LATEST_ACTUAL_YEAR; // same cap as data.js (latest actual year)
   const DEBT_BASE = 2019;       // pre-pandemic anchor for the debt decomposition
   const COVID = new Set([2020, 2021]);
   // Gross-debt decompositions are not meaningful where most debt is FX-linked

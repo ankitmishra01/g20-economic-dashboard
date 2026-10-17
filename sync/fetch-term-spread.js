@@ -74,7 +74,7 @@ async function fredCsv(seriesId) {
     if (!long || !short) { console.log(`${iso3}: missing series, skipped`); continue; }
     const byYear = {}; let n = 0, latest = null;
     for (const y of Object.keys(long).map(Number).sort((a, b) => a - b)) {
-      if (short[y] == null || y < 2000 || y > 2025) continue;
+      if (short[y] == null || y < 2000 || y > new Date().getUTCFullYear() - 1) continue;
       const spread = +(long[y] - short[y]).toFixed(3);
       byYear[y] = spread; n++; latest = { y, spread };
     }

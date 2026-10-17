@@ -7,10 +7,8 @@ const SUPABASE_URL = 'https://qozknjenyhewmkapsizk.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
 const { summarizeIndicators } = require('../lib/economic-domain.cjs');
 
-const ALL_COUNTRIES = [
-  'USA','GBR','CAN','DEU','FRA','ITA','JPN','AUS','KOR',
-  'CHN','IND','BRA','MEX','ARG','RUS','SAU','ZAF','IDN','TUR',
-];
+// Status is reported for the dashboard's G20 economies (from the country registry).
+const ALL_COUNTRIES = require('../lib/registry.cjs').g20Iso3();
 
 function buildStatusPayload(allRows, options = {}) {
   const countries = options.countries || ALL_COUNTRIES;
@@ -55,7 +53,7 @@ module.exports = async function handler(req, res) {
     let offset = 0;
     while (true) {
       const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/g20_economic_data?select=country_iso3,indicator_key,year,fetched_at`,
+        `${SUPABASE_URL}/rest/v1/g20_economic_data?select=country_iso3,indicator_key,year,fetched_at&country_iso3=in.(${ALL_COUNTRIES.join(',')})`,
         {
           headers: {
             'apikey': SUPABASE_KEY,
