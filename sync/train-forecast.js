@@ -19,6 +19,8 @@ const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_pub
 const REC_AUC_GATE = 0.65;
 
 // Modelled economies: the G20 countries from the registry (the EU is an aggregate).
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
 const G20_ISO3 = require('../lib/registry.cjs').g20Iso3();
 const NAMES = { USA:'United States', GBR:'United Kingdom', CAN:'Canada', DEU:'Germany', FRA:'France', ITA:'Italy', JPN:'Japan', AUS:'Australia', KOR:'South Korea', CHN:'China', IND:'India', BRA:'Brazil', MEX:'Mexico', ARG:'Argentina', RUS:'Russia', SAU:'Saudi Arabia', ZAF:'South Africa', IDN:'Indonesia', TUR:'Turkey' };
 
