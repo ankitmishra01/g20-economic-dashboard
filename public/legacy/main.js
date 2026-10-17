@@ -376,7 +376,7 @@
     body.innerHTML += `
       <div class="agent-msg loading" id="${loadingId}">
         <div class="agent-msg-label">Data Engine</div>
-        <div class="agent-msg-text">Analysing G20 data…</div>
+        <div class="agent-msg-text">Analysing ${window.Scope && !Scope.isG20() ? A.escapeText(Scope.label()) : 'G20'} data…</div>
       </div>
     `;
     body.scrollTop = body.scrollHeight;
@@ -422,7 +422,7 @@
       const r = await fetch('/api/agent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(activeIso3 ? { question, country: activeIso3 } : { question }),
+        body: JSON.stringify({ question, ...(activeIso3 ? { country: activeIso3 } : {}), scope: window.Scope ? Scope.id() : 'g20' }),
       });
       const data = await r.json().catch(() => ({}));
       if (!r.ok || !data.text) {
@@ -460,7 +460,7 @@
 
   // ── Chart mounting (deferred so canvas is in DOM) ─────────────────────────
   function mountPageCharts(page) {
-    if (page === 'overview')    { mountOverviewCharts(); if (window.mountProjectionSummary) window.mountProjectionSummary(); }
+    if (page === 'overview')    { mountOverviewCharts(); if (window.mountProjectionSummary) window.mountProjectionSummary(); if (window.mountWhatChanged) window.mountWhatChanged(); }
     if (page === 'projections') mountProjections();
     if (page === 'analysis')    mountAnalysisCharts();
     if (page === 'about' && window.mountProjectionMethodology) window.mountProjectionMethodology();

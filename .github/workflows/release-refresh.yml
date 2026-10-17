@@ -8,7 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger protected release ingestion
-        run: curl --fail --retry 3 -H "Authorization: Bearer $CRON_SECRET" "$PRODUCTION_URL/api/cron/ingest"
+        run: |
+          curl --fail --retry 3 -H "Authorization: Bearer $CRON_SECRET" "$PRODUCTION_URL/api/cron/ingest"
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}

@@ -144,6 +144,9 @@
       `aria-label="Open ${escapeAttr(name)} profile"`;
   }
 
-  global.A = { icon, colorHash, fmtGDP, fmtGDPScaled, fmtTn, fmtPct, fmtSignedPct, fmtMillions, fmtThousands, fmtDecimal,
+  // One GDP unit per chart (components/units.js).
+  const gdpAxisFormatter = (values) => (global.Units ? global.Units.gdpAxisFormatter(values) : fmtGDPScaled);
+
+  global.A = { icon, colorHash, fmtGDP, fmtGDPScaled, gdpAxisFormatter, fmtTn, fmtPct, fmtSignedPct, fmtMillions, fmtThousands, fmtDecimal,
                fmtByFormat, deltaBadge, escapeText, escapeAttr, chartTheme, navRowAttrs };
 })(window);

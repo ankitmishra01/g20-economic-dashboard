@@ -52,6 +52,9 @@ const FLAGS_CONFIG = {
   currentAccDeficit:{ key: 'CURRENT_ACC', threshold: -5,  dir: 'below', label: 'Large CA Deficit',  severity: 'low'    },
   highYouthUnemp:   { key: 'YOUTH_UNEMP', threshold: 25,  dir: 'above', label: 'High Youth Unemp.', severity: 'medium' },
   fiscalDeficit:    { key: 'FISCAL_BAL',  threshold: -6,  dir: 'below', label: 'Large Fiscal Deficit', severity: 'medium' },
+  // Daily market signals from data/realtime.json (ECB FX, BIS policy rates); see components/risk-core.js.
+  fxSlide:          { key: 'FX_30D',      threshold: 5,   dir: 'above', label: 'Currency Slide',       severity: 'medium', realtime: true },
+  policyShock:      { key: 'POLICY_SHOCK', threshold: 50, dir: 'above', label: 'Policy-rate Shock',    severity: 'low',    realtime: true },
 };
 
 // Shared categorical palette for multi-series charts (e.g. Compare page
