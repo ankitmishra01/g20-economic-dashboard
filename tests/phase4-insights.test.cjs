@@ -181,3 +181,41 @@ test('workflows: committing jobs share one concurrency group and push with retry
   assert.ok(rt.indexOf('--stash realtime') < rt.indexOf('node sync/realtime.js'), 'stash before regenerating');
   assert.ok(rt.indexOf('node sync/realtime.js') < rt.lastIndexOf('node sync/what-changed.js'), 'diff after regenerating');
 });
+
+test('agent handler: brief mode sends only the computed changes to the model and caches the answer', async () => {
+  const sent = [];
+  const realFetch = global.fetch;
+  process.env.GEMINI_API_KEY = 'test-key';
+  global.fetch = async (url, opts) => {
+    sent.push(JSON.parse(opts.body));
+    return { ok: true, status: 200, json: async () => ({ candidates: [{ content: { parts: [{ text: 'Narrated.' }] } }] }) };
+  };
+  try {
+    delete require.cache[require.resolve('../api/agent.js')];
+    const handler = require('../api/agent.js');
+    const call = (body) => new Promise((resolve) => {
+      const res = { headers: {}, statusCode: 200, setHeader(k, v) { this.headers[k] = v; }, status(c) { this.statusCode = c; return this; },
+        json(o) { resolve({ status: this.statusCode, body: o }); }, end() { resolve({ status: this.statusCode }); } };
+      handler({ method: 'POST', headers: { origin: 'http://localhost:3000', 'x-forwarded-for': `10.0.0.${Math.floor(Math.random() * 200)}` }, body }, res);
+    });
+    const first = await call({ mode: 'brief', scope: 'global' });
+    assert.strictEqual(first.status, 200);
+    assert.strictEqual(first.body.text, 'Narrated.');
+    const prompt = sent[0].contents[0].parts[0].text;
+    assert.match(prompt, /^What changed \(computed from the published data/);
+    assert.match(prompt, /Use only the facts and figures in the list above/);
+    assert.ok(!/Live data snapshot|Latest Economic Snapshot|latest annual snapshot/.test(prompt), 'no other data in the brief prompt');
+    const second = await call({ mode: 'brief', scope: 'global' });
+    assert.strictEqual(second.body.cached, true);
+    assert.strictEqual(sent.length, 1, 'cached per data version and scope');
+    const q = await call({ question: 'How is inflation?', country: 'NGA', scope: 'global' });
+    assert.strictEqual(q.status, 200);
+    const qPrompt = sent[1].contents[0].parts[0].text;
+    assert.match(qPrompt, /Nigeria economic snapshot/);
+    assert.match(qPrompt, /GDP_GROWTH history:/, 'country shard read from disk');
+    assert.match(qPrompt, /Daily market reference data/);
+  } finally {
+    global.fetch = realFetch;
+    delete process.env.GEMINI_API_KEY;
+  }
+});

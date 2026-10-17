@@ -39,14 +39,15 @@ function loadData() {
   return { index: cachedIndex, projections: cachedProjections };
 }
 
-const optionalJson = (rel) => { try { return require(rel); } catch (_) { return null; } };
+// Literal require() paths so Vercel's file tracer bundles these files with the function.
+const attempt = (load) => { try { return load(); } catch (_) { return null; } };
 let cachedGlobal = null;
 function loadGlobal() {
   if (!cachedGlobal) {
     cachedGlobal = {
-      latest: optionalJson('../public/legacy/data/latest.json'),
-      realtime: optionalJson('../public/legacy/data/realtime.json'),
-      whatChanged: optionalJson('../public/legacy/data/what-changed.json'),
+      latest: attempt(() => require('../public/legacy/data/latest.json')),
+      realtime: attempt(() => require('../public/legacy/data/realtime.json')),
+      whatChanged: attempt(() => require('../public/legacy/data/what-changed.json')),
     };
   }
   return cachedGlobal;
