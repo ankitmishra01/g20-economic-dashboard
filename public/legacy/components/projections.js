@@ -1,7 +1,7 @@
 // Multi year outlook. All projected values come from projections.json.
 (function () {
   const LABEL = { GDP_GROWTH:'Real growth', INFLATION:'Inflation', UNEMPLOYMENT:'Unemployment', DEBT_GDP:'Debt to GDP', FISCAL_BAL:'Fiscal balance', CURRENT_ACC:'Current account' };
-  const EXPORTERS = new Set(['AUS','BRA','CAN','IDN','RUS','SAU','ZAF']);
+  const EXPORTERS = window.COUNTRY_SETS.commodityExporters; // from the country registry
   let data, loading, fanChart, outlookChart;
   const esc = value => window.A?.escapeText ? A.escapeText(String(value)) : String(value);
   const countryName = iso => iso === 'G20_MEDIAN' ? 'G20 median' : iso === 'OECD' ? 'OECD aggregate' : G20.find(c => c.iso3 === iso)?.name || iso;

@@ -8,28 +8,10 @@
   // ── Country detection (G20 names, demonyms, capitals, central banks) ──────
   // Case-sensitive on purpose: headlines capitalise proper nouns, which keeps
   // "turkey" (food) or "us" (pronoun) from matching.
-  const COUNTRY_TERMS = {
-    USA: ['United States', 'US', 'U\\.S\\.', 'USA', 'American', 'Americans', 'Washington', 'Wall Street', 'Fed', 'Federal Reserve', 'White House', 'Trump'],
-    GBR: ['United Kingdom', 'UK', 'U\\.K\\.', 'Britain', 'British', 'England', 'London', 'Bank of England', 'BoE', 'Scotland', 'Wales', 'Reeves'],
-    CAN: ['Canada', 'Canadian', 'Canadians', 'Ottawa', 'Bank of Canada', 'Carney'],
-    DEU: ['Germany', 'German', 'Germans', 'Berlin', 'Bundesbank', 'Frankfurt'],
-    FRA: ['France', 'French', 'Paris', 'Macron'],
-    ITA: ['Italy', 'Italian', 'Rome', 'Milan', 'Meloni'],
-    JPN: ['Japan', 'Japanese', 'Tokyo', 'Bank of Japan', 'BoJ', 'BOJ', 'Nikkei', 'yen'],
-    AUS: ['Australia', 'Australian', 'Canberra', 'Sydney', 'RBA'],
-    KOR: ['South Korea', 'Korea', 'Korean', 'Seoul', 'Samsung'],
-    CHN: ['China', 'Chinese', 'Beijing', 'Shanghai', 'PBoC', 'PBOC', 'yuan', 'renminbi', 'Xi'],
-    IND: ['India', 'Indian', 'Delhi', 'New Delhi', 'Mumbai', 'RBI', 'rupee', 'Modi'],
-    BRA: ['Brazil', 'Brazilian', 'Brasília', 'Brasilia', 'Lula', 'real'],
-    MEX: ['Mexico', 'Mexican', 'Mexico City', 'Banxico', 'peso'],
-    ARG: ['Argentina', 'Argentine', 'Argentinian', 'Buenos Aires', 'Milei'],
-    RUS: ['Russia', 'Russian', 'Moscow', 'Kremlin', 'Putin', 'rouble', 'ruble'],
-    SAU: ['Saudi Arabia', 'Saudi', 'Riyadh', 'Aramco'],
-    ZAF: ['South Africa', 'South African', 'Pretoria', 'Johannesburg', 'rand'],
-    IDN: ['Indonesia', 'Indonesian', 'Jakarta'],
-    TUR: ['Turkey', 'Türkiye', 'Turkish', 'Ankara', 'Istanbul', 'lira'],
-    EUU: ['European Union', 'EU', 'Eurozone', 'eurozone', 'euro area', 'Brussels', 'ECB', 'European Commission', 'Lagarde', 'Europe', 'European'],
-  };
+  // Terms are curated per G20 member in the country registry (countries.js).
+  const COUNTRY_TERMS = Object.fromEntries(
+    (window.COUNTRY_REGISTRY?.collections?.g20?.members || []).map(m => [m.iso3, m.newsTerms || [m.name]])
+  );
   // Currency words like "real"/"rand"/"peso" are too ambiguous in lowercase;
   // only keep the unambiguous lowercase ones.
   const AMBIGUOUS = new Set(['real', 'rand', 'peso', 'lira', 'yen', 'yuan', 'rupee', 'renminbi', 'rouble', 'ruble']);

@@ -64,7 +64,7 @@ function renderAbout() {
 
   <div class="sec-head"><div class="sec-head__title">Known limits <span class="sec-head__sub">stated plainly</span></div></div>
   <div class="panel mb-20"><div class="panel__body" style="padding:14px 20px;font-size:14px;line-height:1.75;color:var(--text-2)">
-    Latest values are capped at 2025, and several 2025 figures are IMF estimates rather than final outturns.
+    Latest values are capped at ${window.LATEST_ACTUAL_YEAR}, and several ${window.LATEST_ACTUAL_YEAR} figures are IMF estimates rather than final outturns.
     Aggregate GDP sums the 19 countries only, because the EU's output is already inside its member states.
     The AI labour exposure and AI readiness figures come from third-party research and the AI Trajectory Index, not from the sources above.
     The free-tier AI model can be rate limited, in which case answers come from the data engine.

@@ -331,7 +331,7 @@ function renderOverview() {
     <a href="https://data.worldbank.org" target="_blank" rel="noopener">World Bank Open Data</a> (CC BY 4.0) ·
     <a href="https://www.imf.org/external/datamapper" target="_blank" rel="noopener">IMF DataMapper</a> ·
     <a href="https://stats.oecd.org" target="_blank" rel="noopener">OECD MSTI</a>.
-    Latest reads are capped at 2025; several 2025 values are IMF estimates rather than final outturns. OECD total growth is from the OECD Economic Outlook.
+    Latest reads are capped at ${window.LATEST_ACTUAL_YEAR}; several ${window.LATEST_ACTUAL_YEAR} values are IMF estimates rather than final outturns. OECD total growth is from the OECD Economic Outlook.
     Series refreshed monthly via automated pipelines (GitHub Actions → Supabase).
   </div>
 
@@ -678,7 +678,7 @@ window.overviewSortTable = function(mode, btn) {
 
 // ── KPI group filter: All G20 / Advanced / Emerging ───────────────────────────
 // Advanced economies within the G20 (IMF classification); the rest are emerging.
-const AE_SET = new Set(['USA','GBR','CAN','DEU','FRA','ITA','JPN','AUS','KOR']);
+const AE_SET = window.COUNTRY_SETS.advanced; // advanced economies, from the country registry
 window.overviewFilterClass = function(group, btn) {
   document.querySelectorAll('[onclick^="overviewFilterClass"]').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');

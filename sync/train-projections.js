@@ -10,7 +10,10 @@ const path = require('node:path');
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://qozknjenyhewmkapsizk.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
 const INDICATORS = ['GDP_GROWTH', 'INFLATION', 'UNEMPLOYMENT', 'DEBT_GDP', 'FISCAL_BAL', 'CURRENT_ACC'];
-const COUNTRIES = ['USA','GBR','CAN','DEU','FRA','ITA','JPN','AUS','KOR','CHN','IND','BRA','MEX','ARG','RUS','SAU','ZAF','IDN','TUR'];
+// Modelled economies: the G20 countries from the registry (the EU is an aggregate).
+const COUNTRIES = require('../lib/registry.cjs').g20Iso3();
+// Latest year treated as observed data; later IMF years are projections.
+const LATEST_ACTUAL_YEAR = new Date().getUTCFullYear() - 1;
 const NAMES = { USA:'United States', GBR:'United Kingdom', CAN:'Canada', DEU:'Germany', FRA:'France', ITA:'Italy', JPN:'Japan', AUS:'Australia', KOR:'South Korea', CHN:'China', IND:'India', BRA:'Brazil', MEX:'Mexico', ARG:'Argentina', RUS:'Russia', SAU:'Saudi Arabia', ZAF:'South Africa', IDN:'Indonesia', TUR:'Türkiye' };
 const HORIZONS = [1, 2, 3, 4, 5];
 const SHOCK_YEARS = new Set([2020, 2022]);
@@ -37,7 +40,7 @@ function valueAtOrBefore(panel, iso3, key, year) {
   for (let y = year; y >= year - 8; y--) if (finite(series[y])) return series[y];
   return null;
 }
-function latestYear(panel, countries, key, cap = 2025) {
+function latestYear(panel, countries, key, cap = LATEST_ACTUAL_YEAR) {
   let out = 0;
   for (const c of countries) for (const y of Object.keys(panel[c]?.[key] || {}).map(Number)) if (y <= cap) out = Math.max(out, y);
   return out;
@@ -115,7 +118,7 @@ function samplesFor(panel, termSpread, countries, key, horizon, maxOrigin, minTr
 }
 
 function evaluate(panel, termSpread, countries, key, horizon, opts) {
-  const all = samplesFor(panel, termSpread, countries, key, horizon, 2025 - horizon, opts.minTrainYear);
+  const all = samplesFor(panel, termSpread, countries, key, horizon, (opts.latestActualYear ?? LATEST_ACTUAL_YEAR) - horizon, opts.minTrainYear);
   const origins = [...new Set(all.map(s => s.origin))].filter(y => y >= opts.firstBacktestOrigin).sort();
   const records = [];
   for (const origin of origins) {
@@ -247,14 +250,14 @@ function trainProjectionEngine(panel, options = {}) {
 async function loadPanel() {
   const rows = []; let offset = 0; const pageSize = 1000;
   while (true) {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/g20_economic_data?select=country_iso3,indicator_key,year,value,fetched_at&order=year.asc`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Range: `${offset}-${offset + pageSize - 1}` } });
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/g20_economic_data?select=country_iso3,indicator_key,year,value,fetched_at&country_iso3=in.(${COUNTRIES.join(',')})&order=year.asc`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Range: `${offset}-${offset + pageSize - 1}` } });
     if (!response.ok) throw new Error(`Supabase fetch failed: ${response.status}`);
     const page = await response.json(); rows.push(...page);
     if (page.length < pageSize) break; offset += pageSize;
   }
   const panel = {}; let vintage = '';
   for (const row of rows) {
-    if (!row.country_iso3 || !row.indicator_key || !finite(row.value) || row.year > 2025) continue;
+    if (!row.country_iso3 || !row.indicator_key || !finite(row.value) || row.year > LATEST_ACTUAL_YEAR) continue;
     (((panel[row.country_iso3] ||= {})[row.indicator_key] ||= {}))[row.year] = row.value;
     if (row.fetched_at) vintage = [vintage, row.fetched_at.slice(0, 10)].sort().pop();
   }

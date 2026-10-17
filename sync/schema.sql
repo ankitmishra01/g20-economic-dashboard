@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS g20_economic_data (
   value         FLOAT8  NOT NULL,
   source        TEXT    NOT NULL DEFAULT 'worldbank',
   fetched_at    TIMESTAMPTZ DEFAULT NOW(),
+  is_projection BOOLEAN NOT NULL DEFAULT FALSE, -- year after the latest observed year (IMF debt paths)
   PRIMARY KEY (country_iso3, indicator_key, year)
 );
 

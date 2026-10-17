@@ -419,7 +419,19 @@ FRED_API_KEY=example \
 node sync/seed.js
 ```
 
-The seed validates the credential, fetches sources, normalises identifiers, checks ranges, timestamps payloads, upserts rows and writes `sync/report.json`.
+The seed covers every economy in the country registry (about 217 countries plus the EU comparator). It validates the credential, fetches sources, normalises identifiers, drops values outside plausible global ranges (`lib/seed-helpers.cjs`), flags IMF years after the latest observed year as projections (`is_projection`), upserts rows and writes `sync/report.json`. The run fails if core G20 coverage is missing or stale.
+
+Check a refresh without credentials or writes:
+
+```bash
+node sync/seed.js --dry-run     # fetches everything, validates in memory, writes sync/report.json
+```
+
+### Country registry
+
+`node sync/registry.js` rebuilds `public/legacy/countries.json` (Node, via `lib/registry.cjs`) and `public/legacy/countries.js` (browser, `window.COUNTRY_REGISTRY`) from the World Bank country API. World Bank aggregates such as `WLD` or `HIC` are kept separately and never counted as countries. The G20 collection keeps the dashboard's original order, names, regions, advanced-economy and commodity-exporter flags, and news terms, so the default view is unchanged. The dashboard still reads only its G20 scope; wider scopes arrive with the scope selector.
+
+Apply `supabase/migrations/20261017000000_projection_flag.sql` before the first global seed. Until then the seed runs and omits the flag.
 
 Never expose the service role key in frontend code, committed environment files or public Vercel variables.
 
