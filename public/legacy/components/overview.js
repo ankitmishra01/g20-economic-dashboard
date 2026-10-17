@@ -299,24 +299,7 @@ function renderOverview() {
           </tr>
         </thead>
         <tbody>
-          ${[
-            ['GDP, GDP Growth, GDP per Capita', 'World Bank (NY.GDP.*)', '19/19 countries', 'Annual'],
-            ['Inflation (CPI)', 'World Bank (FP.CPI.TOTL.ZG)', '19/19 countries', 'Annual'],
-            ['Unemployment, Youth Unemployment', 'World Bank / ILO modelled', '19/19 countries', 'Annual'],
-            ['Current Account Balance', 'World Bank (BN.CAB.XOKA.GD.ZS)', '19/19 countries', 'Annual'],
-            ['Health Spending', 'World Bank / WHO (SH.XPD.CHEX.GD.ZS)', '19/19 countries', 'Annual'],
-            ['Education Spending', 'World Bank / UNESCO (SE.XPD.TOTL.GD.ZS)', '19/19 countries', 'Annual'],
-            ['Capital Formation, Exports, Manufacturing', 'World Bank National Accounts', '19/19 countries', 'Annual'],
-            ['FDI Inflows', 'World Bank (BX.KLT.DINV.WD.GD.ZS)', '19/19 countries', 'Annual'],
-            ['Tax Revenue', 'World Bank / IMF GFS (GC.TAX.TOTL.GD.ZS)', '18/19 G20', 'Annual'],
-            ['Gross Government Debt', 'IMF World Economic Outlook (GGXWDG_NGDP)', '19/19 countries', 'Annual'],
-            ['Government Fiscal Balance', 'IMF World Economic Outlook (GGXCNL_NGDP)', '19/19 countries', 'Annual'],
-            ['R&D Expenditure', 'OECD MSTI / World Bank UNESCO (GB.XPD.RSDV.GD.ZS)', '19/19 countries', 'Annual'],
-            ['CO₂ Emissions per Capita', 'World Bank / EDGAR (EN.GHG.CO2.PC.CE.AR5)', '19/19 countries', 'Annual'],
-            ['Gini Coefficient', 'World Bank PovcalNet (SI.POV.GINI)', '18/19 G20', 'Periodic'],
-            ['Population', 'World Bank (SP.POP.TOTL)', '19/19 countries', 'Annual'],
-            ['Trade Openness', 'World Bank National Accounts (NE.TRD.GNFS.ZS)', '19/19 countries', 'Annual'],
-          ].map(([ind, src, cov, freq]) => `
+          ${sourceRows().map(([ind, src, cov, freq]) => `
             <tr style="border-bottom:1px solid rgba(0,0,0,.04)">
               <td style="padding:7px 14px;color:var(--text-1)">${ind}</td>
               <td style="padding:7px 14px;color:var(--text-2);font-family:var(--font-mono);font-size:11px">${src}</td>
@@ -332,17 +315,20 @@ function renderOverview() {
   <!-- Methodology -->
   <div class="methodology">
     <h4>About this dataset</h4>
-    Latest reads at the publication cut-off (${latestYear}). All data sourced from official open APIs:
+    Latest reads at the publication cut-off (${latestYear}) for ${scopeEconomies().length} economies in ${A.escapeText(window.Scope ? Scope.label() : 'G20')} scope. All data comes from official open APIs:
     <a href="https://data.worldbank.org" target="_blank" rel="noopener">World Bank Open Data</a> (CC BY 4.0) ·
-    <a href="https://www.imf.org/external/datamapper" target="_blank" rel="noopener">IMF DataMapper</a> ·
-    <a href="https://stats.oecd.org" target="_blank" rel="noopener">OECD MSTI</a>.
-    Latest reads are capped at ${window.LATEST_ACTUAL_YEAR}; several ${window.LATEST_ACTUAL_YEAR} values are IMF estimates rather than final outturns. OECD total growth is from the OECD Economic Outlook.
-    Series refreshed monthly via automated pipelines (GitHub Actions → Supabase).
+    <a href="https://www.imf.org/external/datamapper" target="_blank" rel="noopener">IMF DataMapper / WEO</a> ·
+    <a href="https://stats.oecd.org" target="_blank" rel="noopener">OECD</a> ·
+    <a href="https://data.bis.org/topics/CBPOL" target="_blank" rel="noopener">BIS central bank policy rates</a> ·
+    <a href="https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html" target="_blank" rel="noopener">ECB reference rates</a> ·
+    <a href="https://fred.stlouisfed.org" target="_blank" rel="noopener">FRED</a>.
+    Latest reads are capped at ${window.LATEST_ACTUAL_YEAR}; several ${window.LATEST_ACTUAL_YEAR} values are IMF estimates rather than final outturns, and IMF projections are never shown as latest actuals. Coverage counts economies with a latest actual value; aggregates (World, EU, income groups) are excluded.
+    Structural series refresh monthly (GitHub Actions → Supabase); policy rates, FX and market series refresh every 6 hours on weekdays and are official daily references, not tick prices.
   </div>
 
   <div class="page-foot">
     <span>g20.monitor · ${latestYear}</span>
-    <span>World Bank · IMF · OECD</span>
+    <span>World Bank · IMF · OECD · BIS · ECB · FRED</span>
   </div>
 
 </div>`;
@@ -720,3 +706,53 @@ window.overviewFilterRisk = function(severity, btn) {
     el.style.display = (severity === 'all' || el.dataset.severity === severity) ? '' : 'none';
   });
 };
+
+
+// ── Data sources: coverage computed from the data for the current scope ─────────
+function scopeEconomies() {
+  // Scope members, excluding aggregates such as the EU comparator.
+  return (window.G20 || []).filter(c => c && c.iso3 && c.iso3 !== 'EUU' && !c.aggregate);
+}
+function coverageText(keys) {
+  const members = scopeEconomies();
+  if (!members.length || !window.G20Data) return '—';
+  const has = c => keys.some(k => window.G20Data.getLatest(c.iso3, k, { annualOnly: true })?.value != null);
+  const n = members.filter(has).length;
+  const noun = window.Scope && Scope.isG20() ? 'G20 countries' : 'economies';
+  return `${n}/${members.length} ${noun}`;
+}
+function sourceRows() {
+  const rt = window.REALTIME || null;
+  const prN = rt ? Object.keys(rt.policyRates?.values || {}).length : null;
+  const fxN = rt ? Object.keys(rt.fx?.values || {}).length : null;
+  const mkN = rt ? Object.keys(rt.markets || {}).length : null;
+  return [
+    ['GDP, GDP per Capita', 'IMF WEO (NGDPD, NGDPDPC) / World Bank (NY.GDP.*)', coverageText(['GDP']), 'Annual'],
+    ['Real GDP Growth', 'IMF WEO (NGDP_RPCH) / World Bank', coverageText(['GDP_GROWTH']), 'Annual'],
+    ['GDP per Capita (PPP)', 'World Bank (NY.GDP.PCAP.PP.CD)', coverageText(['GDP_CAPITA_PPP']), 'Annual'],
+    ['Inflation (CPI)', 'IMF WEO (PCPIPCH) / World Bank (FP.CPI.TOTL.ZG)', coverageText(['INFLATION']), 'Annual'],
+    ['Unemployment', 'IMF WEO (LUR) / World Bank ILO modelled', coverageText(['UNEMPLOYMENT']), 'Annual'],
+    ['Youth Unemployment', 'World Bank / ILO modelled (SL.UEM.1524.ZS)', coverageText(['YOUTH_UNEMP']), 'Annual'],
+    ['Female Labour Force Participation', 'World Bank / ILO (SL.TLF.CACT.FE.ZS)', coverageText(['FEMALE_LFP']), 'Annual'],
+    ['Current Account Balance', 'IMF WEO (BCA_NGDPD) / World Bank', coverageText(['CURRENT_ACC']), 'Annual'],
+    ['Gross Government Debt', 'IMF WEO (GGXWDG_NGDP)', coverageText(['DEBT_GDP']), 'Annual'],
+    ['Government Fiscal Balance', 'IMF WEO (GGXCNL_NGDP)', coverageText(['FISCAL_BAL']), 'Annual'],
+    ['Tax Revenue', 'World Bank / IMF GFS (GC.TAX.TOTL.GD.ZS)', coverageText(['TAX_REVENUE']), 'Annual'],
+    ['Health Spending', 'World Bank / WHO (SH.XPD.CHEX.GD.ZS)', coverageText(['HEALTH_EXP']), 'Annual'],
+    ['Education Spending', 'World Bank / UNESCO (SE.XPD.TOTL.GD.ZS)', coverageText(['EDUC_EXP']), 'Annual'],
+    ['Capital Formation', 'World Bank National Accounts (NE.GDI.TOTL.ZS)', coverageText(['CAPITAL_FORM']), 'Annual'],
+    ['Exports', 'World Bank National Accounts (NE.EXP.GNFS.ZS)', coverageText(['EXPORTS_GDP']), 'Annual'],
+    ['Manufacturing', 'World Bank National Accounts (NV.IND.MANF.ZS)', coverageText(['MANUFACTURING']), 'Annual'],
+    ['Trade Openness', 'World Bank National Accounts (NE.TRD.GNFS.ZS)', coverageText(['TRADE_GDP']), 'Annual'],
+    ['FDI Inflows', 'World Bank (BX.KLT.DINV.WD.GD.ZS)', coverageText(['FDI_INFLOWS']), 'Annual'],
+    ['R&D Expenditure', 'OECD MSTI / World Bank UNESCO (GB.XPD.RSDV.GD.ZS)', coverageText(['RD_EXP']), 'Annual'],
+    ['Researchers per Million', 'World Bank / UNESCO (SP.POP.SCIE.RD.P6)', coverageText(['RESEARCHERS']), 'Annual'],
+    ['CO\u2082 Emissions per Capita', 'World Bank / EDGAR (EN.GHG.CO2.PC.CE.AR5)', coverageText(['CO2_CAPITA']), 'Annual'],
+    ['Gini Coefficient', 'World Bank Poverty and Inequality Platform (SI.POV.GINI)', coverageText(['GINI']), 'Periodic'],
+    ['Life Expectancy', 'World Bank (SP.DYN.LE00.IN)', coverageText(['LIFE_EXPECT']), 'Annual'],
+    ['Population', 'World Bank (SP.POP.TOTL)', coverageText(['POPULATION']), 'Annual'],
+    ['Central Bank Policy Rates', 'BIS (WS_CBPOL)', prN == null ? 'Loading…' : `${prN} economies (euro area shared)`, 'Daily'],
+    ['Exchange Rates vs USD', 'ECB euro foreign exchange reference rates', fxN == null ? 'Loading…' : `${fxN} currencies`, 'Daily (business days)'],
+    ['Markets: US 10Y, Brent, WTI, Broad Dollar, VIX', 'FRED (Treasury, EIA, Federal Reserve, Cboe)', mkN == null ? 'Loading…' : `${mkN} series`, 'Daily'],
+  ];
+}
