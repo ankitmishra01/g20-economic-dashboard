@@ -21,65 +21,65 @@ window.G20_MODEL = {
   ],
   "growth": {
     "coef": [
-      1.8052674964927793,
-      -0.8219797588219853,
-      -1.3625449535866596,
-      -0.6233579088399651,
-      1.0596691710942423,
-      0.20065417538954397,
-      0.07672719667620255
+      1.7575989334693483,
+      -0.8143363937312887,
+      -1.4113986731564285,
+      -0.6639512698110921,
+      1.077215322210839,
+      0.19429054566317802,
+      0.10113870475636108
     ],
-    "intercept": 2.9555299539170514,
+    "intercept": 2.984523809523809,
     "mu": [
-      2.958986175115208,
-      -0.0868663594470047,
-      -2.9529953917050675,
-      66.80645161290323,
-      0.5921658986175116,
-      7.671999999999995,
-      5.9596774193548425
+      2.9738095238095243,
+      -0.07142857142857154,
+      -2.9419047619047602,
+      66.89690476190478,
+      0.6361904761904762,
+      7.687783333333333,
+      5.974761904761907
     ],
     "sigma": [
-      3.63829160354631,
-      4.558679152790304,
-      4.306527332268221,
-      43.57102528161321,
-      4.8739487497176235,
-      5.302542020161275,
-      14.488004282809495
+      3.6545574628719555,
+      4.612838487478684,
+      4.356347988906936,
+      43.873546264783215,
+      4.904048353088815,
+      5.372437848979808,
+      14.670968455405424
     ]
   },
   "recession": {
     "coef": [
-      -0.4970392895607224,
-      0.09079106081560114,
-      0.5663065860159068,
-      0.42403257470738065,
-      -0.10266327844749881,
-      0.07699152470450205,
-      0.08415090480041679,
-      -0.47873129940042913
+      -0.5602655175103181,
+      0.13733050586635745,
+      0.5762459584755592,
+      0.42020035099263114,
+      -0.09033961705703757,
+      0.08074055516822051,
+      0.12318415791686112,
+      -0.5110909250696019
     ],
-    "intercept": -2.227437041145528,
+    "intercept": -2.204505318171458,
     "mu": [
-      1.846296296296296,
-      -0.19074074074074068,
-      -2.972592592592593,
-      76.08851851851853,
-      0.17592592592592599,
-      7.6800000000000015,
-      3.086666666666668,
-      0.9830555555555556
+      1.8637404580152672,
+      -0.20152671755725185,
+      -2.9809160305343525,
+      76.10458015267177,
+      0.17709923664122146,
+      7.704580152671758,
+      3.0973282442748107,
+      0.9973091603053438
     ],
     "sigma": [
-      2.7512766708595335,
-      3.9083608631353806,
-      3.343161724401124,
-      48.25067700186751,
-      3.5502496096485006,
-      6.352955567642863,
-      2.7372140473007844,
-      1.323578163983087
+      2.779206827338784,
+      3.95262951867255,
+      3.394621127018828,
+      48.5574474639374,
+      3.5304793888851607,
+      6.431196184669922,
+      2.6431014411356895,
+      1.3037768125484477
     ],
     "covered": [
       "AUS",
@@ -95,38 +95,38 @@ window.G20_MODEL = {
       "USA",
       "ZAF"
     ],
-    "auc": 0.445,
-    "aucCyclical": 0.478,
+    "auc": 0.454,
+    "aucCyclical": 0.492,
     "gate": 0.65
   },
   "backtest": [
     {
       "forecastYear": 2003,
-      "growthRMSE": 3.23,
+      "growthRMSE": 3.2,
       "recessions": 1,
       "recHits": 0
     },
     {
       "forecastYear": 2004,
-      "growthRMSE": 2.92,
+      "growthRMSE": 2.93,
       "recessions": 0,
       "recHits": 0
     },
     {
       "forecastYear": 2005,
-      "growthRMSE": 2.94,
+      "growthRMSE": 2.98,
       "recessions": 0,
       "recHits": 0
     },
     {
       "forecastYear": 2006,
-      "growthRMSE": 2.45,
+      "growthRMSE": 2.48,
       "recessions": 0,
       "recHits": 0
     },
     {
       "forecastYear": 2007,
-      "growthRMSE": 2.56,
+      "growthRMSE": 2.6,
       "recessions": 0,
       "recHits": 0
     },
@@ -138,19 +138,19 @@ window.G20_MODEL = {
     },
     {
       "forecastYear": 2009,
-      "growthRMSE": 6.08,
+      "growthRMSE": 6.11,
       "recessions": 10,
       "recHits": 0
     },
     {
       "forecastYear": 2010,
-      "growthRMSE": 4.05,
+      "growthRMSE": 3.98,
       "recessions": 0,
       "recHits": 0
     },
     {
       "forecastYear": 2011,
-      "growthRMSE": 2.72,
+      "growthRMSE": 2.74,
       "recessions": 1,
       "recHits": 0
     },
@@ -162,55 +162,55 @@ window.G20_MODEL = {
     },
     {
       "forecastYear": 2013,
-      "growthRMSE": 1.86,
+      "growthRMSE": 1.87,
       "recessions": 1,
       "recHits": 0
     },
     {
       "forecastYear": 2014,
-      "growthRMSE": 1.93,
-      "recessions": 0,
-      "recHits": 0
-    },
-    {
-      "forecastYear": 2015,
-      "growthRMSE": 2.18,
-      "recessions": 1,
-      "recHits": 0
-    },
-    {
-      "forecastYear": 2016,
-      "growthRMSE": 2.08,
-      "recessions": 0,
-      "recHits": 0
-    },
-    {
-      "forecastYear": 2017,
       "growthRMSE": 1.95,
       "recessions": 0,
       "recHits": 0
     },
     {
+      "forecastYear": 2015,
+      "growthRMSE": 2.2,
+      "recessions": 1,
+      "recHits": 0
+    },
+    {
+      "forecastYear": 2016,
+      "growthRMSE": 2.37,
+      "recessions": 0,
+      "recHits": 0
+    },
+    {
+      "forecastYear": 2017,
+      "growthRMSE": 1.96,
+      "recessions": 0,
+      "recHits": 0
+    },
+    {
       "forecastYear": 2018,
-      "growthRMSE": 1.74,
+      "growthRMSE": 1.19,
       "recessions": 0,
       "recHits": 0
     },
     {
       "forecastYear": 2019,
-      "growthRMSE": 1.59,
+      "growthRMSE": 1.64,
       "recessions": 2,
       "recHits": 0
     },
     {
       "forecastYear": 2020,
-      "growthRMSE": 7.78,
+      "growthRMSE": 7.82,
       "recessions": 11,
       "recHits": 0
     },
     {
       "forecastYear": 2021,
-      "growthRMSE": 7.4,
+      "growthRMSE": 7.29,
       "recessions": 0,
       "recHits": 0
     },
@@ -222,35 +222,35 @@ window.G20_MODEL = {
     },
     {
       "forecastYear": 2023,
-      "growthRMSE": 2.3,
+      "growthRMSE": 2.29,
       "recessions": 1,
       "recHits": 0
     },
     {
       "forecastYear": 2024,
-      "growthRMSE": 2.12,
+      "growthRMSE": 2.18,
       "recessions": 0,
       "recHits": 0
     },
     {
       "forecastYear": 2025,
-      "growthRMSE": 1.92,
+      "growthRMSE": 1.88,
       "recessions": 0,
       "recHits": 0
     }
   ],
   "meta": {
-    "trainedAt": "2026-10-14",
-    "nGrowth": 434,
-    "nRecession": 270,
-    "growthRMSE": 3.42,
-    "growthMAE": 2.35,
-    "growthPersistenceRMSE": 4.16,
-    "growthBeatsPersistence": 0.74,
-    "recAUC": 0.445,
-    "recAUCCyclical": 0.478,
-    "recAUCFundamentalsOnly": 0.407,
+    "trainedAt": "2026-10-17",
+    "nGrowth": 420,
+    "nRecession": 262,
+    "growthRMSE": 3.45,
+    "growthMAE": 2.38,
+    "growthPersistenceRMSE": 4.22,
+    "growthBeatsPersistence": 0.77,
+    "recAUC": 0.454,
+    "recAUCCyclical": 0.492,
+    "recAUCFundamentalsOnly": 0.405,
     "horizonYears": 1,
-    "notes": "Growth: ridge, pooled G20. Recession: logistic on yield-curve-covered economies (term spread 10y-3m, keyless FRED). LOYO-CV. Recession probability framed as cyclical (AUC 0.48); all-period 0.44 reflects the unpredictable 2020 pandemic."
+    "notes": "Growth: ridge, pooled G20. Recession: logistic on yield-curve-covered economies (term spread 10y-3m, keyless FRED). LOYO-CV. Recession probability framed as cyclical (AUC 0.49); all-period 0.45 reflects the unpredictable 2020 pandemic."
   }
 };
