@@ -1,0 +1,16 @@
+{
+ "iso3": "CUB",
+ "name": "Cuba",
+ "headline": "Cuba: −1.1% growth in 2024",
+ "sections": [
+  "Cuba is a $107 billion economy (2020), the world's 74th-largest of 215 measured. Real output grew −1.1% in 2024, slower than the world median of +3.5%. Manufacturing accounts for 10.7% of GDP (2024).",
+  "Unemployment stood at 1.7% (2025), below the world median of 5.1%. Youth unemployment was 4.3% (2025).",
+  "No recent data is available for this section.",
+  "Trade equals 125% of GDP (2024), a highly open economy. Net FDI inflows were 0.0% of GDP (2020).",
+  "Life expectancy is 78.3 years (2024). Population: 10.9 million (2025)."
+ ],
+ "asOf": 2024,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

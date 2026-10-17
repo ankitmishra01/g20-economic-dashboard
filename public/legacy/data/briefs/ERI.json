@@ -1,0 +1,16 @@
+{
+ "iso3": "ERI",
+ "name": "Eritrea",
+ "headline": "Eritrea: +3.8% growth in 2019, 1.3% inflation, debt 260% of GDP",
+ "sections": [
+  "Eritrea is a $2.0 billion economy (2019), the world's 194th-largest of 215 measured. Real output grew +3.8% in 2019, close to the world median of +3.5%.",
+  "Consumer prices rose 1.3% in 2019, broadly within typical target ranges, up from −5.6% in 2016. Unemployment stood at 6.0% (2025), above the world median of 5.1%. Youth unemployment was 10.2% (2025).",
+  "Gross government debt is 260% of GDP (2019), a very high level that has risen from 205% in 2014. The general government balance is +2.7% of GDP (2019), a surplus.",
+  "The current account balance is +13.0% of GDP (2019), a large surplus.",
+  "Life expectancy is 68.9 years (2024). Population: 3.6 million (2025)."
+ ],
+ "asOf": 2019,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

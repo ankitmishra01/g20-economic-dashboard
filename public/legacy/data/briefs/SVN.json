@@ -1,0 +1,16 @@
+{
+ "iso3": "SVN",
+ "name": "Slovenia",
+ "headline": "Slovenia: +1.5% growth in 2025, 2.5% inflation, debt 65% of GDP",
+ "sections": [
+  "Slovenia is a $80.4 billion economy (2025), the world's 88th-largest of 215 measured. Real output grew +1.5% in 2025, slower than the world median of +3.5%. Income per person is $59K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 18.6% of GDP (2025).",
+  "Consumer prices rose 2.5% in 2025, broadly within typical target ranges, down from 9.3% in 2022. Unemployment stood at 3.9% (2025), below the world median of 5.1%. Youth unemployment was 9.5% (2025).",
+  "Gross government debt is 65% of GDP (2025), a elevated level that has fallen from 80% in 2020. The general government balance is −2.5% of GDP (2025).",
+  "The current account balance is +4.1% of GDP (2025), a large surplus. Trade equals 152% of GDP (2025), a highly open economy. Net FDI inflows were 2.3% of GDP (2025).",
+  "IMF projections put government debt at 68% of GDP by 2031, still rising from today's level. Life expectancy is 82.3 years (2024). Population: 2.1 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

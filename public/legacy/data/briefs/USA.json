@@ -1,0 +1,16 @@
+{
+ "iso3": "USA",
+ "name": "United States",
+ "headline": "United States: +2.3% growth in 2025, 2.7% inflation, debt 124% of GDP",
+ "sections": [
+  "United States is a $30.86 trillion economy (2025), the world's largest of 215 measured. Real output grew +2.3% in 2025, slower than the world median of +3.5%. Income per person is $90K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 10.5% of GDP (2021).",
+  "Consumer prices rose 2.7% in 2025, broadly within typical target ranges, down from 8.0% in 2022. Unemployment stood at 4.3% (2025), below the world median of 5.1%. Youth unemployment was 9.3% (2025).",
+  "Gross government debt is 124% of GDP (2025), a very high level that has fallen from 133% in 2020. The general government balance is −7.1% of GDP (2025), a deficit beyond the common 3% benchmark.",
+  "The current account balance is −3.8% of GDP (2025). Trade equals 25% of GDP (2024), a relatively closed economy. Net FDI inflows were 1.0% of GDP (2025).",
+  "IMF projections put government debt at 145% of GDP by 2031, still rising from today's level. Life expectancy is 78.9 years (2024). Population: 341.9 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

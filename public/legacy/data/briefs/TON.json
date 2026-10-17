@@ -1,0 +1,16 @@
+{
+ "iso3": "TON",
+ "name": "Tonga",
+ "headline": "Tonga: +4.4% growth in 2025, 3.1% inflation, debt 27% of GDP",
+ "sections": [
+  "Tonga is a $692 million economy (2025), the world's 208th-largest of 215 measured. Real output grew +4.4% in 2025, faster than the world median of +3.5%. Income per person is $8,675 at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 5.5% of GDP (2024).",
+  "Consumer prices rose 3.1% in 2025, broadly within typical target ranges, down from 6.5% in 2022. Unemployment stood at 2.0% (2025), below the world median of 5.1%. Youth unemployment was 6.0% (2025).",
+  "Gross government debt is 27% of GDP (2025), a low level that has fallen from 42% in 2020. The general government balance is +1.2% of GDP (2025), a surplus.",
+  "The current account balance is −4.3% of GDP (2025), a sizeable external financing need. Trade equals 78% of GDP (2024), a fairly open economy. Net FDI inflows were 2.6% of GDP (2025).",
+  "IMF projections put government debt at 65% of GDP by 2031, still rising from today's level. Life expectancy is 73.1 years (2024). Population: 99 thousand (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

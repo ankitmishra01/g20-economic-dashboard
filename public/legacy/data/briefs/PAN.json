@@ -1,0 +1,16 @@
+{
+ "iso3": "PAN",
+ "name": "Panama",
+ "headline": "Panama: +4.4% growth in 2025, −0.1% inflation, debt 57% of GDP",
+ "sections": [
+  "Panama is a $90.5 billion economy (2025), the world's 84th-largest of 215 measured. Real output grew +4.4% in 2025, faster than the world median of +3.5%. Income per person is $44K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 4.8% of GDP (2025).",
+  "Consumer prices rose −0.1% in 2025, in deflation, down from 2.9% in 2022. Unemployment stood at 10.4% (2025), above the world median of 5.1%. Youth unemployment was 19.8% (2025).",
+  "Gross government debt is 57% of GDP (2025), a moderate level that has fallen from 62% in 2020. The general government balance is −3.7% of GDP (2025), a deficit beyond the common 3% benchmark.",
+  "The current account balance is −0.2% of GDP (2025). Trade equals 84% of GDP (2024), a fairly open economy. Net FDI inflows were 1.0% of GDP (2025).",
+  "IMF projections put government debt at 50% of GDP by 2031, on a declining path from today's level. Life expectancy is 79.8 years (2024). Population: 4.6 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

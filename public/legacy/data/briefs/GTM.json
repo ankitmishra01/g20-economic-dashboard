@@ -1,0 +1,16 @@
+{
+ "iso3": "GTM",
+ "name": "Guatemala",
+ "headline": "Guatemala: +4.3% growth in 2025, 1.6% inflation, debt 27% of GDP",
+ "sections": [
+  "Guatemala is a $123 billion economy (2025), the world's 70th-largest of 215 measured. Real output grew +4.3% in 2025, faster than the world median of +3.5%. Income per person is $15K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 13.2% of GDP (2025).",
+  "Consumer prices rose 1.6% in 2025, broadly within typical target ranges, down from 6.9% in 2022. Unemployment stood at 2.6% (2025), below the world median of 5.1%. Youth unemployment was 4.8% (2025).",
+  "Gross government debt is 27% of GDP (2025), a low level that has fallen from 32% in 2020. The general government balance is −1.9% of GDP (2025).",
+  "The current account balance is +4.7% of GDP (2025), a large surplus. Trade equals 47% of GDP (2025), a relatively closed economy. Net FDI inflows were 1.4% of GDP (2025).",
+  "IMF projections put government debt at 31% of GDP by 2031, still rising from today's level. Life expectancy is 72.7 years (2024). Population: 18.7 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

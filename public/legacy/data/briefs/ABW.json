@@ -1,0 +1,16 @@
+{
+ "iso3": "ABW",
+ "name": "Aruba",
+ "headline": "Aruba: +6.3% growth in 2025, 0.1% inflation, debt 65% of GDP",
+ "sections": [
+  "Aruba is a $4.4 billion economy (2025), the world's 179th-largest of 215 measured. Real output grew +6.3% in 2025, faster than the world median of +3.5%. Income per person is $52K at purchasing-power parity (2024), against a world median of $21K. Manufacturing accounts for 2.4% of GDP (2023).",
+  "Consumer prices rose 0.1% in 2025, broadly within typical target ranges, down from 5.5% in 2022. Unemployment stood at 4.0% (2025), below the world median of 5.1%.",
+  "Gross government debt is 65% of GDP (2025), a elevated level that has fallen from 117% in 2020. The general government balance is +4.0% of GDP (2025), a surplus.",
+  "The current account balance is +11.6% of GDP (2025), a large surplus. Trade equals 164% of GDP (2024), a highly open economy. Net FDI inflows were 2.5% of GDP (2024).",
+  "IMF projections put government debt at 47% of GDP by 2031, on a declining path from today's level. Life expectancy is 76.5 years (2024). Population: 109 thousand (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

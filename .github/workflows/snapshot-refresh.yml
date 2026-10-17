@@ -29,6 +29,8 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+      - name: Build country briefs from the shards (data/briefs/)
+        run: node sync/briefs.js
       - name: Build What changed (data/what-changed.json)
         run: node sync/what-changed.js
       - name: Commit offline snapshot and shards

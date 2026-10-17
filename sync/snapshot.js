@@ -13,6 +13,8 @@ const BASE = process.env.SUPABASE_URL || 'https://qozknjenyhewmkapsizk.supabase.
 const KEY = process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
 const PAGE = 1000;
 
+// Range paging needs a unique sort key, or rows at page boundaries are skipped or
+// repeated (a 'year.asc' order dropped 77 G20 rows from the snapshot).
 async function fetchAll(table, select, order, filter = '') {
   const out = [];
   for (let offset = 0; ; offset += PAGE) {
@@ -37,9 +39,9 @@ async function fetchAll(table, select, order, filter = '') {
 }
 
 (async () => {
-  const annual = await fetchAll('g20_economic_data', 'country_iso3,indicator_key,year,value', 'year.asc', `&country_iso3=in.(${SCOPE.join(',')})`);
-  const quarterly = await fetchAll('g20_quarterly_data', 'country_iso3,indicator_key,period,value', 'period.asc');
-  const meta = await fetchAll('g20_indicators', '*');
+  const annual = await fetchAll('g20_economic_data', 'country_iso3,indicator_key,year,value', 'year.asc,country_iso3.asc,indicator_key.asc', `&country_iso3=in.(${SCOPE.join(',')})`);
+  const quarterly = await fetchAll('g20_quarterly_data', 'country_iso3,indicator_key,period,value', 'period.asc,country_iso3.asc,indicator_key.asc');
+  const meta = await fetchAll('g20_indicators', '*', 'key.asc');
   if (annual.length < 1000) throw new Error(`Refusing to write snapshot: only ${annual.length} annual rows`);
   const snap = {
     generatedAt: new Date().toISOString(),

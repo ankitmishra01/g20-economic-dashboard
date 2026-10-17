@@ -1,0 +1,16 @@
+{
+ "iso3": "MAC",
+ "name": "Macao SAR, China",
+ "headline": "Macao SAR, China: +4.7% growth in 2025, 0.3% inflation, debt 0% of GDP",
+ "sections": [
+  "Macao SAR, China is a $52.1 billion economy (2025), the world's 97th-largest of 215 measured. Real output grew +4.7% in 2025, faster than the world median of +3.5%. Income per person is $137K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 0.6% of GDP (2024).",
+  "Consumer prices rose 0.3% in 2025, broadly within typical target ranges. Unemployment stood at 1.7% (2025), below the world median of 5.1%. Youth unemployment was 6.8% (2025).",
+  "Gross government debt is 0% of GDP (2025), a low level. The general government balance is +8.3% of GDP (2025), a surplus.",
+  "The current account balance is +39.6% of GDP (2025), a large surplus. Trade equals 139% of GDP (2025), a highly open economy. Net FDI inflows were 2.2% of GDP (2025).",
+  "IMF projections put government debt at 0% of GDP by 2031, broadly stable from today's level. Life expectancy is 83.3 years (2024). Population: 699 thousand (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

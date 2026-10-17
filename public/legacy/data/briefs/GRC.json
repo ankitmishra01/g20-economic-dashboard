@@ -1,0 +1,16 @@
+{
+ "iso3": "GRC",
+ "name": "Greece",
+ "headline": "Greece: +2.1% growth in 2025, 2.9% inflation, debt 147% of GDP",
+ "sections": [
+  "Greece is a $280 billion economy (2025), the world's 53rd-largest of 215 measured. Real output grew +2.1% in 2025, slower than the world median of +3.5%. Income per person is $45K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 9.1% of GDP (2025).",
+  "Consumer prices rose 2.9% in 2025, broadly within typical target ranges, down from 9.3% in 2022. Unemployment stood at 8.9% (2025), above the world median of 5.1%. Youth unemployment was 21.4% (2025).",
+  "Gross government debt is 147% of GDP (2025), a very high level that has fallen from 210% in 2020. The general government balance is +1.7% of GDP (2025), a surplus.",
+  "The current account balance is −5.7% of GDP (2025), a sizeable external financing need. Trade equals 83% of GDP (2025), a fairly open economy. Net FDI inflows were 4.8% of GDP (2025).",
+  "IMF projections put government debt at 111% of GDP by 2031, on a declining path from today's level. Life expectancy is 81.8 years (2024). Population: 10.4 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

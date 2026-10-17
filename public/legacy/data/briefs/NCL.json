@@ -1,0 +1,16 @@
+{
+ "iso3": "NCL",
+ "name": "New Caledonia",
+ "headline": "New Caledonia: −13.5% growth in 2024",
+ "sections": [
+  "New Caledonia is a $8.5 billion economy (2024), the world's 160th-largest of 215 measured. Real output grew −13.5% in 2024, slower than the world median of +3.5%.",
+  "Unemployment stood at 11.2% (2025), above the world median of 5.1%. Youth unemployment was 33.1% (2025).",
+  "No recent data is available for this section.",
+  "Trade equals 40% of GDP (2024), a relatively closed economy. Net FDI inflows were 5.9% of GDP (2024).",
+  "Life expectancy is 78.9 years (2024). Population: 295 thousand (2025)."
+ ],
+ "asOf": 2024,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

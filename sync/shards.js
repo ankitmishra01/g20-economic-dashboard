@@ -57,7 +57,7 @@ function realtimeCountries() {
   // Registry economies plus the EU comparator (an aggregate the G20 view still shows).
   const countries = [...registry.countryIso3(), 'EUU'];
   const rows = await fetchAll('g20_economic_data', 'country_iso3,indicator_key,year,value,is_projection', 'country_iso3.asc,indicator_key.asc,year.asc');
-  const quarterly = await fetchAll('g20_quarterly_data', 'country_iso3', null, '&indicator_key=eq.GDP_GROWTH');
+  const quarterly = await fetchAll('g20_quarterly_data', 'country_iso3', 'country_iso3.asc,period.asc', '&indicator_key=eq.GDP_GROWTH');
   const economies = new Set(rows.map((r) => r.country_iso3));
   const minEconomies = Number(process.env.SHARDS_MIN_ECONOMIES || 150);
   if (economies.size < minEconomies) {

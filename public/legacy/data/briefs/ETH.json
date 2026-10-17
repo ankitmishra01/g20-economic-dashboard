@@ -1,0 +1,16 @@
+{
+ "iso3": "ETH",
+ "name": "Ethiopia",
+ "headline": "Ethiopia: +9.2% growth in 2025, 16.0% inflation, debt 43% of GDP",
+ "sections": [
+  "Ethiopia is a $126 billion economy (2025), the world's 69th-largest of 215 measured. Real output grew +9.2% in 2025, faster than the world median of +3.5%. Income per person is $3,622 at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 4.2% of GDP (2025).",
+  "Consumer prices rose 16.0% in 2025, well above typical central bank targets, down from 33.9% in 2022. Unemployment stood at 3.3% (2025), below the world median of 5.1%. Youth unemployment was 5.4% (2025).",
+  "Gross government debt is 43% of GDP (2025), a moderate level that has fallen from 53% in 2020. The general government balance is −1.2% of GDP (2025).",
+  "The current account balance is −0.8% of GDP (2025). Trade equals 33% of GDP (2025), a relatively closed economy. Net FDI inflows were 3.0% of GDP (2025).",
+  "IMF projections put government debt at 28% of GDP by 2031, on a declining path from today's level. Life expectancy is 67.6 years (2024). Population: 110.6 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

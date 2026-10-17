@@ -603,6 +603,19 @@ Stores up to 24 dated vintages. A rerun on the same date replaces that date inst
 
 `public/legacy/forecast-model.js` and `public/legacy/forecast-history.json` contain the separate one year growth and recession system used by the forecast strip.
 
+### `public/legacy/data/briefs/{ISO3}.json`
+
+Written by `sync/briefs.js` (`lib/briefs-build.cjs`) after `sync/shards.js` in `snapshot-refresh.yml`: one deterministic five-section brief per registry economy (size and growth, prices and labour, public finances, external, outlook), every figure with its year, values more than six years older than the latest actual year left out, IMF projections labelled as projections. No AI call. The country profile writes its brief live from the data; this file is the fallback when live data is unavailable (it replaced the hand-written 2024 commentary).
+
+| Field | Meaning |
+|---|---|
+| `iso3`, `name` | Economy |
+| `headline` | One-line summary |
+| `sections` | Five paragraphs |
+| `asOf` | Latest year among GDP, growth, inflation and debt |
+| `generatedAt` | Shard build time |
+| `source` | `deterministic` |
+
 ## Project structure
 
 ```text
@@ -642,6 +655,27 @@ Writes require `SUPABASE_SERVICE_ROLE_KEY`. The refresh utility rejects missing 
 ### Browser and AI boundaries
 
 Dynamic external content is escaped through shared helpers. Provider keys stay in Vercel environment variables. The `/api/*` functions send CORS headers only to allow-listed origins. `/api/agent` builds its data context on the server, rejects foreign origins, rate limits clients, limits inputs, applies timeouts and instructs providers not to invent unsupported numbers.
+
+`lib/cors.cjs` allows production, localhost and only this project's previews (`g20-*-ankitmishra01s-projects.vercel.app`). `/api/agent` also caps daily use (60 questions per client and 400 per server instance per day; `AGENT_DAILY_PER_CLIENT`, `AGENT_DAILY_CAP`). Those limits are per instance and an Origin header can be spoofed by scripts, so the global backstop is a Vercel Firewall rule, applied once with a staged rollout from a checkout linked to the `g20` project (`vercel link --yes --project g20 --scope ankitmishra01s-projects`):
+
+```bash
+# 1. Log only: watch real traffic for a few days
+vercel firewall rules add "Ask AI rate limit" \
+  --condition '{"type":"path","op":"eq","value":"/api/agent"}' \
+  --condition '{"type":"method","op":"eq","value":"POST"}' \
+  --action rate_limit --rate-limit-window 60 --rate-limit-requests 20 \
+  --rate-limit-keys ip --rate-limit-action log --yes
+vercel firewall diff && vercel firewall publish --yes
+# 2. Enforce (429) once the traffic view shows only abusive clients over the limit
+vercel firewall rules edit "Ask AI rate limit" --action rate_limit --rate-limit-action rate_limit --yes
+vercel firewall publish --yes
+```
+
+Blocked requests are not billed; counters are per region.
+
+### Monitoring
+
+`/api/status` reports coverage and freshness for observed G20 rows (IMF projections excluded; ordered, parallel paging). `.github/workflows/health-probe.yml` runs `sync/probe.js` every 6 hours: the dashboard shell loads, `data/latest.json` is under 40 days old, `data/realtime.json` is under 4 days old, and `/api/status` is healthy. On failure it opens one issue (none if a probe issue is already open). `.github/workflows/ci.yml` runs tests, typecheck and the build on every pull request and push to `main`.
 
 ## Known limits
 
@@ -696,7 +730,7 @@ Inspect the specific schema, interval, finite value, debt identity or baseline g
 
 ## Retired PR #11 surfaces
 
-PR #11 added a separate Next.js experience (`/pulse`, `/countries`, `/indicators`, `/calendar`, `/compare`, `/account`, `/sign-in`), a normalized Supabase fact model, a `/api/v1` API, watchlists, alerts and email briefs. PR #12 restored this dashboard as the production default. Phase 0 retired the remaining public routes: each now redirects to `/legacy/index.html` (`next.config.ts`), and their scheduled jobs (`release-refresh.yml`, `market-refresh.yml`, the daily brief cron) no longer run on a schedule. The code, the additive migrations and `/api/v1` stay in the repository so solid pieces (market data helpers, freshness classification, the normalized schema) can be reused. Data on those tables distinguishes actual and forecast observations, but the dashboard does not depend on them.
+PR #11 added a separate Next.js experience (`/pulse`, `/countries`, `/indicators`, `/calendar`, `/compare`, `/account`, `/sign-in`), a normalized Supabase fact model, a `/api/v1` API, watchlists, alerts and email briefs. PR #12 restored this dashboard as the production default. Phase 0 retired the remaining public routes: each now redirects to the dashboard at `/` (`next.config.ts`), `/api/v1/*` answers `410 Gone` (`src/proxy.ts`, which runs only on `/api/v1`; the Supabase session-refresh middleware that ran on every request was removed in Phase C), and their scheduled jobs (`release-refresh.yml`, `market-refresh.yml`, the daily brief cron) no longer run on a schedule. The code and the additive migrations stay in the repository so solid pieces (market data helpers, freshness classification, the normalized schema) can be reused. Data on those tables distinguishes actual and forecast observations, but the dashboard does not depend on them.
 
 ## Deployment and rollback
 

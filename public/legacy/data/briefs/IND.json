@@ -1,0 +1,16 @@
+{
+ "iso3": "IND",
+ "name": "India",
+ "headline": "India: +7.8% growth in 2025, 2.0% inflation, debt 84% of GDP",
+ "sections": [
+  "India is a $3.91 trillion economy (2025), the world's 7th-largest of 215 measured. Real output grew +7.8% in 2025, faster than the world median of +3.5%. Income per person is $12K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 13.5% of GDP (2025).",
+  "Consumer prices rose 2.0% in 2025, broadly within typical target ranges, down from 6.6% in 2022. Unemployment stood at 5.0% (2025), below the world median of 5.1%. Youth unemployment was 16.0% (2025).",
+  "Gross government debt is 84% of GDP (2025), a elevated level that has fallen from 90% in 2020. The general government balance is −7.4% of GDP (2025), a deficit beyond the common 3% benchmark.",
+  "The current account balance is −0.7% of GDP (2025). Trade equals 46% of GDP (2025), a relatively closed economy. Net FDI inflows were 1.0% of GDP (2025).",
+  "IMF projections put government debt at 75% of GDP by 2031, on a declining path from today's level. Life expectancy is 72.2 years (2024). Population: 1463.9 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

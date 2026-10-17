@@ -1,0 +1,16 @@
+{
+ "iso3": "KAZ",
+ "name": "Kazakhstan",
+ "headline": "Kazakhstan: +6.5% growth in 2025, 11.4% inflation, debt 24% of GDP",
+ "sections": [
+  "Kazakhstan is a $306 billion economy (2025), the world's 50th-largest of 215 measured. Real output grew +6.5% in 2025, faster than the world median of +3.5%. Income per person is $44K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 12.7% of GDP (2025).",
+  "Consumer prices rose 11.4% in 2025, well above typical central bank targets, down from 15.0% in 2022. Unemployment stood at 4.6% (2025), below the world median of 5.1%. Youth unemployment was 3.8% (2025).",
+  "Gross government debt is 24% of GDP (2025), a low level. The general government balance is −3.1% of GDP (2025), a deficit beyond the common 3% benchmark.",
+  "The current account balance is −4.1% of GDP (2025), a sizeable external financing need. Trade equals 57% of GDP (2024), a fairly open economy. Net FDI inflows were −0.3% of GDP (2025).",
+  "IMF projections put government debt at 30% of GDP by 2031, still rising from today's level. Life expectancy is 74.5 years (2024). Population: 20.4 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

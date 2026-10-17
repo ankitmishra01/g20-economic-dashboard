@@ -1,0 +1,16 @@
+{
+ "iso3": "SLB",
+ "name": "Solomon Islands",
+ "headline": "Solomon Islands: +3.6% growth in 2025, 2.7% inflation, debt 30% of GDP",
+ "sections": [
+  "Solomon Islands is a $1.7 billion economy (2025), the world's 197th-largest of 215 measured. Real output grew +3.6% in 2025, close to the world median of +3.5%. Income per person is $2,788 at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 10.1% of GDP (2024).",
+  "Consumer prices rose 2.7% in 2025, broadly within typical target ranges, down from 5.4% in 2022. Unemployment stood at 1.4% (2025), below the world median of 5.1%. Youth unemployment was 2.8% (2025).",
+  "Gross government debt is 30% of GDP (2025), a low level that has risen from 13% in 2020. The general government balance is −3.9% of GDP (2025), a deficit beyond the common 3% benchmark.",
+  "The current account balance is +5.6% of GDP (2025), a large surplus. Trade equals 111% of GDP (2024), a highly open economy. Net FDI inflows were 3.8% of GDP (2025).",
+  "IMF projections put government debt at 36% of GDP by 2031, still rising from today's level. Life expectancy is 70.7 years (2024). Population: 798 thousand (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

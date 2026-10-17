@@ -1,0 +1,16 @@
+{
+ "iso3": "SGP",
+ "name": "Singapore",
+ "headline": "Singapore: +5.0% growth in 2025, 0.9% inflation, debt 166% of GDP",
+ "sections": [
+  "Singapore is a $604 billion economy (2025), the world's 29th-largest of 215 measured. Real output grew +5.0% in 2025, faster than the world median of +3.5%. Income per person is $163K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 17.4% of GDP (2025).",
+  "Consumer prices rose 0.9% in 2025, broadly within typical target ranges, down from 6.1% in 2022. Unemployment stood at 2.0% (2025), below the world median of 5.1%. Youth unemployment was 6.8% (2025).",
+  "Gross government debt is 166% of GDP (2025), a very high level that has risen from 147% in 2020. The general government balance is +4.2% of GDP (2025), a surplus.",
+  "The current account balance is +16.7% of GDP (2025), a large surplus. Trade equals 320% of GDP (2025), a highly open economy. Net FDI inflows were 26.3% of GDP (2025).",
+  "IMF projections put government debt at 169% of GDP by 2031, still rising from today's level. Life expectancy is 83.3 years (2024). Population: 6.1 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

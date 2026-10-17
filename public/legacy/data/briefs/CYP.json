@@ -1,0 +1,16 @@
+{
+ "iso3": "CYP",
+ "name": "Cyprus",
+ "headline": "Cyprus: +3.8% growth in 2025, 0.8% inflation, debt 55% of GDP",
+ "sections": [
+  "Cyprus is a $41.2 billion economy (2025), the world's 106th-largest of 215 measured. Real output grew +3.8% in 2025, close to the world median of +3.5%. Income per person is $65K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 4.4% of GDP (2025).",
+  "Consumer prices rose 0.8% in 2025, broadly within typical target ranges, down from 8.1% in 2022. Unemployment stood at 4.4% (2025), below the world median of 5.1%. Youth unemployment was 12.7% (2025).",
+  "Gross government debt is 55% of GDP (2025), a moderate level that has fallen from 114% in 2020. The general government balance is +3.4% of GDP (2025), a surplus.",
+  "The current account balance is −6.4% of GDP (2025), a sizeable external financing need. Trade equals 189% of GDP (2025), a highly open economy. Net FDI inflows were 27.1% of GDP (2025).",
+  "IMF projections put government debt at 33% of GDP by 2031, on a declining path from today's level. Life expectancy is 81.8 years (2024). Population: 983 thousand (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

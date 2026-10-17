@@ -1,0 +1,16 @@
+{
+ "iso3": "MHL",
+ "name": "Marshall Islands",
+ "headline": "Marshall Islands: +1.8% growth in 2025, 4.1% inflation, debt 9% of GDP",
+ "sections": [
+  "Marshall Islands is a $303 million economy (2025), the world's 213th-largest of 215 measured. Real output grew +1.8% in 2025, slower than the world median of +3.5%. Income per person is $8,964 at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 3.2% of GDP (2024).",
+  "Consumer prices rose 4.1% in 2025, above typical targets.",
+  "Gross government debt is 9% of GDP (2025), a low level that has fallen from 22% in 2020. The general government balance is +4.8% of GDP (2025), a surplus.",
+  "The current account balance is +33.8% of GDP (2025), a large surplus. Trade equals 116% of GDP (2025), a highly open economy. Net FDI inflows were 1.0% of GDP (2025).",
+  "IMF projections put government debt at 14% of GDP by 2031, still rising from today's level. Life expectancy is 67.1 years (2024). Population: 38 thousand (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

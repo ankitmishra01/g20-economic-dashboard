@@ -1,0 +1,16 @@
+{
+ "iso3": "BMU",
+ "name": "Bermuda",
+ "headline": "Bermuda: +1.9% growth in 2024",
+ "sections": [
+  "Bermuda is a $9.2 billion economy (2024), the world's 158th-largest of 215 measured. Real output grew +1.9% in 2024, slower than the world median of +3.5%. Income per person is $119K at purchasing-power parity (2024), against a world median of $21K. Manufacturing accounts for 0.3% of GDP (2024).",
+  "No recent data is available for this section.",
+  "No recent data is available for this section.",
+  "The current account balance is +18.3% of GDP (2024), a large surplus. Trade equals 80% of GDP (2024), a fairly open economy. Net FDI inflows were 1.3% of GDP (2024).",
+  "Life expectancy is 82.5 years (2024). Population: 65 thousand (2025)."
+ ],
+ "asOf": 2024,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

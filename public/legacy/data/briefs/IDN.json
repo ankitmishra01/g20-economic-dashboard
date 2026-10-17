@@ -1,0 +1,16 @@
+{
+ "iso3": "IDN",
+ "name": "Indonesia",
+ "headline": "Indonesia: +5.1% growth in 2025, 1.9% inflation, debt 41% of GDP",
+ "sections": [
+  "Indonesia is a $1.45 trillion economy (2025), the world's 18th-largest of 215 measured. Real output grew +5.1% in 2025, faster than the world median of +3.5%. Income per person is $18K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 19.1% of GDP (2025).",
+  "Consumer prices rose 1.9% in 2025, broadly within typical target ranges, down from 4.1% in 2022. Unemployment stood at 4.9% (2025), below the world median of 5.1%. Youth unemployment was 13.0% (2025).",
+  "Gross government debt is 41% of GDP (2025), a moderate level. The general government balance is −2.9% of GDP (2025).",
+  "The current account balance is −0.1% of GDP (2025). Trade equals 43% of GDP (2025), a relatively closed economy. Net FDI inflows were 1.6% of GDP (2025).",
+  "IMF projections put government debt at 42% of GDP by 2031, broadly stable from today's level. Life expectancy is 71.3 years (2024). Population: 284.7 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

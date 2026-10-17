@@ -1,0 +1,16 @@
+{
+ "iso3": "COM",
+ "name": "Comoros",
+ "headline": "Comoros: +3.8% growth in 2025, 3.2% inflation, debt 31% of GDP",
+ "sections": [
+  "Comoros is a $1.6 billion economy (2025), the world's 198th-largest of 215 measured. Real output grew +3.8% in 2025, close to the world median of +3.5%. Income per person is $4,238 at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 7.2% of GDP (2025).",
+  "Consumer prices rose 3.2% in 2025, broadly within typical target ranges, down from 12.4% in 2022. Unemployment stood at 3.8% (2025), below the world median of 5.1%. Youth unemployment was 8.8% (2025).",
+  "Gross government debt is 31% of GDP (2025), a low level that has risen from 26% in 2020. The general government balance is −1.3% of GDP (2025).",
+  "The current account balance is −0.5% of GDP (2025). Trade equals 41% of GDP (2025), a relatively closed economy. Net FDI inflows were 0.5% of GDP (2025).",
+  "IMF projections put government debt at 29% of GDP by 2031, broadly stable from today's level. Life expectancy is 67.0 years (2024). Population: 910 thousand (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

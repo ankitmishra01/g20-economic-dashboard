@@ -142,10 +142,8 @@ function renderCountryProfile(iso3) {
   const vintage = Math.max(
     gdp?.year || 0, gr?.year || 0, inf?.year || 0, une?.year || 0, debt?.year || 0
   );
-  const commentaryDate = window.G20_COMMENTARY?.global?._generatedAt
-    ? new Date(window.G20_COMMENTARY.global._generatedAt)
-        .toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-    : null;
+  // The brief is written from the live data at render time; no separate analysis date.
+  const commentaryDate = null;
 
   // AI draft context for this country
   const contextSnippet = [
@@ -1055,21 +1053,19 @@ function loadSavedNotes(iso3) {
     return;
   }
 
-  // 3. Static pre-written fallback (only when live data is unavailable)
-  const cc = window.G20_COMMENTARY?.countries?.[iso3];
-  if (cc?.sections?.length) {
-    headline.textContent = `${cc.headline || '—'} (archived 2024 text: live data unavailable)`;
-    cc.sections.forEach((s, i) => {
-      const p = document.getElementById(`brief-body-${i}`);
-      if (p) p.textContent = s.body;
-    });
-  } else if (cc?.paragraphs?.length) {
-    headline.textContent = `${cc.headline || '—'} (archived 2024 text: live data unavailable)`;
-    cc.paragraphs.forEach((text, i) => {
-      const p = document.getElementById(`brief-body-${i}`);
-      if (p) p.textContent = text;
-    });
-  }
+  // 3. Fallback when live data is unavailable: the brief generated from the published
+  //    data at the last refresh (sync/briefs.js → data/briefs/{ISO3}.json).
+  fetch(`data/briefs/${iso3}.json`, { cache: 'no-cache' })
+    .then(r => (r.ok ? r.json() : null))
+    .then(b => {
+      if (!b || !Array.isArray(b.sections)) return;
+      headline.textContent = `${b.headline}${b.asOf ? ` (data to ${b.asOf}, refreshed ${String(b.generatedAt || '').slice(0, 10)})` : ''}`;
+      b.sections.forEach((text, i) => {
+        const p = document.getElementById(`brief-body-${i}`);
+        if (p) p.textContent = text;
+      });
+    })
+    .catch(() => {});
 }
 
 // ── Brief panel save ─────────────────────────────────────────────────────────

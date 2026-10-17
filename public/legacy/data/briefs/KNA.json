@@ -1,0 +1,16 @@
+{
+ "iso3": "KNA",
+ "name": "St. Kitts and Nevis",
+ "headline": "St. Kitts and Nevis: +1.5% growth in 2025, 0.8% inflation, debt 59% of GDP",
+ "sections": [
+  "St. Kitts and Nevis is a $1.1 billion economy (2025), the world's 204th-largest of 215 measured. Real output grew +1.5% in 2025, slower than the world median of +3.5%. Income per person is $37K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 4.0% of GDP (2025).",
+  "Consumer prices rose 0.8% in 2025, broadly within typical target ranges, down from 2.7% in 2022.",
+  "Gross government debt is 59% of GDP (2025), a moderate level that has fallen from 72% in 2020. The general government balance is −11.8% of GDP (2025), a deficit beyond the common 3% benchmark.",
+  "The current account balance is −14.4% of GDP (2025), a sizeable external financing need. Net FDI inflows were 2.4% of GDP (2025).",
+  "IMF projections put government debt at 79% of GDP by 2031, still rising from today's level. Life expectancy is 72.3 years (2024). Population: 52 thousand (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}
