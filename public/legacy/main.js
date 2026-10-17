@@ -118,8 +118,13 @@
     // OECD total growth (static file refreshed with the data); optional, never blocks the app
     fetch('oecd-aggregate.json').then(r => r.ok ? r.json() : null).then(j => { if (j) window.OECD_AGG = j; }).catch(() => {});
 
+    // Daily market layer: strip + country profile figures (optional, never blocks).
+    const realtime = window.loadRealtime ? window.loadRealtime() : Promise.resolve(null);
+    realtime.then(() => window.mountMarketStrip && window.mountMarketStrip());
+
     try {
       await window.G20Data.loadAllData();
+      await realtime;
       _dataLoaded = true;
       document.getElementById('data-status').textContent = window.G20_SNAPSHOT_AT ? 'offline snapshot' : 'official observations';
 

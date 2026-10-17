@@ -105,6 +105,9 @@
       </div>
     </header>
 
+    <!-- Daily market layer (data/realtime.json) — built by components/markets.js -->
+    <div class="news-strip market-strip" id="market-strip" hidden aria-label="Daily official market references"></div>
+
     <!-- Page root — content swapped by router -->
     <div id="page-root" style="flex:1">
       <div class="loading-spinner">
@@ -175,6 +178,7 @@
 <script src="components/analysis.js"></script>
 <script src="components/insights.js"></script>
 <script src="components/worldmap.js"></script>
+<script src="components/markets.js"></script>
 <!-- Forecast model + yield-curve term spread (generated offline) + inference -->
 <script src="forecast-model.js"></script>
 <script src="term-spread.js"></script>
