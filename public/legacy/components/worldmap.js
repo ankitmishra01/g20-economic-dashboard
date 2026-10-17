@@ -68,6 +68,7 @@
       <canvas id="${id}" data-key="${key}" aria-label="World map of the selected indicator" role="img"></canvas>
       <div class="worldmap-status" id="${id}-status">Loading map…</div>
     </div>
+    <div class="worldmap-legend" id="${id}-legend"></div>
   </div>`;
   };
 
@@ -112,6 +113,22 @@
       if (meta.dir === 'div') return t < 0.5 ? mix(neg, base, t * 2) : mix(base, pos, (t - 0.5) * 2);
       return mix(base, meta.dir === 'bad' ? neg : info, 0.12 + t * 0.88);
     };
+
+    // Legend: the colour ramp with its capped ends, and which economies sit beyond them.
+    const legend = document.getElementById(`${id}-legend`);
+    if (legend) {
+      const stops = [0, 0.25, 0.5, 0.75, 1].map(t => `${colorOf(lo + t * (hi - lo))} ${t * 100}%`).join(', ');
+      const beyond = [...values.entries()].filter(([, l]) => l.value > hi || l.value < lo)
+        .sort((a, b) => Math.abs(b[1].value) - Math.abs(a[1].value));
+      const name = iso => scope.get(iso)?.name || iso;
+      legend.innerHTML = values.size ? `
+        <span class="worldmap-legend__end">${meta.fmt(lo)}${sorted[0] < lo ? ' or less' : ''}</span>
+        <span class="worldmap-legend__ramp" style="background:linear-gradient(90deg, ${stops})"></span>
+        <span class="worldmap-legend__end">${meta.fmt(hi)}${sorted[sorted.length - 1] > hi ? ' or more' : ''}</span>
+        <span class="worldmap-legend__note">${beyond.length
+          ? `Colours capped at the 5th–95th percentile so outliers don't wash out the map; ${beyond.length} beyond the range, e.g. ${beyond.slice(0, 3).map(([iso, l]) => `${A.escapeText(name(iso))} ${meta.fmt(l.value)}`).join(', ')}.`
+          : 'Colour scale spans the 5th–95th percentile.'} Grey: outside scope or no data.</span>` : '';
+    }
 
     const data = geo.features.map(f => {
       const l = f.iso3 && values.get(f.iso3);

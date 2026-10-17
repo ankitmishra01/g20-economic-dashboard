@@ -33,7 +33,7 @@
       <div class="rail__mark">G20</div>
       <div>
         <div class="rail__title">Monitor <span class="badge">live</span></div>
-        <div class="rail__sub" id="rail-period">Q4·2024</div>
+        <div class="rail__sub" id="rail-period">—</div>
       </div>
     </div>
 
@@ -95,6 +95,7 @@
           <span class="dot"></span>
           <span id="live-time">Live · —</span>
         </div>
+        <button class="pill-btn qs-btn" id="qs-btn" onclick="openQuickSearch()" title="Find any economy (press /)" aria-haspopup="dialog"><span class="qs-btn__lbl">Find economy</span><kbd class="qs-kbd">/</kbd></button>
         <button class="pill-btn" id="present-btn" onclick="togglePresentMode()" aria-pressed="false" title="Larger text and charts for screen sharing">Present</button>
         <button class="ask-btn" id="ask-btn" onclick="toggleAgentDrawer()">
           <svg class="ai-glyph" viewBox="0 0 14 14" fill="currentColor">
@@ -145,7 +146,7 @@
   </div>
   <div class="agent-input-area">
     <input class="agent-input" id="agent-input" type="text"
-      placeholder="Ask about G20 economies…"
+      placeholder="Ask about any economy…"
       onkeydown="if(event.key==='Enter') sendAgentQuestion()">
     <button class="agent-send" id="agent-send" onclick="sendAgentQuestion()">Ask</button>
   </div>
@@ -156,7 +157,7 @@
       <button class="agent-sq" onclick="askSuggested(this)">Show me the G20 fiscal health overview — debt, deficits, and tax revenue.</button>
       <button class="agent-sq" onclick="askSuggested(this)">Compare India, China, and USA economic performance.</button>
       <button class="agent-sq" onclick="askSuggested(this)">What does the outlook say about India's growth through 2027, and how reliable is that projection?</button>
-      <button class="agent-sq" onclick="askSuggested(this)">If Japan's debt costs rise, what are the implications for the rest of the G20?</button>
+      <button class="agent-sq" onclick="askSuggested(this)">If Japan's debt costs rise, what are the implications for other major economies?</button>
     </div>
   </div>
 </aside>
@@ -193,5 +194,11 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <!-- Chart.js datalabels plugin — value labels on bar charts -->
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <div class="qs-backdrop" id="qs-backdrop" hidden onclick="closeQuickSearch()"></div>
+  <div class="panel qs" id="qs" role="dialog" aria-label="Find an economy" hidden>
+    <div class="qs__input filter-bar" style="margin:0"><input id="qs-input" type="search" placeholder="Type a country, ISO code or region…" autocomplete="off" aria-label="Find an economy"></div>
+    <div class="qs__list" id="qs-list" role="listbox"></div>
+    <div class="qs__hint">↑ ↓ to move · Enter to open profile · Esc to close</div>
+  </div>
 </body>
 </html>

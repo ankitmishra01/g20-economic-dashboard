@@ -45,7 +45,9 @@
   function fmtGDPScaled(n) {
     if (n == null || isNaN(n)) return '—';
     const a = Math.abs(n);
-    if (a >= 1e11) return `$${(n / 1e12).toFixed(2)}T`;
+    // One unit per magnitude: $1.84T, $280B, $19.7B, $871M (never "$0.28T").
+    if (a >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
+    if (a >= 1e11) return `$${(n / 1e9).toFixed(0)}B`;
     if (a >= 1e9)  return `$${(n / 1e9).toFixed(1)}B`;
     return `$${(n / 1e6).toFixed(0)}M`;
   }
@@ -118,6 +120,7 @@
     const v = (name, fallback) => cs.getPropertyValue(name).trim() || fallback;
     return {
       tick:      v('--text-3', '#8A8A8A'),
+      text1:     v('--text-1', '#0A0A0A'),
       text2:     v('--text-2', '#383838'),
       grid:      v('--chart-grid', 'rgba(0,0,0,0.04)'),
       tooltipBg: v('--chart-tooltip-bg', 'rgba(10,10,10,0.88)'),

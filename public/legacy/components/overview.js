@@ -447,9 +447,9 @@ function renderGrowthBars(rows) {
     const sign = display >= 0 ? '+' : '';
     return `
     <div class="bar-row">
-      <div class="bar-row__label">
+      <div class="bar-row__label" title="${A.escapeAttr(c.name)}">
         <span class="bar-row__flag" style="${flagBG(c.code)}"></span>
-        ${A.escapeText(c.name)}
+        <span class="bar-row__name">${A.escapeText(c.name)}</span>
       </div>
       <div class="bar-row__track">
         ${zeroPct > 0 ? `<div class="bar-row__zero" style="left:${zeroPct.toFixed(1)}%"></div>` : ''}
@@ -462,19 +462,24 @@ function renderGrowthBars(rows) {
 
 // ── Inflation bar chart ────────────────────────────────────────────────────────
 function renderInflationBars(rows) {
-  const maxVal = Math.max(...rows.map(c => c.value));
+  // One extreme value (e.g. hyperinflation) would flatten every other bar: scale to the
+  // runner-up and show the leader as a full bar with a break mark; the label keeps the true value.
+  const vals = rows.map(c => c.value).sort((a, b) => b - a);
+  const broken = vals.length > 2 && vals[0] > 2 * vals[1];
+  const maxVal = broken ? vals[1] * 1.15 : vals[0];
   return `<div class="bar-chart">${rows.map(c => {
-    const pct = (c.value / maxVal) * 100;
+    const pct = Math.min(100, (c.value / maxVal) * 100);
+    const brk = broken && c.value > maxVal;
     const cls = c.value > 8 ? 'bar-neg' : c.value > 4 ? 'bar-warn' : '';
     const valCls = c.value > 8 ? 'v-neg' : c.value > 4 ? 'v-warn' : '';
     return `
     <div class="bar-row">
-      <div class="bar-row__label">
+      <div class="bar-row__label" title="${A.escapeAttr(c.name)}">
         <span class="bar-row__flag" style="${flagBG(c.code)}"></span>
-        ${A.escapeText(c.name)}
+        <span class="bar-row__name">${A.escapeText(c.name)}</span>
       </div>
       <div class="bar-row__track">
-        <div class="bar-row__bar ${cls}" style="left:0;width:${pct}%"></div>
+        <div class="bar-row__bar ${cls}${brk ? ' bar-row__bar--break' : ''}" style="left:0;width:${pct}%"${brk ? ' title="Bar shortened: off the scale of the others"' : ''}></div>
       </div>
       <div class="bar-row__val ${valCls}">${c.value.toFixed(1)}%</div>
     </div>`;
@@ -583,11 +588,11 @@ function renderGlobalOutlookComputed() {
       ? list.map(c => ({ c, yc: window.computeYieldCurve(c.iso3) })).filter(x => x.yc.covered && x.yc.spread <= -0.25)
       : [];
     if (medFc != null) {
-      p5 = `Turning from the record to the forecast, our models put median G20 growth at <strong>${pct(medFc)}</strong> next year, a step ${medFc < medGrowth ? 'down from' : 'up from'} the <strong>${pct(medGrowth)}</strong> just recorded. `;
+      p5 = `Turning from the record to the forecast, our models put median ${PEER()} growth at <strong>${pct(medFc)}</strong> next year, a step ${medFc < medGrowth ? 'down from' : 'up from'} the <strong>${pct(medGrowth)}</strong> just recorded. `;
       p5 += inv.length
         ? `The clearest warning sits in the bond market: the yield curve is inverted in ${inv.length} of the covered advanced economies (${inv.map(x => A.escapeText(x.c.name)).join(', ')}), a configuration that has preceded past downturns. `
         : `No covered advanced economy currently runs an inverted yield curve, the configuration that has typically preceded past downturns. `;
-      p5 += `On annual data we make no calibrated recession-probability call, so the operative gauge remains fundamentals fragility. Unless the curve re-steepens where it has inverted, the advanced G20 needs to ready countercyclical capacity now, while the large emerging markets should rebuild fiscal and external buffers while growth still affords the room.`;
+      p5 += `On annual data we make no calibrated recession-probability call, so the operative gauge remains fundamentals fragility. Unless the curve re-steepens where it has inverted, advanced economies need to ready countercyclical capacity now, while the large emerging markets should rebuild fiscal and external buffers while growth still affords the room.`;
     }
   }
 

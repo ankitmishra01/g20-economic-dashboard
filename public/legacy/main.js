@@ -296,7 +296,7 @@
         case 'overview':    root.innerHTML = renderOverview();     break;
         case 'projections': root.innerHTML = renderProjections();  break;
         case 'analysis':    root.innerHTML = renderAnalysis();     break;
-        case 'countries':   root.innerHTML = renderCountries();   break;
+        case 'countries':   root.innerHTML = renderCountries(); if (window.countriesFilter) countriesFilter(); break;
         case 'prosperity':  root.innerHTML = renderProsperity();  break;
         case 'ai-economy':  root.innerHTML = renderAIEconomy();   break;
         case 'compare':     root.innerHTML = renderCompare();     break;

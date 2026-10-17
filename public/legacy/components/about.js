@@ -40,7 +40,7 @@ function renderAbout() {
       Comparing economies normally means hours of manual collection and cleaning, and errors slip through unnoticed.
     </p>
     <p style="margin:0;font-size:14.5px;line-height:1.7;color:var(--text-2)">
-      This monitor does that work once, automatically: ${indicators} indicators for ${economies} economies, with the ${members} G20 members (19 countries and the EU) as the default view,
+      This monitor does that work once, automatically: ${indicators} indicators for ${economies} economies, with every economy as the default view and the ${members}-member G20 (19 countries and the EU) one click away in the scope menu,
       refreshed monthly, plus daily policy rates, FX and market reference data, a ranked "What changed" brief, country profiles, rankings, a risk register, IMF projections and a plain-English analyst you can question.
     </p>
   </div></div>
@@ -106,11 +106,11 @@ function renderAbout() {
   <div class="sec-head"><div class="sec-head__title">Known limits <span class="sec-head__sub">stated plainly</span></div></div>
   <div class="panel mb-20"><div class="panel__body" style="padding:14px 20px;font-size:14px;line-height:1.75;color:var(--text-2)">
     Latest values are capped at ${window.LATEST_ACTUAL_YEAR}, and several ${window.LATEST_ACTUAL_YEAR} figures are IMF estimates rather than final outturns.
-    Aggregate GDP sums the 19 countries only, because the EU's output is already inside its member states.
+    Aggregate GDP never double counts: regional aggregates such as the EU are kept out of the economy list, and the G20 view sums its 19 countries only because the EU's output is already inside its member states.
     The AI labour exposure and AI readiness figures come from third-party research and the AI Trajectory Index, not from the sources above.
     The free-tier AI model can be rate limited, in which case answers come from the data engine.
     Macro data refreshes monthly and market data daily, so this is not a real-time market feed.
-    The projection panel covers 19 countries with roughly 25 annual observations, cannot anticipate policy decisions or structural breaks, and is not advice. Scenarios are illustrative.
+    The Outlook projection panel covers the G20's 19 countries with roughly 25 annual observations each (the Outlook page stays on the G20 in every scope), cannot anticipate policy decisions or structural breaks, and is not advice. Scenarios are illustrative.
   </div></div>
 
   <div class="methodology">
