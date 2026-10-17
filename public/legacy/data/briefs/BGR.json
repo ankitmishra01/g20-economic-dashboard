@@ -1,0 +1,16 @@
+{
+ "iso3": "BGR",
+ "name": "Bulgaria",
+ "headline": "Bulgaria: +3.1% growth in 2025, 3.5% inflation, debt 30% of GDP",
+ "sections": [
+  "Bulgaria is a $131 billion economy (2025), the world's 65th-largest of 215 measured. Real output grew +3.1% in 2025, close to the world median of +3.5%. Income per person is $44K at purchasing-power parity (2025), against a world median of $21K.",
+  "Consumer prices rose 3.5% in 2025, broadly within typical target ranges, down from 13.0% in 2022. Unemployment stood at 3.6% (2025), below the world median of 5.1%. Youth unemployment was 10.2% (2025).",
+  "Gross government debt is 30% of GDP (2025), a low level that has risen from 23% in 2020. The general government balance is −3.0% of GDP (2025).",
+  "The current account balance is −6.1% of GDP (2025), a sizeable external financing need. Trade equals 103% of GDP (2025), a highly open economy. Net FDI inflows were 3.7% of GDP (2025).",
+  "IMF projections put government debt at 41% of GDP by 2031, still rising from today's level. Life expectancy is 75.8 years (2024). Population: 6.4 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

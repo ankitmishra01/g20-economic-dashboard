@@ -1,0 +1,16 @@
+{
+ "iso3": "BLR",
+ "name": "Belarus",
+ "headline": "Belarus: +1.3% growth in 2025, 6.6% inflation, debt 31% of GDP",
+ "sections": [
+  "Belarus is a $96.0 billion economy (2025), the world's 81st-largest of 215 measured. Real output grew +1.3% in 2025, slower than the world median of +3.5%. Income per person is $35K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 20.5% of GDP (2025).",
+  "Consumer prices rose 6.6% in 2025, above typical targets, down from 15.2% in 2022. Unemployment stood at 2.5% (2025), below the world median of 5.1%. Youth unemployment was 9.2% (2025).",
+  "Gross government debt is 31% of GDP (2025), a low level that has fallen from 48% in 2020. The general government balance is +0.1% of GDP (2025), a surplus.",
+  "The current account balance is −1.9% of GDP (2025). Trade equals 112% of GDP (2025), a highly open economy. Net FDI inflows were 1.8% of GDP (2025).",
+  "IMF projections put government debt at 27% of GDP by 2031, on a declining path from today's level. Life expectancy is 74.4 years (2024). Population: 9.1 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

@@ -1,0 +1,16 @@
+{
+ "iso3": "CAN",
+ "name": "Canada",
+ "headline": "Canada: +1.9% growth in 2025, 2.1% inflation, debt 114% of GDP",
+ "sections": [
+  "Canada is a $2.32 trillion economy (2025), the world's 11th-largest of 215 measured. Real output grew +1.9% in 2025, slower than the world median of +3.5%. Income per person is $67K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 9.3% of GDP (2022).",
+  "Consumer prices rose 2.1% in 2025, broadly within typical target ranges, down from 6.8% in 2022. Unemployment stood at 6.9% (2025), above the world median of 5.1%. Youth unemployment was 13.8% (2025).",
+  "Gross government debt is 114% of GDP (2025), a very high level that has fallen from 118% in 2020. The general government balance is −1.7% of GDP (2025).",
+  "The current account balance is −0.9% of GDP (2025). Trade equals 64% of GDP (2025), a fairly open economy. Net FDI inflows were 3.0% of GDP (2025).",
+  "IMF projections put government debt at 107% of GDP by 2031, on a declining path from today's level. Life expectancy is 82.1 years (2024). Population: 41.6 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

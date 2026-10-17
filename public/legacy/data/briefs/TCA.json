@@ -1,0 +1,16 @@
+{
+ "iso3": "TCA",
+ "name": "Turks and Caicos Islands",
+ "headline": "Turks and Caicos Islands: +5.6% growth in 2024",
+ "sections": [
+  "Turks and Caicos Islands is a $1.7 billion economy (2024), the world's 196th-largest of 215 measured. Real output grew +5.6% in 2024, faster than the world median of +3.5%. Income per person is $38K at purchasing-power parity (2024), against a world median of $21K. Manufacturing accounts for 0.4% of GDP (2024).",
+  "No recent data is available for this section.",
+  "No recent data is available for this section.",
+  "Net FDI inflows were 2.5% of GDP (2024).",
+  "Life expectancy is 78.2 years (2024). Population: 47 thousand (2025)."
+ ],
+ "asOf": 2024,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

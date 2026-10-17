@@ -1,0 +1,16 @@
+{
+ "iso3": "AUT",
+ "name": "Austria",
+ "headline": "Austria: +0.8% growth in 2025, 3.6% inflation, debt 81% of GDP",
+ "sections": [
+  "Austria is a $580 billion economy (2025), the world's 30th-largest of 215 measured. Real output grew +0.8% in 2025, slower than the world median of +3.5%. Income per person is $77K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 15.2% of GDP (2025).",
+  "Consumer prices rose 3.6% in 2025, broadly within typical target ranges, down from 8.6% in 2022. Unemployment stood at 5.7% (2025), above the world median of 5.1%. Youth unemployment was 11.0% (2025).",
+  "Gross government debt is 81% of GDP (2025), a elevated level. The general government balance is −4.2% of GDP (2025), a deficit beyond the common 3% benchmark.",
+  "The current account balance is +1.9% of GDP (2025). Trade equals 107% of GDP (2025), a highly open economy. Net FDI inflows were −2.0% of GDP (2025).",
+  "IMF projections put government debt at 84% of GDP by 2031, broadly stable from today's level. Life expectancy is 82.0 years (2024). Population: 9.2 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

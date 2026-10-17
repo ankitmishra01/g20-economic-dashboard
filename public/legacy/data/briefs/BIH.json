@@ -1,0 +1,16 @@
+{
+ "iso3": "BIH",
+ "name": "Bosnia and Herzegovina",
+ "headline": "Bosnia and Herzegovina: +2.4% growth in 2025, 4.0% inflation, debt 29% of GDP",
+ "sections": [
+  "Bosnia and Herzegovina is a $33.6 billion economy (2025), the world's 114th-largest of 215 measured. Real output grew +2.4% in 2025, slower than the world median of +3.5%. Income per person is $26K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 12.0% of GDP (2025).",
+  "Consumer prices rose 4.0% in 2025, broadly within typical target ranges, down from 14.0% in 2022. Unemployment stood at 12.2% (2025), above the world median of 5.1%. Youth unemployment was 28.2% (2025).",
+  "Gross government debt is 29% of GDP (2025), a low level that has fallen from 37% in 2020. The general government balance is −2.5% of GDP (2025).",
+  "The current account balance is −3.1% of GDP (2025). Trade equals 95% of GDP (2025), a fairly open economy. Net FDI inflows were 2.6% of GDP (2025).",
+  "IMF projections put government debt at 44% of GDP by 2031, still rising from today's level. Life expectancy is 78.0 years (2024). Population: 3.4 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

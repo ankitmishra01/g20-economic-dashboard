@@ -1,0 +1,16 @@
+{
+ "iso3": "PYF",
+ "name": "French Polynesia",
+ "headline": "French Polynesia: +1.1% growth in 2024",
+ "sections": [
+  "French Polynesia is a $6.3 billion economy (2024), the world's 169th-largest of 215 measured. Real output grew +1.1% in 2024, slower than the world median of +3.5%. Manufacturing accounts for 4.7% of GDP (2020).",
+  "Unemployment stood at 11.7% (2025), above the world median of 5.1%. Youth unemployment was 36.6% (2025).",
+  "No recent data is available for this section.",
+  "Trade equals 64% of GDP (2024), a fairly open economy. Net FDI inflows were −0.2% of GDP (2024).",
+  "Life expectancy is 84.2 years (2024). Population: 282 thousand (2025)."
+ ],
+ "asOf": 2024,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

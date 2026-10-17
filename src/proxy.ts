@@ -1,14 +1,14 @@
-import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { serverEnv } from "@/lib/env";
 
-export async function proxy(request: NextRequest) {
-  const env = serverEnv(); const url = env.SUPABASE_URL ?? env.NEXT_PUBLIC_SUPABASE_URL; const key = env.SUPABASE_PUBLISHABLE_KEY ?? env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return NextResponse.next({ request });
-  let response = NextResponse.next({ request });
-  const supabase = createServerClient(url, key, { cookies: { getAll: () => request.cookies.getAll(), setAll: (values) => { values.forEach(({ name, value }) => request.cookies.set(name, value)); response = NextResponse.next({ request }); values.forEach(({ name, value, options }) => response.cookies.set(name, value, options)); } } });
-  await supabase.auth.getClaims();
-  return response;
+// The PR #11 surfaces are retired (Phase 0). Their pages redirect to the dashboard
+// (next.config.ts) and their /api/v1 endpoints are gone: answer 410 instead of running
+// slow full-table queries. The middleware runs only on /api/v1, so dashboard pages,
+// static assets and the legacy /api functions no longer pay for a Supabase auth call.
+export function proxy(request: NextRequest) {
+  return NextResponse.json(
+    { error: "gone", message: "This API was retired. Use https://g20-gamma.vercel.app for the dashboard." },
+    { status: 410, headers: { "cache-control": "public, max-age=3600" } },
+  );
 }
 
-export const config = { matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"] };
+export const config = { matcher: ["/api/v1/:path*"] };

@@ -1,0 +1,16 @@
+{
+ "iso3": "CYM",
+ "name": "Cayman Islands",
+ "headline": "Cayman Islands: +3.8% growth in 2024",
+ "sections": [
+  "Cayman Islands is a $7.8 billion economy (2024), the world's 163rd-largest of 215 measured. Real output grew +3.8% in 2024, close to the world median of +3.5%. Income per person is $92K at purchasing-power parity (2024), against a world median of $21K. Manufacturing accounts for 0.9% of GDP (2024).",
+  "No recent data is available for this section.",
+  "No recent data is available for this section.",
+  "The current account balance is −8.8% of GDP (2024), a sizeable external financing need. Trade equals 105% of GDP (2020), a highly open economy. Net FDI inflows were 40.9% of GDP (2024).",
+  "Life expectancy is 80.5 years (2024). Population: 76 thousand (2025)."
+ ],
+ "asOf": 2024,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

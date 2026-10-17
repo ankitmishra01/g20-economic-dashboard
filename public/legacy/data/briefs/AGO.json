@@ -1,0 +1,16 @@
+{
+ "iso3": "AGO",
+ "name": "Angola",
+ "headline": "Angola: +3.1% growth in 2025, 20.2% inflation, debt 53% of GDP",
+ "sections": [
+  "Angola is a $141 billion economy (2025), the world's 63rd-largest of 215 measured. Real output grew +3.1% in 2025, close to the world median of +3.5%. Income per person is $10K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 6.8% of GDP (2025).",
+  "Consumer prices rose 20.2% in 2025, well above typical central bank targets, down from 21.4% in 2022. Unemployment stood at 14.1% (2025), above the world median of 5.1%. Youth unemployment was 27.2% (2025).",
+  "Gross government debt is 53% of GDP (2025), a moderate level that has fallen from 120% in 2020. The general government balance is −4.1% of GDP (2025), a deficit beyond the common 3% benchmark.",
+  "The current account balance is +0.3% of GDP (2025). Trade equals 35% of GDP (2025), a relatively closed economy. Net FDI inflows were 1.8% of GDP (2025).",
+  "IMF projections put government debt at 55% of GDP by 2031, broadly stable from today's level. Life expectancy is 64.8 years (2024). Population: 39.2 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

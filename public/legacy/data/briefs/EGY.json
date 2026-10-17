@@ -1,0 +1,16 @@
+{
+ "iso3": "EGY",
+ "name": "Egypt, Arab Rep.",
+ "headline": "Egypt, Arab Rep.: +4.4% growth in 2025, 20.4% inflation, debt 87% of GDP",
+ "sections": [
+  "Egypt, Arab Rep. is a $365 billion economy (2025), the world's 45th-largest of 215 measured. Real output grew +4.4% in 2025, faster than the world median of +3.5%. Income per person is $20K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 14.5% of GDP (2025).",
+  "Consumer prices rose 20.4% in 2025, well above typical central bank targets, up from 8.5% in 2022. Unemployment stood at 7.3% (2025), above the world median of 5.1%. Youth unemployment was 18.3% (2025).",
+  "Gross government debt is 87% of GDP (2025), a elevated level. The general government balance is −6.6% of GDP (2025), a deficit beyond the common 3% benchmark.",
+  "The current account balance is −4.2% of GDP (2025), a sizeable external financing need. Trade equals 51% of GDP (2025), a fairly open economy. Net FDI inflows were 4.2% of GDP (2025).",
+  "IMF projections put government debt at 72% of GDP by 2031, on a declining path from today's level. Life expectancy is 71.8 years (2024). Population: 107.9 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

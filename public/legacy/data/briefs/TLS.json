@@ -1,0 +1,16 @@
+{
+ "iso3": "TLS",
+ "name": "Timor-Leste",
+ "headline": "Timor-Leste: +4.5% growth in 2025, 0.5% inflation, debt 13% of GDP",
+ "sections": [
+  "Timor-Leste is a $2.1 billion economy (2025), the world's 193rd-largest of 215 measured. Real output grew +4.5% in 2025, faster than the world median of +3.5%. Income per person is $4,809 at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 1.9% of GDP (2024).",
+  "Consumer prices rose 0.5% in 2025, broadly within typical target ranges, down from 7.0% in 2022. Unemployment stood at 1.6% (2025), below the world median of 5.1%. Youth unemployment was 3.7% (2025).",
+  "Gross government debt is 13% of GDP (2025), a low level that has risen from 10% in 2020. The general government balance is −46.2% of GDP (2025), a deficit beyond the common 3% benchmark.",
+  "The current account balance is −35.8% of GDP (2025), a sizeable external financing need. Trade equals 95% of GDP (2024), a fairly open economy. Net FDI inflows were 13.3% of GDP (2025).",
+  "IMF projections put government debt at 15% of GDP by 2031, broadly stable from today's level. Life expectancy is 67.9 years (2024). Population: 1.4 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

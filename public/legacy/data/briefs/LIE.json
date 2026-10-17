@@ -1,0 +1,16 @@
+{
+ "iso3": "LIE",
+ "name": "Liechtenstein",
+ "headline": "Liechtenstein: +0.0% growth in 2025, 0.2% inflation, debt 1% of GDP",
+ "sections": [
+  "Liechtenstein is a $9.0 billion economy (2025), the world's 159th-largest of 215 measured. Real output grew +0.0% in 2025, slower than the world median of +3.5%. Manufacturing accounts for 34.2% of GDP (2023).",
+  "Consumer prices rose 0.2% in 2025, broadly within typical target ranges, down from 2.8% in 2022. Unemployment stood at 2.0% (2025), below the world median of 5.1%.",
+  "Gross government debt is 1% of GDP (2025), a low level. The general government balance is +2.8% of GDP (2025), a surplus.",
+  "The current account balance is +16.2% of GDP (2025), a large surplus.",
+  "IMF projections put government debt at 1% of GDP by 2031, broadly stable from today's level. Life expectancy is 84.2 years (2024). Population: 41 thousand (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

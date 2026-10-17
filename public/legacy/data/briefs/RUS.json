@@ -1,0 +1,16 @@
+{
+ "iso3": "RUS",
+ "name": "Russian Federation",
+ "headline": "Russian Federation: +1.0% growth in 2025, 8.7% inflation, debt 17% of GDP",
+ "sections": [
+  "Russian Federation is a $2.57 trillion economy (2025), the world's 9th-largest of 215 measured. Real output grew +1.0% in 2025, slower than the world median of +3.5%. Income per person is $50K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 13.7% of GDP (2025).",
+  "Consumer prices rose 8.7% in 2025, above typical targets, down from 13.7% in 2022. Unemployment stood at 2.2% (2025), below the world median of 5.1%. Youth unemployment was 7.6% (2025).",
+  "Gross government debt is 17% of GDP (2025), a low level. The general government balance is −3.9% of GDP (2025), a deficit beyond the common 3% benchmark.",
+  "The current account balance is +1.5% of GDP (2025). Trade equals 34% of GDP (2025), a relatively closed economy. Net FDI inflows were 0.4% of GDP (2025).",
+  "IMF projections put government debt at 31% of GDP by 2031, still rising from today's level. Life expectancy is 73.4 years (2024). Population: 144.0 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

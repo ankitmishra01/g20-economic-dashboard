@@ -26,10 +26,69 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
         return _data;
       }
     }
-    return loadG20FromSupabase();
+    // G20 scope: render from the static snapshot (complete G20 annual + quarterly +
+    // metadata, regenerated on every refresh and served from the CDN), then refresh the
+    // values from Supabase in the background. Falls back to Supabase if the snapshot fails.
+    try {
+      const d = await loadG20FromSupabase({ preferSnapshot: true });
+      window.G20_BACKGROUND_REFRESH = refreshG20FromSupabase()
+        .catch(err => {
+          console.warn('Background Supabase refresh skipped; snapshot remains in use:', err);
+          window.G20_SNAPSHOT_AT = window.G20_SNAPSHOT_FIRST_AT;
+          const el = document.getElementById('data-status');
+          if (el) el.textContent = 'offline snapshot';
+        });
+      return d;
+    } catch (err) {
+      console.warn('Snapshot unavailable, loading from Supabase:', err);
+      return loadG20FromSupabase();
+    }
   }
 
-  async function loadG20FromSupabase({ background = false } = {}) {
+  // Pull the G20 rows from Supabase after first paint and overwrite any value that
+  // changed since the snapshot was built; recompute the latest reads for those economies.
+  async function refreshG20FromSupabase() {
+    const scopeIso3 = (window.G20_MEMBERS || []).map(c => c.iso3);
+    if (!scopeIso3.length) return;
+    const base = `${SUPABASE_URL}/rest/v1/g20_economic_data?select=country_iso3,indicator_key,year,value&country_iso3=in.(${scopeIso3.join(',')})&order=year.asc,country_iso3.asc,indicator_key.asc`;
+    const headers = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
+    const rows = [];
+    for (let offset = 0; ; offset += 1000) {
+      const r = await fetch(base, { signal: AbortSignal.timeout(15000), headers: { ...headers, Range: `${offset}-${offset + 999}` } });
+      if (!r.ok) throw new Error(`Supabase fetch failed: ${r.status}`);
+      const page = await r.json();
+      rows.push(...page);
+      if (page.length < 1000) break;
+    }
+    let changed = 0;
+    for (const { country_iso3: iso3, indicator_key: key, year, value } of rows) {
+      if (!iso3 || !key || value === null || value === undefined) continue;
+      if (!_data[iso3]) _data[iso3] = {};
+      const cur = _data[iso3][key] || (_data[iso3][key] = {});
+      if (cur[year] !== value) { cur[year] = value; changed++; }
+    }
+    if (changed) computeLatest(scopeIso3);
+    window.G20_SUPABASE_REFRESHED = { at: new Date().toISOString(), changed };
+  }
+
+  // Most recent non-null actual value per economy per indicator (projections excluded).
+  function computeLatest(isoList) {
+    const cap = window.LATEST_ACTUAL_YEAR;
+    _data._latest = _data._latest || {};
+    for (const iso3 of isoList) {
+      if (!_data[iso3]) continue;
+      _data._latest[iso3] = _data._latest[iso3] || {};
+      for (const key of Object.keys(_data[iso3])) {
+        const years = Object.keys(_data[iso3][key]).map(Number).filter(y => y <= cap).sort((a, b) => b - a);
+        for (const yr of years) {
+          const v = _data[iso3][key][yr];
+          if (v !== null && v !== undefined && !isNaN(v)) { _data._latest[iso3][key] = { value: v, year: yr }; break; }
+        }
+      }
+    }
+  }
+
+  async function loadG20FromSupabase({ background = false, preferSnapshot = false } = {}) {
     // Supabase default page size is 1000 rows — paginate until all rows are fetched.
     // If Supabase is unreachable (free tier auto-pauses), fall back to the static snapshot.
     let rows = [];
@@ -41,6 +100,7 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
     const scopeIso3 = (window.G20_MEMBERS || window.G20 || []).map(c => c.iso3).join(',');
     const latestShard = background ? null : loadLatestShard();
     try {
+      if (preferSnapshot) throw Object.assign(new Error('snapshot first'), { snapshotFirst: true });
       const PAGE = 1000;
       let offset = 0;
       while (true) {
@@ -62,12 +122,15 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
         offset += PAGE;
       }
     } catch (err) {
-      console.warn('Supabase unavailable, using static snapshot:', err);
+      if (!err.snapshotFirst) console.warn('Supabase unavailable, using static snapshot:', err);
       const sr = await fetch('data-snapshot.json');
       if (!sr.ok) throw err;
       snapshot = await sr.json();
       rows = snapshot.annual.map(([country_iso3, indicator_key, year, value]) => ({ country_iso3, indicator_key, year, value }));
-      window.G20_SNAPSHOT_AT = snapshot.generatedAt;
+      // Only label the page "offline snapshot" when Supabase actually failed; the
+      // snapshot-first path is the normal fast start and is refreshed in the background.
+      if (err.snapshotFirst) window.G20_SNAPSHOT_FIRST_AT = snapshot.generatedAt;
+      else window.G20_SNAPSHOT_AT = snapshot.generatedAt;
     }
 
     if (background) {

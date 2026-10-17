@@ -1,0 +1,16 @@
+{
+ "iso3": "UGA",
+ "name": "Uganda",
+ "headline": "Uganda: +6.7% growth in 2025, 3.6% inflation, debt 53% of GDP",
+ "sections": [
+  "Uganda is a $66.5 billion economy (2025), the world's 91st-largest of 215 measured. Real output grew +6.7% in 2025, faster than the world median of +3.5%. Income per person is $3,488 at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 14.5% of GDP (2025).",
+  "Consumer prices rose 3.6% in 2025, broadly within typical target ranges, down from 7.2% in 2022. Unemployment stood at 2.7% (2025), below the world median of 5.1%. Youth unemployment was 4.2% (2025).",
+  "Gross government debt is 53% of GDP (2025), a moderate level that has risen from 47% in 2020. The general government balance is −6.6% of GDP (2025), a deficit beyond the common 3% benchmark.",
+  "The current account balance is −5.1% of GDP (2025), a sizeable external financing need. Trade equals 50% of GDP (2025), a fairly open economy. Net FDI inflows were 5.4% of GDP (2025).",
+  "IMF projections put government debt at 57% of GDP by 2031, still rising from today's level. Life expectancy is 68.5 years (2024). Population: 48.0 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

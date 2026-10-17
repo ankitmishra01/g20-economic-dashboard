@@ -31,7 +31,7 @@ const LBL = { GROWTH:'GDP growth', MOMENTUM:'Growth momentum (2y)', FISCAL_BAL:'
 async function loadPanel() {
   const PAGE = 1000; const rows = []; let offset = 0;
   while (true) {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/g20_economic_data?select=country_iso3,indicator_key,year,value&country_iso3=in.(${G20_ISO3.join(',')})&order=year.asc`,
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/g20_economic_data?select=country_iso3,indicator_key,year,value&country_iso3=in.(${G20_ISO3.join(',')})&order=year.asc,country_iso3.asc,indicator_key.asc`,
       { headers: { apikey: SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`, Range: `${offset}-${offset + PAGE - 1}` } });
     if (!r.ok) throw new Error(`Supabase fetch failed: ${r.status}`);
     const page = await r.json(); rows.push(...page);

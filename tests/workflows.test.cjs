@@ -24,12 +24,7 @@ test('auth and account routes are wired to Supabase magic links', () => {
   assert.match(callback, /exchangeCodeForSession/);
 });
 
-test('Next proxy refreshes Supabase sessions through writable response cookies', () => {
-  const proxy = fs.readFileSync(path.resolve(__dirname, '..', 'src/proxy.ts'), 'utf8');
-  assert.match(proxy, /getClaims/);
-  assert.match(proxy, /response\.cookies\.set/);
-  assert.match(proxy, /request\.cookies\.set/);
-});
+// Session refresh middleware removed in Phase C: sign-in surfaces are retired (see tests/phaseC-reliability.test.cjs).
 
 test('watchlist mutations are owner-derived and never accept user_id from form input', () => {
   const source = fs.readFileSync(path.resolve(__dirname, '..', 'src/app/account/actions.ts'), 'utf8');

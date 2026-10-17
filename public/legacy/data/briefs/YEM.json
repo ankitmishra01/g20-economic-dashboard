@@ -1,0 +1,16 @@
+{
+ "iso3": "YEM",
+ "name": "Yemen, Rep.",
+ "headline": "Yemen, Rep.: −0.5% growth in 2025, 20.2% inflation",
+ "sections": [
+  "Yemen, Rep. is a $7.9 billion economy (2025), the world's 162nd-largest of 215 measured. Real output grew −0.5% in 2025, slower than the world median of +3.5%.",
+  "Consumer prices rose 20.2% in 2025, well above typical central bank targets, down from 36.4% in 2022. Unemployment stood at 17.3% (2025), above the world median of 5.1%. Youth unemployment was 32.6% (2025).",
+  "The general government balance is −3.9% of GDP (2025), a deficit beyond the common 3% benchmark.",
+  "The current account balance is −6.8% of GDP (2025), a sizeable external financing need.",
+  "Life expectancy is 69.4 years (2024). Population: 18.8 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

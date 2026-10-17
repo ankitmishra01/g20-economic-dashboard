@@ -1,0 +1,16 @@
+{
+ "iso3": "MNG",
+ "name": "Mongolia",
+ "headline": "Mongolia: +6.8% growth in 2025, 8.6% inflation, debt 45% of GDP",
+ "sections": [
+  "Mongolia is a $25.4 billion economy (2025), the world's 125th-largest of 215 measured. Real output grew +6.8% in 2025, faster than the world median of +3.5%. Income per person is $21K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 5.9% of GDP (2025).",
+  "Consumer prices rose 8.6% in 2025, above typical targets, down from 15.1% in 2022. Unemployment stood at 5.3% (2025), above the world median of 5.1%. Youth unemployment was 11.7% (2025).",
+  "Gross government debt is 45% of GDP (2025), a moderate level that has fallen from 83% in 2020. The general government balance is +2.2% of GDP (2025), a surplus.",
+  "The current account balance is −8.4% of GDP (2025), a sizeable external financing need. Trade equals 131% of GDP (2025), a highly open economy. Net FDI inflows were 10.8% of GDP (2025).",
+  "IMF projections put government debt at 62% of GDP by 2031, still rising from today's level. Life expectancy is 72.4 years (2024). Population: 3.6 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

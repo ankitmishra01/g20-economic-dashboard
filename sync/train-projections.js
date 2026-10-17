@@ -252,7 +252,7 @@ function trainProjectionEngine(panel, options = {}) {
 async function loadPanel() {
   const rows = []; let offset = 0; const pageSize = 1000;
   while (true) {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/g20_economic_data?select=country_iso3,indicator_key,year,value,fetched_at&country_iso3=in.(${COUNTRIES.join(',')})&order=year.asc`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Range: `${offset}-${offset + pageSize - 1}` } });
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/g20_economic_data?select=country_iso3,indicator_key,year,value,fetched_at&country_iso3=in.(${COUNTRIES.join(',')})&order=year.asc,country_iso3.asc,indicator_key.asc`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Range: `${offset}-${offset + pageSize - 1}` } });
     if (!response.ok) throw new Error(`Supabase fetch failed: ${response.status}`);
     const page = await response.json(); rows.push(...page);
     if (page.length < pageSize) break; offset += pageSize;

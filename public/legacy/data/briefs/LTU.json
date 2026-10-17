@@ -1,0 +1,16 @@
+{
+ "iso3": "LTU",
+ "name": "Lithuania",
+ "headline": "Lithuania: +2.9% growth in 2025, 3.4% inflation, debt 40% of GDP",
+ "sections": [
+  "Lithuania is a $95.1 billion economy (2025), the world's 82nd-largest of 215 measured. Real output grew +2.9% in 2025, slower than the world median of +3.5%. Income per person is $57K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 13.1% of GDP (2025).",
+  "Consumer prices rose 3.4% in 2025, broadly within typical target ranges, down from 18.9% in 2022. Unemployment stood at 6.9% (2025), above the world median of 5.1%. Youth unemployment was 13.8% (2025).",
+  "Gross government debt is 40% of GDP (2025), a low level that has fallen from 46% in 2020. The general government balance is −1.8% of GDP (2025).",
+  "The current account balance is −1.0% of GDP (2025). Trade equals 142% of GDP (2025), a highly open economy. Net FDI inflows were 3.2% of GDP (2025).",
+  "IMF projections put government debt at 57% of GDP by 2031, still rising from today's level. Life expectancy is 77.2 years (2024). Population: 2.9 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

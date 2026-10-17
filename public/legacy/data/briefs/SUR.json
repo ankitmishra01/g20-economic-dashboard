@@ -1,0 +1,16 @@
+{
+ "iso3": "SUR",
+ "name": "Suriname",
+ "headline": "Suriname: +4.0% growth in 2025, 9.2% inflation, debt 97% of GDP",
+ "sections": [
+  "Suriname is a $4.7 billion economy (2025), the world's 174th-largest of 215 measured. Real output grew +4.0% in 2025, close to the world median of +3.5%. Income per person is $23K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 19.8% of GDP (2024).",
+  "Consumer prices rose 9.2% in 2025, above typical targets, down from 52.4% in 2022. Unemployment stood at 9.5% (2025), above the world median of 5.1%. Youth unemployment was 25.4% (2025).",
+  "Gross government debt is 97% of GDP (2025), a elevated level that has fallen from 152% in 2020. The general government balance is −8.3% of GDP (2025), a deficit beyond the common 3% benchmark.",
+  "The current account balance is −53.3% of GDP (2025), a sizeable external financing need. Net FDI inflows were 45.4% of GDP (2025).",
+  "IMF projections put government debt at 28% of GDP by 2031, on a declining path from today's level. Life expectancy is 73.8 years (2024). Population: 657 thousand (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

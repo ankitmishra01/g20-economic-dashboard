@@ -1,0 +1,16 @@
+{
+ "iso3": "PRY",
+ "name": "Paraguay",
+ "headline": "Paraguay: +6.6% growth in 2025, 4.0% inflation, debt 38% of GDP",
+ "sections": [
+  "Paraguay is a $49.3 billion economy (2025), the world's 99th-largest of 215 measured. Real output grew +6.6% in 2025, faster than the world median of +3.5%. Income per person is $20K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 19.4% of GDP (2025).",
+  "Consumer prices rose 4.0% in 2025, broadly within typical target ranges, down from 9.8% in 2022. Unemployment stood at 4.8% (2025), below the world median of 5.1%. Youth unemployment was 11.7% (2025).",
+  "Gross government debt is 38% of GDP (2025), a low level. The general government balance is −1.7% of GDP (2025).",
+  "The current account balance is −2.5% of GDP (2025). Trade equals 76% of GDP (2025), a fairly open economy. Net FDI inflows were 2.4% of GDP (2025).",
+  "IMF projections put government debt at 36% of GDP by 2031, broadly stable from today's level. Life expectancy is 74.0 years (2024). Population: 6.4 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

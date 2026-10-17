@@ -28,6 +28,12 @@ const REGISTRY = require('../public/legacy/countries.json');
 const MAX_QUESTION = 500;
 const MAX_CONTEXT = 20000;
 const limiter = createRateLimiter({ limit: Number(process.env.AGENT_RATE_LIMIT || 10), windowMs: 60_000 });
+// Daily caps protect the free AI quota from scripts that spoof the Origin header.
+// They are per server instance (Fluid compute reuses instances); the Vercel Firewall
+// rate-limit rule documented in README.md is the global backstop.
+const DAY_MS = 24 * 60 * 60 * 1000;
+const perClientDaily = createRateLimiter({ limit: Number(process.env.AGENT_DAILY_PER_CLIENT || 60), windowMs: DAY_MS });
+const instanceDaily = createRateLimiter({ limit: Number(process.env.AGENT_DAILY_CAP || 400), windowMs: DAY_MS });
 
 let cachedIndex = null;
 let cachedProjections = null;
@@ -178,10 +184,16 @@ module.exports = async function handler(req, res) {
   }
   if (req.method !== 'POST') return res.status(405).end();
 
-  const gate = limiter(clientKey(req));
+  const key = clientKey(req);
+  const gate = limiter(key);
   if (!gate.allowed) {
     res.setHeader('Retry-After', String(Math.ceil((gate.retryAfterMs || 60_000) / 1000)));
     return res.status(429).json({ code: 'RATE_LIMITED', error: 'Too many questions in a short time. Try again in a minute.' });
+  }
+  const daily = perClientDaily(key);
+  const overall = instanceDaily('all');
+  if (!daily.allowed || !overall.allowed) {
+    return res.status(429).json({ code: 'DAILY_LIMIT', error: 'Ask AI has reached its daily limit. Please try again tomorrow.' });
   }
 
   const { question, country, mode, scope } = req.body || {};

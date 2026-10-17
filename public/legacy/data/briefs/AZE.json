@@ -1,0 +1,16 @@
+{
+ "iso3": "AZE",
+ "name": "Azerbaijan",
+ "headline": "Azerbaijan: +1.4% growth in 2025, 5.6% inflation, debt 20% of GDP",
+ "sections": [
+  "Azerbaijan is a $75.9 billion economy (2025), the world's 90th-largest of 215 measured. Real output grew +1.4% in 2025, slower than the world median of +3.5%. Income per person is $26K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 6.0% of GDP (2025).",
+  "Consumer prices rose 5.6% in 2025, above typical targets, down from 13.9% in 2022. Unemployment stood at 5.3% (2025), above the world median of 5.1%. Youth unemployment was 13.1% (2025).",
+  "Gross government debt is 20% of GDP (2025), a low level. The general government balance is +2.6% of GDP (2025), a surplus.",
+  "The current account balance is +4.6% of GDP (2025), a large surplus. Trade equals 80% of GDP (2025), a fairly open economy. Net FDI inflows were 0.5% of GDP (2025).",
+  "IMF projections put government debt at 17% of GDP by 2031, on a declining path from today's level. Life expectancy is 74.6 years (2024). Population: 10.4 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

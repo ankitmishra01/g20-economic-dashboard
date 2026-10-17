@@ -1,0 +1,16 @@
+{
+ "iso3": "SXM",
+ "name": "Sint Maarten (Dutch part)",
+ "headline": "Sint Maarten (Dutch part): +3.4% growth in 2025",
+ "sections": [
+  "Sint Maarten (Dutch part) is a $1.9 billion economy (2025), the world's 195th-largest of 215 measured. Real output grew +3.4% in 2025, close to the world median of +3.5%. Income per person is $56K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 1.2% of GDP (2021).",
+  "No recent data is available for this section.",
+  "No recent data is available for this section.",
+  "The current account balance is −6.9% of GDP (2023), a sizeable external financing need. Net FDI inflows were 1.9% of GDP (2025).",
+  "Life expectancy is 76.5 years (2024). Population: 44 thousand (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

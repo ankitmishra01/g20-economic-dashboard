@@ -1,0 +1,16 @@
+{
+ "iso3": "NLD",
+ "name": "Netherlands",
+ "headline": "Netherlands: +1.6% growth in 2025, 3.0% inflation, debt 45% of GDP",
+ "sections": [
+  "Netherlands is a $1.32 trillion economy (2025), the world's 19th-largest of 215 measured. Real output grew +1.6% in 2025, slower than the world median of +3.5%. Income per person is $87K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 10.1% of GDP (2025).",
+  "Consumer prices rose 3.0% in 2025, broadly within typical target ranges, down from 11.6% in 2022. Unemployment stood at 3.9% (2025), below the world median of 5.1%. Youth unemployment was 8.8% (2025).",
+  "Gross government debt is 45% of GDP (2025), a moderate level that has fallen from 53% in 2020. The general government balance is −1.6% of GDP (2025).",
+  "The current account balance is +7.6% of GDP (2025), a large surplus. Trade equals 150% of GDP (2025), a highly open economy. Net FDI inflows were 0.3% of GDP (2025).",
+  "IMF projections put government debt at 48% of GDP by 2031, still rising from today's level. Life expectancy is 82.0 years (2024). Population: 18.0 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

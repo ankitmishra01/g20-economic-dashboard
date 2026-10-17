@@ -1,0 +1,16 @@
+{
+ "iso3": "ZMB",
+ "name": "Zambia",
+ "headline": "Zambia: +3.8% growth in 2025, 13.9% inflation, debt 101% of GDP",
+ "sections": [
+  "Zambia is a $28.7 billion economy (2025), the world's 120th-largest of 215 measured. Real output grew +3.8% in 2025, close to the world median of +3.5%. Income per person is $4,379 at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 8.7% of GDP (2025).",
+  "Consumer prices rose 13.9% in 2025, well above typical central bank targets, up from 11.0% in 2022. Unemployment stood at 5.9% (2025), above the world median of 5.1%. Youth unemployment was 10.5% (2025).",
+  "Gross government debt is 101% of GDP (2025), a very high level that has fallen from 140% in 2020. The general government balance is −3.8% of GDP (2025), a deficit beyond the common 3% benchmark.",
+  "The current account balance is −5.5% of GDP (2025), a sizeable external financing need. Trade equals 63% of GDP (2024), a fairly open economy. Net FDI inflows were 4.5% of GDP (2025).",
+  "IMF projections put government debt at 57% of GDP by 2031, on a declining path from today's level. Life expectancy is 66.5 years (2024). Population: 21.9 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

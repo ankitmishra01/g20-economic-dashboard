@@ -1,0 +1,16 @@
+{
+ "iso3": "BLZ",
+ "name": "Belize",
+ "headline": "Belize: +2.6% growth in 2025, 1.1% inflation, debt 67% of GDP",
+ "sections": [
+  "Belize is a $3.3 billion economy (2025), the world's 184th-largest of 215 measured. Real output grew +2.6% in 2025, slower than the world median of +3.5%. Income per person is $15K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 6.6% of GDP (2024).",
+  "Consumer prices rose 1.1% in 2025, broadly within typical target ranges, down from 6.3% in 2022. Unemployment stood at 2.0% (2025), below the world median of 5.1%. Youth unemployment was 19.3% (2025).",
+  "Gross government debt is 67% of GDP (2025), a elevated level that has fallen from 103% in 2020. The general government balance is −1.0% of GDP (2025).",
+  "The current account balance is −2.8% of GDP (2025). Trade equals 109% of GDP (2024), a highly open economy. Net FDI inflows were 0.0% of GDP (2025).",
+  "IMF projections put government debt at 65% of GDP by 2031, broadly stable from today's level. Life expectancy is 73.7 years (2024). Population: 418 thousand (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

@@ -1,0 +1,16 @@
+{
+ "iso3": "GBR",
+ "name": "United Kingdom",
+ "headline": "United Kingdom: +1.2% growth in 2025, 3.4% inflation, debt 102% of GDP",
+ "sections": [
+  "United Kingdom is a $4.01 trillion economy (2025), the world's 6th-largest of 215 measured. Real output grew +1.2% in 2025, slower than the world median of +3.5%. Income per person is $65K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 7.7% of GDP (2025).",
+  "Consumer prices rose 3.4% in 2025, broadly within typical target ranges, down from 9.1% in 2022. Unemployment stood at 4.9% (2025), below the world median of 5.1%. Youth unemployment was 14.6% (2025).",
+  "Gross government debt is 102% of GDP (2025), a very high level. The general government balance is −5.3% of GDP (2025), a deficit beyond the common 3% benchmark.",
+  "The current account balance is −3.0% of GDP (2025). Trade equals 62% of GDP (2025), a fairly open economy. Net FDI inflows were 0.9% of GDP (2025).",
+  "IMF projections put government debt at 100% of GDP by 2031, broadly stable from today's level. Life expectancy is 81.4 years (2024). Population: 69.5 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

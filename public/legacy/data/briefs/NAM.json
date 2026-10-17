@@ -1,0 +1,16 @@
+{
+ "iso3": "NAM",
+ "name": "Namibia",
+ "headline": "Namibia: +1.7% growth in 2025, 3.5% inflation, debt 68% of GDP",
+ "sections": [
+  "Namibia is a $15.1 billion economy (2025), the world's 148th-largest of 215 measured. Real output grew +1.7% in 2025, slower than the world median of +3.5%. Income per person is $12K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 10.0% of GDP (2025).",
+  "Consumer prices rose 3.5% in 2025, broadly within typical target ranges, down from 6.1% in 2022. Unemployment stood at 19.3% (2025), above the world median of 5.1%. Youth unemployment was 38.0% (2025).",
+  "Gross government debt is 68% of GDP (2025), a elevated level that has risen from 64% in 2020. The general government balance is −5.9% of GDP (2025), a deficit beyond the common 3% benchmark.",
+  "The current account balance is −13.1% of GDP (2025), a sizeable external financing need. Trade equals 109% of GDP (2025), a highly open economy. Net FDI inflows were 9.6% of GDP (2025).",
+  "IMF projections put government debt at 71% of GDP by 2031, still rising from today's level. Life expectancy is 67.5 years (2024). Population: 3.1 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

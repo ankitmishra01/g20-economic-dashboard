@@ -1,0 +1,16 @@
+{
+ "iso3": "BRA",
+ "name": "Brazil",
+ "headline": "Brazil: +2.3% growth in 2025, 5.0% inflation, debt 93% of GDP",
+ "sections": [
+  "Brazil is a $2.28 trillion economy (2025), the world's 12th-largest of 215 measured. Real output grew +2.3% in 2025, slower than the world median of +3.5%. Income per person is $23K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 11.8% of GDP (2025).",
+  "Consumer prices rose 5.0% in 2025, above typical targets, down from 9.3% in 2022. Unemployment stood at 6.0% (2025), above the world median of 5.1%. Youth unemployment was 14.0% (2025).",
+  "Gross government debt is 93% of GDP (2025), a elevated level. The general government balance is −7.4% of GDP (2025), a deficit beyond the common 3% benchmark.",
+  "The current account balance is −2.9% of GDP (2025). Trade equals 35% of GDP (2025), a relatively closed economy. Net FDI inflows were 3.4% of GDP (2025).",
+  "IMF projections put government debt at 105% of GDP by 2031, still rising from today's level. Life expectancy is 76.0 years (2024). Population: 213.4 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

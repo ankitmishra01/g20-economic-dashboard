@@ -1,0 +1,16 @@
+{
+ "iso3": "BWA",
+ "name": "Botswana",
+ "headline": "Botswana: −0.7% growth in 2025, 2.8% inflation, debt 34% of GDP",
+ "sections": [
+  "Botswana is a $19.9 billion economy (2025), the world's 136th-largest of 215 measured. Real output grew −0.7% in 2025, slower than the world median of +3.5%. Income per person is $21K at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 5.7% of GDP (2025).",
+  "Consumer prices rose 2.8% in 2025, broadly within typical target ranges, down from 12.2% in 2022. Unemployment stood at 24.5% (2025), above the world median of 5.1%. Youth unemployment was 46.0% (2025).",
+  "Gross government debt is 34% of GDP (2025), a low level that has risen from 24% in 2020. The general government balance is −6.1% of GDP (2025), a deficit beyond the common 3% benchmark.",
+  "The current account balance is +3.1% of GDP (2025). Trade equals 70% of GDP (2025), a fairly open economy. Net FDI inflows were −3.3% of GDP (2025).",
+  "IMF projections put government debt at 64% of GDP by 2031, still rising from today's level. Life expectancy is 69.3 years (2024). Population: 2.5 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

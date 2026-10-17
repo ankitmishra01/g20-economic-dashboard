@@ -1,0 +1,16 @@
+{
+ "iso3": "TGO",
+ "name": "Togo",
+ "headline": "Togo: +6.3% growth in 2025, 0.4% inflation, debt 65% of GDP",
+ "sections": [
+  "Togo is a $11.9 billion economy (2025), the world's 155th-largest of 215 measured. Real output grew +6.3% in 2025, faster than the world median of +3.5%. Income per person is $4,079 at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 11.4% of GDP (2024).",
+  "Consumer prices rose 0.4% in 2025, broadly within typical target ranges, down from 7.6% in 2022. Unemployment stood at 2.0% (2025), below the world median of 5.1%. Youth unemployment was 3.4% (2025).",
+  "Gross government debt is 65% of GDP (2025), a elevated level that has risen from 61% in 2020. The general government balance is −3.2% of GDP (2025), a deficit beyond the common 3% benchmark.",
+  "The current account balance is −2.8% of GDP (2025). Trade equals 60% of GDP (2023), a fairly open economy. Net FDI inflows were 1.9% of GDP (2025).",
+  "IMF projections put government debt at 58% of GDP by 2031, on a declining path from today's level. Life expectancy is 62.9 years (2024). Population: 8.7 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}

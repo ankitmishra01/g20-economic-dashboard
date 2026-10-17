@@ -1,0 +1,16 @@
+{
+ "iso3": "KHM",
+ "name": "Cambodia",
+ "headline": "Cambodia: +5.3% growth in 2025, 2.5% inflation, debt 26% of GDP",
+ "sections": [
+  "Cambodia is a $50.7 billion economy (2025), the world's 98th-largest of 215 measured. Real output grew +5.3% in 2025, faster than the world median of +3.5%. Income per person is $8,543 at purchasing-power parity (2025), against a world median of $21K. Manufacturing accounts for 29.0% of GDP (2025).",
+  "Consumer prices rose 2.5% in 2025, broadly within typical target ranges, down from 5.3% in 2022. Unemployment stood at 0.3% (2025), below the world median of 5.1%. Youth unemployment was 0.7% (2025).",
+  "Gross government debt is 26% of GDP (2025), a low level. The general government balance is −1.0% of GDP (2025).",
+  "The current account balance is −3.7% of GDP (2025). Trade equals 136% of GDP (2025), a highly open economy. Net FDI inflows were 9.9% of GDP (2025).",
+  "IMF projections put government debt at 26% of GDP by 2031, broadly stable from today's level. Life expectancy is 70.8 years (2024). Population: 17.8 million (2025)."
+ ],
+ "asOf": 2025,
+ "generatedAt": "2026-10-17T03:28:55.330Z",
+ "source": "deterministic",
+ "note": "Built from official World Bank and IMF data; IMF projections are labelled as projections."
+}
