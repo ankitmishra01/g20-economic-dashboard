@@ -9,7 +9,27 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
   // Plus G20_DATA._latest[iso3][indicatorKey] = most recent value
   let _data = {};
 
+  // Wider scopes render straight from the static shards (they hold the G20's annual
+  // series too), so the first view never waits on the paginated Supabase read; the G20
+  // annual, quarterly and metadata load continues in the background. The G20 scope
+  // loads exactly as before.
+  let _g20Full = false;
   async function loadAllData() {
+    if (window.Scope && !Scope.isG20()) {
+      const shard = await loadLatestShard();
+      if (shard && shard.values) {
+        _data = { _latest: {} };
+        window.G20_DATA = _data;
+        mergeLatestShard(shard, { overwriteG20: true });
+        window.G20_BACKGROUND_LOAD = loadG20FromSupabase({ background: true })
+          .catch(err => console.warn('Background G20 load failed; shards remain in use:', err));
+        return _data;
+      }
+    }
+    return loadG20FromSupabase();
+  }
+
+  async function loadG20FromSupabase({ background = false } = {}) {
     // Supabase default page size is 1000 rows — paginate until all rows are fetched.
     // If Supabase is unreachable (free tier auto-pauses), fall back to the static snapshot.
     let rows = [];
@@ -19,7 +39,7 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
     // Always the G20 (incl. the EU), whatever scope is selected: other economies come
     // from the static shards (data/latest.json up front, series on demand).
     const scopeIso3 = (window.G20_MEMBERS || window.G20 || []).map(c => c.iso3).join(',');
-    const latestShard = loadLatestShard();
+    const latestShard = background ? null : loadLatestShard();
     try {
       const PAGE = 1000;
       let offset = 0;
@@ -48,6 +68,21 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
       snapshot = await sr.json();
       rows = snapshot.annual.map(([country_iso3, indicator_key, year, value]) => ({ country_iso3, indicator_key, year, value }));
       window.G20_SNAPSHOT_AT = snapshot.generatedAt;
+    }
+
+    if (background) {
+      // Shards already rendered the page: fill in any G20 years they lack, keep the rest.
+      for (const { country_iso3: iso3, indicator_key: key, year, value } of rows) {
+        if (iso3 && key) mergeSeries(iso3, key, { [year]: value });
+      }
+      _g20Full = true;
+      if (snapshot) {
+        window.G20_QDATA = buildQuarterlyIndex(snapshot.quarterly.map(([country_iso3, indicator_key, period, value]) => ({ country_iso3, indicator_key, period, value })));
+        window.G20_INDICATOR_META = snapshot.meta || [];
+        return _data;
+      }
+      await loadQuarterlyAndMeta();
+      return _data;
     }
 
     // Build nested index
@@ -83,6 +118,7 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
     }
 
     window.G20_DATA = _data;
+    _g20Full = true;
     await mergeLatestShard(await latestShard);
 
     if (snapshot) {
@@ -91,6 +127,11 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
       return _data;
     }
 
+    await loadQuarterlyAndMeta();
+    return _data;
+  }
+
+  async function loadQuarterlyAndMeta() {
     // Load quarterly data from g20_quarterly_data table (non-blocking; graceful fallback)
     try {
       // Paginate: Supabase caps a single response at 1000 rows and the table has several thousand.
@@ -120,7 +161,6 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
       }
     } catch (_) {}
 
-    return _data;
   }
 
   // ── Static shards (global scope) ──────────────────────────────────────────
@@ -136,14 +176,15 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
     return fetch(SHARD_BASE + 'latest.json').then(r => r.ok ? r.json() : null).catch(() => null);
   }
 
-  // G20 values already come from Supabase; the shard fills every other economy.
-  function mergeLatestShard(shard) {
+  // G20 values already come from Supabase; the shard fills every other economy
+  // (and, when rendering from shards first, the G20 too).
+  function mergeLatestShard(shard, { overwriteG20 = false } = {}) {
     if (!shard || !shard.values) return;
     window.COVERAGE_TIERS = shard.tiers || {};
     window.SHARDS_GENERATED_AT = shard.generatedAt;
     const g20 = new Set((window.G20_MEMBERS || []).map(c => c.iso3));
     for (const [iso3, vals] of Object.entries(shard.values)) {
-      if (g20.has(iso3) && _data._latest[iso3]) continue;
+      if (!overwriteG20 && g20.has(iso3) && _data._latest[iso3]) continue;
       _data._latest[iso3] = _data._latest[iso3] || {};
       for (const [key, [value, year]] of Object.entries(vals)) {
         if (year <= window.LATEST_ACTUAL_YEAR) _data._latest[iso3][key] = { value, year };
@@ -177,7 +218,7 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
   // Load one economy's full series, including IMF projections (years > latest actual).
   function ensureCountry(iso3) {
     if (_loadedCountries.has(iso3)) return Promise.resolve();
-    if ((window.G20_MEMBERS || []).some(c => c.iso3 === iso3) && _data[iso3]) { _loadedCountries.add(iso3); return Promise.resolve(); }
+    if (_g20Full && (window.G20_MEMBERS || []).some(c => c.iso3 === iso3) && _data[iso3]) { _loadedCountries.add(iso3); return Promise.resolve(); }
     return once('c:' + iso3, async () => {
       const r = await fetch(`${SHARD_BASE}country/${iso3}.json`);
       if (!r.ok) throw new Error(`country shard ${iso3}: ${r.status}`);
@@ -201,10 +242,13 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
   // Resolves once the data a page needs for the current scope is loaded. Returns null
   // when nothing is missing (render immediately), else a promise.
   function pendingFor(page) {
+    // Booted from shards in a wider scope and switched back to the G20: wait for the
+    // background G20 load (quarterly data, metadata) before rendering G20 pages.
+    if (window.Scope?.isG20?.() && !_g20Full && window.G20_BACKGROUND_LOAD) return window.G20_BACKGROUND_LOAD.then(() => {});
     if (window.Scope?.isG20?.() && !page.startsWith('country/')) return null;
     if (page.startsWith('country/')) {
       const iso3 = page.split('/')[1];
-      return _loadedCountries.has(iso3) || ((window.G20_MEMBERS || []).some(c => c.iso3 === iso3) && _data[iso3])
+      return _loadedCountries.has(iso3) || (_g20Full && (window.G20_MEMBERS || []).some(c => c.iso3 === iso3) && _data[iso3])
         ? null : ensureCountry(iso3);
     }
     const wanted = page === 'compare' ? [window.compareSelectedIndicator?.() || 'GDP_GROWTH', 'GDP'] : (PAGE_INDICATORS[page] || []);
