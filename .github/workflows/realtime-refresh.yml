@@ -1,0 +1,51 @@
+name: Real-time market refresh
+
+# Daily market layer for the dashboard (public/legacy/data/realtime.json):
+# BIS central bank policy rates, ECB FX reference rates, FRED daily series.
+# Keyless official sources. Commits only when the file changes. Each source is
+# independent; a partial failure keeps the previous values and logs a warning.
+# Opens an issue only when the job has failed on two runs in a row.
+
+on:
+  schedule:
+    - cron: '17 5,11,17,23 * * 1-5'   # every 6 hours on weekdays (UTC)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: realtime-refresh
+  cancel-in-progress: false
+
+jobs:
+  realtime:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - name: Fetch policy rates, FX and markets
+        run: node sync/realtime.js
+      - name: Commit realtime.json if it changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/legacy/data/realtime.json
+          if git diff --staged --quiet; then echo "No change"; exit 0; fi
+          git commit -m "chore: refresh daily market data [skip ci]"
+          git pull --rebase --autostash origin "${GITHUB_REF_NAME}" && git push
+      - name: Open an issue after two failures in a row
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          prev=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow realtime-refresh.yml --limit 2 --json conclusion -q '.[1].conclusion // ""')
+          if [ "$prev" = "failure" ]; then
+            gh issue create --repo "$GITHUB_REPOSITORY" \
+              --title "Real-time market refresh failed twice in a row" \
+              --body "Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}. Every source (BIS, ECB, FRED) failed, or the commit failed. The dashboard keeps showing the last good values with their dates."
+          else
+            echo "First failure; not opening an issue yet (previous run: ${prev:-none})."
+          fi

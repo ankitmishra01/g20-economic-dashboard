@@ -2251,3 +2251,20 @@ html.present .agent-drawer { zoom: 1.1; }
 }
 .watch-btn { color: var(--text-on-ink-2); }
 .watch-btn[aria-pressed="true"] { color: var(--warn-on-ink); border-color: var(--warn-on-ink); }
+
+/* ── Daily market layer (Phase 3) — reuses the wires strip and risk-pill styles ── */
+.market-strip { border-top: 0; border-bottom: 1px solid var(--rule-on-ink); }
+.market-strip[hidden] { display: none; }
+.market-strip .mkt-track { animation: none; overflow: hidden; flex: 1; gap: 22px; }
+.mkt-item { gap: 5px; color: var(--text-on-ink); }
+.mkt-chg { font-size: 10.5px; color: var(--text-on-ink-2); }
+.mkt-up, .mkt-up-ink { color: var(--pos-on-ink); }
+.mkt-down, .mkt-down-ink { color: var(--neg-on-ink); }
+.mkt-flat { color: var(--text-on-ink-3); }
+.mkt-move { color: var(--text-on-ink-2); }
+.mkt-asof { flex-shrink: 0; padding: 0 14px; }
+.mkt-hero { margin-top: 12px; }
+.mkt-hero .profile-hero__stat-val span { font-size: 11px; font-family: var(--font-mono); margin-left: 4px; }
+.mkt-sub { color: var(--text-on-ink-3); }
+.mkt-hero-asof { margin-top: 8px; font-family: var(--font-mono); font-size: 10px; color: var(--text-on-ink-3); }
+@media (max-width: 760px) { .market-strip .mkt-track { overflow-x: auto; } .mkt-asof { display: none; } }

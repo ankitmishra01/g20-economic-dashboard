@@ -156,6 +156,7 @@ function renderCountryProfile(iso3) {
         ${une?.value !== undefined ? `<div><div class="profile-hero__stat-lbl">Unemp.</div><div class="profile-hero__stat-val">${une.value.toFixed(1)}%</div></div>` : ''}
         ${dv !== undefined ? `<div><div class="profile-hero__stat-lbl">Debt/GDP</div><div class="profile-hero__stat-val" style="${dv > 100 ? 'color:var(--warn-on-ink)' : ''}">${dv.toFixed(0)}%</div></div>` : ''}
       </div>
+      ${window.renderCountryMarkets ? window.renderCountryMarkets(iso3) : ''}
       ${vintage || commentaryDate ? `<div style="font-family:var(--font-mono);font-size:10px;color:rgba(245,245,242,0.55);margin-top:10px">${vintage ? `Annual data ${vintage}` : ''}${qGr?.isQuarterly ? ` · Latest quarter ${qGr.period.replace(/(\d{4})Q(\d)/, 'Q$2 $1')}: ${A.fmtSignedPct(qGr.value)} y/y growth` : ''}${commentaryDate ? ` · Analysis ${commentaryDate}` : ''}</div>` : ''}
     </div>
   </div>
