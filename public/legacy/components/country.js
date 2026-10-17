@@ -1333,17 +1333,32 @@ async function mountAIOutlookCard(iso3) {
   const el = document.getElementById('ai-outlook-' + iso3);
   if (!el) return;
   try {
-    const aiData = await loadAITrajectoryData();
-    const country = window.G20?.find(c => c.iso3 === iso3);
-    const ai = country ? aiData[country.name] : null;
+    // Matched by ISO3 against the AI Trajectory Index (data/ai-index.json), so any economy works in any scope.
+    const idx = await loadAIIndex();
+    let ai = idx.countries[iso3];
+    if (ai) {
+      // Pillar reasons live in a small per-economy file; the card still renders without them.
+      try {
+        const r = await fetch(`data/ai-index/${iso3}.json`, { signal: AbortSignal.timeout(6000) });
+        if (r.ok) {
+          const d = await r.json();
+          const scores = {};
+          for (const [k, v] of Object.entries(ai.scores || {})) scores[k] = { ...v, reasons: d.reasons?.[k] || v.reasons };
+          ai = { ...ai, scores };
+        }
+      } catch (_) { /* reasons are optional */ }
+    }
     if (!ai) {
-      el.innerHTML = '<div class="panel__body" style="padding:16px 20px;font-size:12px;color:var(--text-4)">AI Trajectory data not available for this economy.</div>';
+      el.innerHTML = '<div class="panel__body" style="padding:16px 20px;font-size:12px;color:var(--text-4)">The AI Trajectory Index does not cover this economy yet.</div>';
       return;
     }
     // Upgrade the header link to the per-country page
     const linkEl = document.getElementById('ai-outlook-link-' + iso3);
-    if (linkEl && ai.slug) linkEl.href = `https://ai-trajectory-index.vercel.app/countries/${ai.slug}`;
-    el.innerHTML = buildAIOutlookHTML(ai);
+    if (linkEl && ai.slug) linkEl.href = `https://ai-trajectory-index.vercel.app/country/${encodeURIComponent(ai.slug)}`;
+    const basis = ai.data_source === 'live' ? 'live score' : 'baseline score';
+    const asOf = idx.asOf ? ` · as of ${new Date(idx.asOf).toISOString().slice(0, 10)}` : '';
+    el.innerHTML = buildAIOutlookHTML(ai) +
+      `<div class="panel__body" style="padding:0 20px 14px;font-family:var(--font-mono);font-size:10px;color:var(--text-4)">AI Trajectory Index ${basis}${asOf}${ai.coverage_label ? ` · data coverage ${A.escapeText(ai.coverage_label)}` : ''}</div>`;
   } catch (e) {
     el.innerHTML = '<div class="panel__body" style="padding:16px 20px;font-size:12px;color:var(--text-4)">Could not load AI Trajectory data.</div>';
   }

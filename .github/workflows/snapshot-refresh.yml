@@ -33,6 +33,8 @@ jobs:
         run: node sync/briefs.js
       - name: Build What changed (data/what-changed.json)
         run: node sync/what-changed.js
+      - name: AI Trajectory Index scores by ISO3 (data/ai-index.json)
+        run: node sync/ai-index.js
       - name: Commit offline snapshot and shards
         run: |
           git config user.name "github-actions[bot]"
