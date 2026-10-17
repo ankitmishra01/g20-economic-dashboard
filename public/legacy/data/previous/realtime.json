@@ -1,0 +1,1067 @@
+{
+ "schemaVersion": 1,
+ "generatedAt": "2026-10-17T03:03:45.336Z",
+ "note": "Official daily reference data, not tick-by-tick prices.",
+ "markets": {
+  "US10Y": {
+   "key": "US10Y",
+   "label": "US 10Y",
+   "unit": "%",
+   "value": 5.1,
+   "date": "2026-10-15",
+   "previous": 5.19,
+   "previousDate": "2026-10-14",
+   "change": -0.09,
+   "changePct": -1.73,
+   "source": "U.S. Treasury via FRED (DGS10)",
+   "frequency": "daily",
+   "releaseCadence": "daily",
+   "freshness": "current"
+  },
+  "WTI": {
+   "key": "WTI",
+   "label": "WTI",
+   "unit": "USD/bbl",
+   "value": 101.91,
+   "date": "2026-10-14",
+   "previous": 100.86,
+   "previousDate": "2026-10-13",
+   "change": 1.05,
+   "changePct": 1.04,
+   "source": "EIA via FRED (DCOILWTICO)",
+   "frequency": "daily",
+   "releaseCadence": "daily",
+   "freshness": "delayed"
+  },
+  "USD_BROAD": {
+   "key": "USD_BROAD",
+   "label": "Broad dollar",
+   "unit": "index",
+   "value": 121.602,
+   "date": "2026-10-09",
+   "previous": 121.447,
+   "previousDate": "2026-10-08",
+   "change": 0.155,
+   "changePct": 0.13,
+   "source": "Federal Reserve via FRED (DTWEXBGS)",
+   "frequency": "daily",
+   "releaseCadence": "weekly",
+   "freshness": "current"
+  },
+  "VIX": {
+   "key": "VIX",
+   "label": "VIX",
+   "unit": "index",
+   "value": 16.46,
+   "date": "2026-10-15",
+   "previous": 16.87,
+   "previousDate": "2026-10-14",
+   "change": -0.41,
+   "changePct": -2.43,
+   "source": "Cboe via FRED (VIXCLS)",
+   "frequency": "daily",
+   "releaseCadence": "daily",
+   "freshness": "current"
+  },
+  "BRENT": {
+   "key": "BRENT",
+   "label": "Brent",
+   "unit": "USD/bbl",
+   "value": 126.55,
+   "date": "2026-10-14",
+   "previous": 125.78,
+   "previousDate": "2026-10-13",
+   "change": 0.77,
+   "changePct": 0.61,
+   "source": "EIA via FRED (DCOILBRENTEU)",
+   "frequency": "daily",
+   "releaseCadence": "daily",
+   "freshness": "delayed"
+  }
+ },
+ "fx": {
+  "base": "USD",
+  "date": "2026-10-16",
+  "previousDate": "2026-10-15",
+  "monthAgoDate": "2026-09-16",
+  "source": "European Central Bank euro foreign exchange reference rates",
+  "frequency": "daily",
+  "freshness": "current",
+  "values": {
+   "JPY": {
+    "perUsd": 158.02,
+    "change1dPct": 0.03,
+    "change30dPct": 1.92
+   },
+   "CZK": {
+    "perUsd": 21.6147,
+    "change1dPct": -0.52,
+    "change30dPct": 2.57
+   },
+   "DKK": {
+    "perUsd": 6.6425,
+    "change1dPct": -0.4,
+    "change30dPct": 2.51
+   },
+   "GBP": {
+    "perUsd": 0.7499,
+    "change1dPct": -0.66,
+    "change30dPct": 0.9
+   },
+   "HUF": {
+    "perUsd": 322.65,
+    "change1dPct": -0.54,
+    "change30dPct": 2.14
+   },
+   "PLN": {
+    "perUsd": 3.8834,
+    "change1dPct": -0.4,
+    "change30dPct": 3.06
+   },
+   "RON": {
+    "perUsd": 4.7374,
+    "change1dPct": -0.45,
+    "change30dPct": 3.85
+   },
+   "SEK": {
+    "perUsd": 9.904,
+    "change1dPct": -0.68,
+    "change30dPct": 1.23
+   },
+   "CHF": {
+    "perUsd": 0.824,
+    "change1dPct": -0.75,
+    "change30dPct": 0.6
+   },
+   "ISK": {
+    "perUsd": 121.03,
+    "change1dPct": -0.55,
+    "change30dPct": -0.12
+   },
+   "NOK": {
+    "perUsd": 9.441,
+    "change1dPct": -0.66,
+    "change30dPct": 0.96
+   },
+   "TRY": {
+    "perUsd": 49.5271,
+    "change1dPct": 0.22,
+    "change30dPct": 1.79
+   },
+   "AUD": {
+    "perUsd": 1.437,
+    "change1dPct": -0.69,
+    "change30dPct": 2.49
+   },
+   "BRL": {
+    "perUsd": 5.0828,
+    "change1dPct": 0.51,
+    "change30dPct": -1.23
+   },
+   "CAD": {
+    "perUsd": 1.4161,
+    "change1dPct": -0.32,
+    "change30dPct": 1.59
+   },
+   "CNY": {
+    "perUsd": 6.6862,
+    "change1dPct": -0.07,
+    "change30dPct": -0.31
+   },
+   "HKD": {
+    "perUsd": 7.8482,
+    "change1dPct": 0.01,
+    "change30dPct": 0.04
+   },
+   "IDR": {
+    "perUsd": 18031,
+    "change1dPct": 0.48,
+    "change30dPct": 2.04
+   },
+   "ILS": {
+    "perUsd": 3.0945,
+    "change1dPct": -0.25,
+    "change30dPct": 2.09
+   },
+   "INR": {
+    "perUsd": 94.9649,
+    "change1dPct": -0.1,
+    "change30dPct": -1.04
+   },
+   "KRW": {
+    "perUsd": 1332.1,
+    "change1dPct": -1.03,
+    "change30dPct": -2.61
+   },
+   "MXN": {
+    "perUsd": 18.3836,
+    "change1dPct": -0.75,
+    "change30dPct": 7.27
+   },
+   "MYR": {
+    "perUsd": 4.0815,
+    "change1dPct": -0.03,
+    "change30dPct": -0.14
+   },
+   "NZD": {
+    "perUsd": 1.7656,
+    "change1dPct": -1.12,
+    "change30dPct": 1.74
+   },
+   "PHP": {
+    "perUsd": 62.9681,
+    "change1dPct": -0.17,
+    "change30dPct": 0.38
+   },
+   "SGD": {
+    "perUsd": 1.2792,
+    "change1dPct": -0.29,
+    "change30dPct": 0.46
+   },
+   "THB": {
+    "perUsd": 33.4151,
+    "change1dPct": -0.37,
+    "change30dPct": 0.5
+   },
+   "ZAR": {
+    "perUsd": 16.4338,
+    "change1dPct": -0.74,
+    "change30dPct": 1.02
+   },
+   "EUR": {
+    "perUsd": 0.8887,
+    "change1dPct": -0.4,
+    "change30dPct": 2.52
+   }
+  },
+  "currencyByIso3": {
+   "USA": "USD",
+   "JPN": "JPY",
+   "CZE": "CZK",
+   "DNK": "DKK",
+   "GBR": "GBP",
+   "HUN": "HUF",
+   "POL": "PLN",
+   "ROU": "RON",
+   "SWE": "SEK",
+   "CHE": "CHF",
+   "ISL": "ISK",
+   "NOR": "NOK",
+   "TUR": "TRY",
+   "AUS": "AUD",
+   "BRA": "BRL",
+   "CAN": "CAD",
+   "CHN": "CNY",
+   "HKG": "HKD",
+   "IDN": "IDR",
+   "ISR": "ILS",
+   "IND": "INR",
+   "KOR": "KRW",
+   "MEX": "MXN",
+   "MYS": "MYR",
+   "NZL": "NZD",
+   "PHL": "PHP",
+   "SGP": "SGD",
+   "THA": "THB",
+   "ZAF": "ZAR",
+   "AUT": "EUR",
+   "BEL": "EUR",
+   "BGR": "EUR",
+   "HRV": "EUR",
+   "CYP": "EUR",
+   "EST": "EUR",
+   "FIN": "EUR",
+   "FRA": "EUR",
+   "DEU": "EUR",
+   "GRC": "EUR",
+   "IRL": "EUR",
+   "ITA": "EUR",
+   "LVA": "EUR",
+   "LTU": "EUR",
+   "LUX": "EUR",
+   "MLT": "EUR",
+   "NLD": "EUR",
+   "PRT": "EUR",
+   "SVK": "EUR",
+   "SVN": "EUR",
+   "ESP": "EUR",
+   "EUU": "EUR"
+  }
+ },
+ "policyRates": {
+  "source": "BIS central bank policy rates (WS_CBPOL)",
+  "frequency": "daily",
+  "releaseCadence": "weekly",
+  "date": "2026-10-13",
+  "values": {
+   "AUS": {
+    "rate": 4.6,
+    "date": "2026-10-08",
+    "lastChange": {
+     "from": 4.35,
+     "to": 4.6,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "AU",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "CAN": {
+    "rate": 2.25,
+    "date": "2026-10-12",
+    "lastChange": {
+     "from": 2.5,
+     "to": 2.25,
+     "after": "2025-09",
+     "change": -0.25
+    },
+    "area": "CA",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "CHE": {
+    "rate": 0,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 0.25,
+     "to": 0,
+     "after": "2025-05",
+     "change": -0.25
+    },
+    "area": "CH",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "CHL": {
+    "rate": 4.5,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 4.75,
+     "to": 4.5,
+     "after": "2025-11",
+     "change": -0.25
+    },
+    "area": "CL",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "CHN": {
+    "rate": 3,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 3.1,
+     "to": 3,
+     "after": "2025-04",
+     "change": -0.1
+    },
+    "area": "CN",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "COL": {
+    "rate": 12.25,
+    "date": "2026-10-09",
+    "lastChange": {
+     "from": 12,
+     "to": 12.25,
+     "after": "2026-09",
+     "change": 0.25
+    },
+    "area": "CO",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "AUT": {
+    "rate": 2.5,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 2.25,
+     "to": 2.5,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "XM",
+    "freshness": "current",
+    "euroArea": true
+   },
+   "CZE": {
+    "rate": 3.75,
+    "date": "2026-10-12",
+    "lastChange": {
+     "from": 3.5,
+     "to": 3.75,
+     "after": "2026-05",
+     "change": 0.25
+    },
+    "area": "CZ",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "DEU": {
+    "rate": 2.5,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 2.25,
+     "to": 2.5,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "XM",
+    "freshness": "current",
+    "euroArea": true
+   },
+   "DNK": {
+    "rate": 2.1,
+    "date": "2026-10-12",
+    "lastChange": {
+     "from": 1.85,
+     "to": 2.1,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "DK",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "ESP": {
+    "rate": 2.5,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 2.25,
+     "to": 2.5,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "XM",
+    "freshness": "current",
+    "euroArea": true
+   },
+   "FRA": {
+    "rate": 2.5,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 2.25,
+     "to": 2.5,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "XM",
+    "freshness": "current",
+    "euroArea": true
+   },
+   "GBR": {
+    "rate": 3.75,
+    "date": "2026-10-12",
+    "lastChange": {
+     "from": 4,
+     "to": 3.75,
+     "after": "2025-11",
+     "change": -0.25
+    },
+    "area": "GB",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "GRC": {
+    "rate": 2.5,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 2.25,
+     "to": 2.5,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "XM",
+    "freshness": "current",
+    "euroArea": true
+   },
+   "HKG": {
+    "rate": 4.25,
+    "date": "2026-10-07",
+    "lastChange": {
+     "from": 4,
+     "to": 4.25,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "HK",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "HUN": {
+    "rate": 5.5,
+    "date": "2026-10-07",
+    "lastChange": {
+     "from": 5.75,
+     "to": 5.5,
+     "after": "2026-07",
+     "change": -0.25
+    },
+    "area": "HU",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "IDN": {
+    "rate": 5.75,
+    "date": "2026-10-05",
+    "lastChange": {
+     "from": 5.25,
+     "to": 5.75,
+     "after": "2026-05",
+     "change": 0.5
+    },
+    "area": "ID",
+    "freshness": "delayed",
+    "euroArea": false
+   },
+   "ISR": {
+    "rate": 3.25,
+    "date": "2026-09-30",
+    "lastChange": {
+     "from": 3.5,
+     "to": 3.25,
+     "after": "2026-08",
+     "change": -0.25
+    },
+    "area": "IL",
+    "freshness": "stale",
+    "euroArea": false
+   },
+   "IND": {
+    "rate": 5.25,
+    "date": "2026-07-23",
+    "lastChange": {
+     "from": 5.5,
+     "to": 5.25,
+     "after": "2025-11",
+     "change": -0.25
+    },
+    "area": "IN",
+    "freshness": "stale",
+    "euroArea": false
+   },
+   "ISL": {
+    "rate": 8,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 7.75,
+     "to": 8,
+     "after": "2026-07",
+     "change": 0.25
+    },
+    "area": "IS",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "ITA": {
+    "rate": 2.5,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 2.25,
+     "to": 2.5,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "XM",
+    "freshness": "current",
+    "euroArea": true
+   },
+   "JPN": {
+    "rate": 1.25,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 1,
+     "to": 1.25,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "JP",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "KOR": {
+    "rate": 3,
+    "date": "2026-10-08",
+    "lastChange": {
+     "from": 2.75,
+     "to": 3,
+     "after": "2026-07",
+     "change": 0.25
+    },
+    "area": "KR",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "KWT": {
+    "rate": 3.5,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 3.75,
+     "to": 3.5,
+     "after": "2025-11",
+     "change": -0.25
+    },
+    "area": "KW",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "MAR": {
+    "rate": 2.25,
+    "date": "2026-08-31",
+    "lastChange": {
+     "from": 2.5,
+     "to": 2.25,
+     "after": "2025-02",
+     "change": -0.25
+    },
+    "area": "MA",
+    "freshness": "stale",
+    "euroArea": false
+   },
+   "MKD": {
+    "rate": 4.25,
+    "date": "2026-10-09",
+    "lastChange": {
+     "from": 4,
+     "to": 4.25,
+     "after": "2026-05",
+     "change": 0.25
+    },
+    "area": "MK",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "MEX": {
+    "rate": 6.5,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 6.75,
+     "to": 6.5,
+     "after": "2026-04",
+     "change": -0.25
+    },
+    "area": "MX",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "MYS": {
+    "rate": 2.75,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 3,
+     "to": 2.75,
+     "after": "2025-06",
+     "change": -0.25
+    },
+    "area": "MY",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "NLD": {
+    "rate": 2.5,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 2.25,
+     "to": 2.5,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "XM",
+    "freshness": "current",
+    "euroArea": true
+   },
+   "NOR": {
+    "rate": 4.5,
+    "date": "2026-10-08",
+    "lastChange": {
+     "from": 4.25,
+     "to": 4.5,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "NO",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "NZL": {
+    "rate": 2.75,
+    "date": "2026-10-09",
+    "lastChange": {
+     "from": 2.5,
+     "to": 2.75,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "NZ",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "PER": {
+    "rate": 4.25,
+    "date": "2026-10-12",
+    "lastChange": {
+     "from": 4.5,
+     "to": 4.25,
+     "after": "2025-08",
+     "change": -0.25
+    },
+    "area": "PE",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "POL": {
+    "rate": 3.75,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 4,
+     "to": 3.75,
+     "after": "2026-02",
+     "change": -0.25
+    },
+    "area": "PL",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "PRT": {
+    "rate": 2.5,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 2.25,
+     "to": 2.5,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "XM",
+    "freshness": "current",
+    "euroArea": true
+   },
+   "ROU": {
+    "rate": 6.5,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 6.75,
+     "to": 6.5,
+     "after": "2024-07",
+     "change": -0.25
+    },
+    "area": "RO",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "SRB": {
+    "rate": 5.75,
+    "date": "2026-10-12",
+    "lastChange": {
+     "from": 6,
+     "to": 5.75,
+     "after": "2024-08",
+     "change": -0.25
+    },
+    "area": "RS",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "RUS": {
+    "rate": 14,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 14.25,
+     "to": 14,
+     "after": "2026-06",
+     "change": -0.25
+    },
+    "area": "RU",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "SAU": {
+    "rate": 4.5,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 4.25,
+     "to": 4.5,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "SA",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "SWE": {
+    "rate": 1.75,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 2,
+     "to": 1.75,
+     "after": "2025-09",
+     "change": -0.25
+    },
+    "area": "SE",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "THA": {
+    "rate": 1,
+    "date": "2026-10-08",
+    "lastChange": {
+     "from": 1.25,
+     "to": 1,
+     "after": "2026-01",
+     "change": -0.25
+    },
+    "area": "TH",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "TUR": {
+    "rate": 37,
+    "date": "2026-10-09",
+    "lastChange": {
+     "from": 38,
+     "to": 37,
+     "after": "2025-12",
+     "change": -1
+    },
+    "area": "TR",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "USA": {
+    "rate": 3.875,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 3.625,
+     "to": 3.875,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "US",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "BEL": {
+    "rate": 2.5,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 2.25,
+     "to": 2.5,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "XM",
+    "freshness": "current",
+    "euroArea": true
+   },
+   "BGR": {
+    "rate": 2.5,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 2.25,
+     "to": 2.5,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "XM",
+    "freshness": "current",
+    "euroArea": true
+   },
+   "HRV": {
+    "rate": 2.5,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 2.25,
+     "to": 2.5,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "XM",
+    "freshness": "current",
+    "euroArea": true
+   },
+   "CYP": {
+    "rate": 2.5,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 2.25,
+     "to": 2.5,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "XM",
+    "freshness": "current",
+    "euroArea": true
+   },
+   "EST": {
+    "rate": 2.5,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 2.25,
+     "to": 2.5,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "XM",
+    "freshness": "current",
+    "euroArea": true
+   },
+   "FIN": {
+    "rate": 2.5,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 2.25,
+     "to": 2.5,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "XM",
+    "freshness": "current",
+    "euroArea": true
+   },
+   "IRL": {
+    "rate": 2.5,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 2.25,
+     "to": 2.5,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "XM",
+    "freshness": "current",
+    "euroArea": true
+   },
+   "LVA": {
+    "rate": 2.5,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 2.25,
+     "to": 2.5,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "XM",
+    "freshness": "current",
+    "euroArea": true
+   },
+   "LTU": {
+    "rate": 2.5,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 2.25,
+     "to": 2.5,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "XM",
+    "freshness": "current",
+    "euroArea": true
+   },
+   "LUX": {
+    "rate": 2.5,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 2.25,
+     "to": 2.5,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "XM",
+    "freshness": "current",
+    "euroArea": true
+   },
+   "MLT": {
+    "rate": 2.5,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 2.25,
+     "to": 2.5,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "XM",
+    "freshness": "current",
+    "euroArea": true
+   },
+   "SVK": {
+    "rate": 2.5,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 2.25,
+     "to": 2.5,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "XM",
+    "freshness": "current",
+    "euroArea": true
+   },
+   "SVN": {
+    "rate": 2.5,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 2.25,
+     "to": 2.5,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "XM",
+    "freshness": "current",
+    "euroArea": true
+   },
+   "EUU": {
+    "rate": 2.5,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 2.25,
+     "to": 2.5,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "XM",
+    "freshness": "current",
+    "euroArea": true
+   },
+   "ZAF": {
+    "rate": 7.25,
+    "date": "2026-10-12",
+    "lastChange": {
+     "from": 7,
+     "to": 7.25,
+     "after": "2026-08",
+     "change": 0.25
+    },
+    "area": "ZA",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "BRA": {
+    "rate": 13.75,
+    "date": "2026-10-13",
+    "lastChange": {
+     "from": 14,
+     "to": 13.75,
+     "after": "2026-08",
+     "change": -0.25
+    },
+    "area": "BR",
+    "freshness": "current",
+    "euroArea": false
+   },
+   "ARG": {
+    "rate": 29,
+    "date": "2025-07-10",
+    "lastChange": {
+     "from": 32,
+     "to": 29,
+     "after": "2024-12",
+     "change": -3
+    },
+    "area": "AR",
+    "freshness": "stale",
+    "euroArea": false
+   }
+  }
+ },
+ "errors": []
+}

@@ -65,7 +65,7 @@ jobs:
             echo "No changes to commit."
           else
             git commit -m "chore: auto-update commentary + forecast $(date -u +'%Y-%m') [skip ci]"
-            git push
+            .github/scripts/push-with-retry.sh
           fi
 
       - name: Upload validation report

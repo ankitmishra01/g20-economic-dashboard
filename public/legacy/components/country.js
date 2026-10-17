@@ -1122,6 +1122,9 @@ window.mountCountryProfileCharts = function(iso3) {
         return;
       }
 
+      // GDP: one unit for the whole axis, chosen from the largest value plotted.
+      if (key === 'GDP') fmtFn = A.gdpAxisFormatter(fullSeries.map(d => d.value));
+
       const labels = fullSeries.map(d => d.year);
       const histData = fullSeries.map(d => d.isProjection ? null : d.value);
       const projData = fullSeries.map((d, i) => {
@@ -1194,7 +1197,9 @@ window.mountCountryProfileCharts = function(iso3) {
       });
     }
 
-    lineChart('profile-gdp-chart',        'GDP',          'rgba(10,10,10,0.8)',  v => A.fmtGDPScaled(v));
+    // Neutral GDP line: near-black in light mode, near-white in dark mode (it vanished on the dark background).
+    const neutralLine = document.documentElement.getAttribute('data-theme') === 'dark' ? 'rgba(242,240,236,0.85)' : 'rgba(10,10,10,0.8)';
+    lineChart('profile-gdp-chart',        'GDP',          neutralLine,  v => A.fmtGDPScaled(v));
     lineChart('profile-unemp-chart',      'UNEMPLOYMENT', 'rgba(161,98,7,1)',    v => v.toFixed(1) + '%');
     lineChart('profile-inflation-chart',  'INFLATION',    'rgba(185,28,28,1)',   v => v.toFixed(1) + '%');
     lineChart('profile-debt-chart',       'DEBT_GDP',     'rgba(91,33,182,1)',   v => v.toFixed(0) + '%');

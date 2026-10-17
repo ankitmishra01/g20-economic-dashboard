@@ -6,6 +6,10 @@ on:
     types: [completed]
 permissions:
   contents: write
+# Every job that commits generated data shares this group, so they never race.
+concurrency:
+  group: data-commit
+  cancel-in-progress: false
 jobs:
   snapshot:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
@@ -18,14 +22,20 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+      - name: Keep the published latest.json for the What changed comparison
+        run: node sync/what-changed.js --stash latest
       - name: Build global data shards (public/legacy/data)
         run: node sync/shards.js
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+      - name: Build What changed (data/what-changed.json)
+        run: node sync/what-changed.js
       - name: Commit offline snapshot and shards
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add public/legacy/data-snapshot.json public/legacy/data
-          git diff --staged --quiet || (git commit -m "chore: refresh offline snapshot and data shards [skip ci]" && git push)
+          if git diff --staged --quiet; then echo "No change"; exit 0; fi
+          git commit -m "chore: refresh offline snapshot and data shards [skip ci]"
+          .github/scripts/push-with-retry.sh

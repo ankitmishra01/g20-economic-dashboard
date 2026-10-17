@@ -1,9 +1,11 @@
 // AI analyst proxy: keeps provider API keys out of the browser.
-// POST /api/agent  { question: string, country?: ISO3, scope?: 'g20' }
+// POST /api/agent  { question: string, country?: ISO3, scope?: 'g20' | 'global' | 'region:XXX' | 'income:XXX' }
+// POST /api/agent  { mode: 'brief', scope? }   one-paragraph narration of "What changed"
 //
-// The data context is built here from the published snapshot
-// (public/legacy/data-snapshot.json + projections.json); any numbers a client
-// sends are ignored. Requests must come from an allowed origin (lib/cors.cjs)
+// The data context is built here from published files only: the G20 snapshot
+// (data-snapshot.json + projections.json), the global shards (data/latest.json and
+// data/country/<ISO3>.json), the daily market layer (data/realtime.json) and the
+// computed changes (data/what-changed.json). Any numbers a client sends are ignored. Requests must come from an allowed origin (lib/cors.cjs)
 // and are rate limited per client (lib/rate-limit.cjs).
 //
 // Provider order (first key found wins):
@@ -14,8 +16,14 @@
 
 const { isAllowedOrigin } = require('../lib/cors.cjs');
 const { createRateLimiter, clientKey } = require('../lib/rate-limit.cjs');
-const { indexSnapshot, buildScopeContext, buildCountryContext } = require('../lib/agent-context.cjs');
+const fs = require('fs');
+const path = require('path');
+const {
+  indexSnapshot, buildScopeContext, buildCountryContext,
+  buildLatestScopeContext, buildLatestCountryContext, buildRealtimeContext, buildBriefContext,
+} = require('../lib/agent-context.cjs');
 const G20 = require('../lib/g20.cjs');
+const REGISTRY = require('../public/legacy/countries.json');
 
 const MAX_QUESTION = 500;
 const MAX_CONTEXT = 20000;
@@ -31,11 +39,69 @@ function loadData() {
   return { index: cachedIndex, projections: cachedProjections };
 }
 
-function serverContext(country) {
-  const { index, projections } = loadData();
-  if (country && G20.some((c) => c.iso3 === country)) return buildCountryContext(index, projections, country, G20);
-  return buildScopeContext(index, G20, { label: 'G20' });
+const optionalJson = (rel) => { try { return require(rel); } catch (_) { return null; } };
+let cachedGlobal = null;
+function loadGlobal() {
+  if (!cachedGlobal) {
+    cachedGlobal = {
+      latest: optionalJson('../public/legacy/data/latest.json'),
+      realtime: optionalJson('../public/legacy/data/realtime.json'),
+      whatChanged: optionalJson('../public/legacy/data/what-changed.json'),
+    };
+  }
+  return cachedGlobal;
 }
+
+// Country shards are bundled with the function (vercel.ts includeFiles); a missing
+// shard just means the context has no history lines.
+function countryShard(iso3) {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'public', 'legacy', 'data', 'country', `${iso3}.json`), 'utf8'));
+  } catch (_) { return null; }
+}
+
+const byIso3 = new Map(REGISTRY.countries.map((c) => [c.iso3, c]));
+// Members of a dashboard scope id, mirroring public/legacy/scope.js.
+function scopeMembers(scope) {
+  if (!scope || scope === 'g20') return { label: 'G20', members: null };
+  if (scope === 'global' || scope === 'watchlist') return { label: 'Global', members: REGISTRY.countries };
+  const [kind, code] = String(scope).split(':');
+  const list = kind === 'region' ? REGISTRY.collections.regions : kind === 'income' ? REGISTRY.collections.income : null;
+  const group = (list || []).find((g) => g.code === code);
+  if (!group) return { label: 'G20', members: null };
+  return { label: group.name, members: group.members.map((iso) => byIso3.get(iso)).filter(Boolean) };
+}
+
+function serverContext(country, scope) {
+  const { index, projections } = loadData();
+  const { latest, realtime } = loadGlobal();
+  if (country && G20.some((c) => c.iso3 === country)) {
+    return [buildCountryContext(index, projections, country, G20), buildRealtimeContext(realtime, country)].filter(Boolean).join('\n\n');
+  }
+  if (country && byIso3.has(country) && latest) {
+    return [buildLatestCountryContext(latest, countryShard(country), byIso3.get(country)), buildRealtimeContext(realtime, country)].filter(Boolean).join('\n\n');
+  }
+  const { label, members } = scopeMembers(scope);
+  const base = members && latest ? buildLatestScopeContext(latest, members, { label }) : buildScopeContext(index, G20, { label: 'G20' });
+  return [base, buildRealtimeContext(realtime)].filter(Boolean).join('\n\n');
+}
+
+// Narration of "What changed" for one scope: built only from the computed items.
+const briefCache = new Map();
+function briefContext(scope) {
+  const { whatChanged } = loadGlobal();
+  if (!whatChanged) return { key: null, ctx: '' };
+  const { members } = scopeMembers(scope);
+  const set = members ? new Set(members.map((m) => m.iso3)) : new Set(G20.map((c) => c.iso3));
+  const euro = new Set(Object.entries(loadGlobal().realtime?.policyRates?.values || {}).filter(([, v]) => v.euroArea).map(([iso]) => iso));
+  const anyEuro = [...set].some((iso) => euro.has(iso));
+  const inScope = scope === 'global' ? null : (iso3) => set.has(iso3) || (iso3 === 'EUU' && anyEuro);
+  const ctx = buildBriefContext(whatChanged, inScope);
+  return { key: `${whatChanged.generatedAt}|${scope || 'g20'}`, ctx };
+}
+const BRIEF_INSTRUCTION =
+  'Write one paragraph of at most 90 words telling a cross-border decision maker what changed and why it matters. ' +
+  'Use only the facts and figures in the list above, mention the most material items first, and do not add any figure that is not in the list.';
 const TIMEOUT_MS = 12000; // per attempt
 // Free-tier Gemini models each have their own quota, so try them in order.
 const GEMINI_CHAIN = ['gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-3.1-flash-lite'];
@@ -43,7 +109,7 @@ const GEMINI_CHAIN = ['gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini
 const FATAL = new Set([401, 403]);
 
 const SYSTEM_PROMPT =
-  `You are a concise economic analyst specialising in G20 macroeconomics. ` +
+  `You are a concise economic analyst covering G20 and global macroeconomics. ` +
   `Answer the user's question using the live data context provided. ` +
   `Always cite specific numbers and country names, using only numbers that appear in the data context; if a figure is not in the context, say it is not in the dataset instead of guessing. Keep answers under 200 words. ` +
   `Write in UK English: use organisation, labour, analyse, recognise, behaviour, stabilisation. ` +
@@ -52,7 +118,7 @@ const SYSTEM_PROMPT =
   `Use "However" to introduce counter-arguments, not "But" or "Yet". ` +
   `Frame risks as conditionals: "Unless X, Y will occur." ` +
   `Close with a prescriptive observation using "needs to" or "should". ` +
-  `Data sourced from World Bank and IMF DataMapper.`;
+  `Data sourced from World Bank, IMF DataMapper, BIS, ECB and FRED.`;
 
 async function callGemini(key, model, userMessage, signal) {
   const upstream = await fetch(
@@ -111,10 +177,19 @@ module.exports = async function handler(req, res) {
     return res.status(429).json({ code: 'RATE_LIMITED', error: 'Too many questions in a short time. Try again in a minute.' });
   }
 
-  const { question, country } = req.body || {};
-  if (!question || typeof question !== 'string') return res.status(400).json({ error: 'question is required' });
-  if (question.length > MAX_QUESTION) return res.status(400).json({ error: `question is limited to ${MAX_QUESTION} characters` });
+  const { question, country, mode, scope } = req.body || {};
+  const isBrief = mode === 'brief';
+  if (!isBrief && (!question || typeof question !== 'string')) return res.status(400).json({ error: 'question is required' });
+  if (!isBrief && question.length > MAX_QUESTION) return res.status(400).json({ error: `question is limited to ${MAX_QUESTION} characters` });
   const iso3 = typeof country === 'string' && /^[A-Z]{3}$/.test(country) ? country : null;
+  const scopeId = typeof scope === 'string' && /^(g20|global|watchlist|(region|income):[A-Z]{2,4})$/.test(scope) ? scope : 'g20';
+
+  let brief = null;
+  if (isBrief) {
+    brief = briefContext(scopeId);
+    if (!brief.ctx) return res.status(404).json({ code: 'NO_CHANGES', error: 'No computed changes for this scope' });
+    if (briefCache.has(brief.key)) return res.status(200).json({ ...briefCache.get(brief.key), cached: true });
+  }
 
   const geminiKey = process.env.GEMINI_API_KEY;
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
@@ -123,8 +198,13 @@ module.exports = async function handler(req, res) {
     return res.status(503).json({ code: 'NO_AI_KEY', error: 'No AI provider key is configured (set GEMINI_API_KEY or ANTHROPIC_API_KEY)' });
   }
 
-  const ctx = serverContext(iso3).slice(0, MAX_CONTEXT);
-  const userMessage = ctx ? `Live data snapshot:\n${ctx}\n\nQuestion: ${question}` : `Question: ${question}`;
+  let userMessage;
+  if (isBrief) {
+    userMessage = `${brief.ctx.slice(0, MAX_CONTEXT)}\n\n${BRIEF_INSTRUCTION}`;
+  } else {
+    const ctx = serverContext(iso3, scopeId).slice(0, MAX_CONTEXT);
+    userMessage = ctx ? `Live data snapshot:\n${ctx}\n\nQuestion: ${question}` : `Question: ${question}`;
+  }
 
   const provider = geminiKey ? 'gemini' : 'anthropic';
   const models = process.env.AI_MODEL
@@ -139,7 +219,11 @@ module.exports = async function handler(req, res) {
       const result = geminiKey
         ? await callGemini(geminiKey, model, userMessage, controller.signal)
         : await callAnthropic(anthropicKey, model, userMessage, controller.signal);
-      if (result.text) return res.status(200).json({ text: result.text, provider, model });
+      if (result.text) {
+        const payload = { text: result.text, provider, model };
+        if (isBrief) { if (briefCache.size > 50) briefCache.clear(); briefCache.set(brief.key, payload); }
+        return res.status(200).json(payload);
+      }
       last = result.error
         ? { status: result.status || 502, code: 'UPSTREAM', error: result.error }
         : { status: 502, code: 'EMPTY', error: 'Empty response from AI provider' };

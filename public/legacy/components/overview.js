@@ -154,6 +154,8 @@ function renderOverview() {
 
 <div class="page-body">
 
+  ${window.renderWhatChangedShell ? window.renderWhatChangedShell() : ''}
+
   ${inG20 ? `<div id="overview-projection-outlook" class="projection-mini panel mb-20"><span>Loading projected G20 median growth…</span></div>` : ''}
 
   <!-- KPI tiles -->

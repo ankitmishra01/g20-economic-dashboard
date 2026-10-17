@@ -33,5 +33,7 @@ test('scheduled model refresh persists generated artifacts', () => {
   const workflow = read('.github/workflows/model-refresh.yml');
   assert.match(workflow, /contents: write/);
   for (const artifact of ['term-spread.js', 'forecast-model.js', 'forecast-history.json', 'projections.json', 'projection-history.json']) assert.match(workflow, new RegExp(artifact.replace('.', '\\.')));
-  assert.match(workflow, /git push/);
+  // Pushes go through the shared retry script (rebases onto concurrent refresh commits).
+  assert.match(workflow, /push-with-retry\.sh/);
+  assert.match(read('.github/scripts/push-with-retry.sh'), /git pull --rebase[\s\S]*git push/);
 });

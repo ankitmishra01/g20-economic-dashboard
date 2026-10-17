@@ -122,7 +122,9 @@ function evaluate(panel, termSpread, countries, key, horizon, opts) {
   const origins = [...new Set(all.map(s => s.origin))].filter(y => y >= opts.firstBacktestOrigin).sort();
   const records = [];
   for (const origin of origins) {
-    const train = all.filter(s => s.origin < origin), test = all.filter(s => s.origin === origin);
+    // Train only on samples whose target year was already observed at the test origin
+    // (origin + horizon <= test origin); s.origin < origin alone leaks future targets for h >= 2.
+    const train = all.filter(s => s.origin + horizon <= origin), test = all.filter(s => s.origin === origin);
     if (train.length < Math.min(MIN_TRAIN, Math.max(12, countries.length * 5)) || !test.length) continue;
     const ridge = fitRidge(train);
     for (const s of test) records.push({

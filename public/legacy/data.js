@@ -352,7 +352,7 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
       const educ  = getLatest(c.iso3, 'EDUC_EXP', { annualOnly: true });
       if (!gdp && !gr) continue;
       const parts = [`${c.name}:`];
-      if (gdp)   parts.push(`GDP $${(gdp.value/1e12).toFixed(2)}T (${gdp.year})`);
+      if (gdp)   parts.push(`GDP ${window.A ? A.fmtGDPScaled(gdp.value) : `$${(gdp.value/1e12).toFixed(2)}T`} (${gdp.year})`);
       if (gr)    parts.push(`growth ${gr.value.toFixed(1)}% (${gr.year})`);
       if (inf)   parts.push(`inflation ${inf.value.toFixed(1)}% (${inf.year})`);
       if (une)   parts.push(`unemployment ${une.value.toFixed(1)}% (${une.year})`);

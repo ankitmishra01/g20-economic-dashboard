@@ -1237,7 +1237,7 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
   text-transform: uppercase;
   letter-spacing: .05em;
 }
-.brief-kf__val { font-size: 13px; font-weight: 600; color: var(--ink); }
+.brief-kf__val { font-size: 13px; font-weight: 600; color: var(--text-1); } /* --ink is near-black in dark mode */
 .brief-kf__yr  { font-size: 10px; color: var(--text-4); font-family: var(--font-mono); }
 
 .brief-section { margin-bottom: 18px; }
@@ -1281,7 +1281,7 @@ button { cursor: pointer; border: none; background: none; font: inherit; color: 
 .country-brief__headline {
   font-size: 15px;
   font-weight: 700;
-  color: var(--ink);
+  color: var(--text-1); /* --ink is near-black in dark mode; --text-1 matches it in light mode */
   line-height: 1.4;
   margin-bottom: 5px;
   letter-spacing: -0.015em;
