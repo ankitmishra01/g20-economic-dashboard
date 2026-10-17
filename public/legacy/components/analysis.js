@@ -25,7 +25,15 @@
   // ── Helpers ───────────────────────────────────────────────────────────────
   const series = (iso3, key) => window.G20_DATA?.[iso3]?.[key] || {};
   const num = (v) => (v === null || v === undefined || Number.isNaN(+v) ? null : +v);
-  const countries = () => window.G20.filter(c => c.iso3 !== 'EUU');
+  // The four panels are country-by-country econometrics, readable for about 20 economies.
+  // Wider scopes use their 20 largest economies by GDP (a note on the page says so).
+  const ANALYSIS_MAX = 20;
+  const countries = () => {
+    const list = window.G20.filter(c => c.iso3 !== 'EUU');
+    if (!window.Scope || Scope.isG20() || list.length <= ANALYSIS_MAX) return list;
+    const keep = new Set(window.G20Data.getRanking('GDP').filter(c => c.iso3 !== 'EUU').slice(0, ANALYSIS_MAX).map(c => c.iso3));
+    return list.filter(c => keep.has(c.iso3));
+  };
   const nameOf = (iso3) => window.G20.find(c => c.iso3 === iso3)?.name || iso3;
   const esc = (s) => A.escapeText(s);
   const f = (v, d = 1) => (v >= 0 ? '' : '−') + Math.abs(v).toFixed(d);
@@ -187,12 +195,12 @@
         ${finding('R²', fit.r2.toFixed(2), `${fit.n} economies`)}
         ${finding('Convergence speed', lambda ? `${(lambda * 100).toFixed(1)}%/yr` : 'n/a', halfLife ? `half-life ≈ ${Math.round(halfLife)} years` : '')}
       </div>
-      <p class="an-read">Economies that started poorer grew faster. A G20 economy with half the 2000 income of a peer grew
+      <p class="an-read">Economies that started poorer grew faster. A ${PEER()} economy with half the 2000 income of a peer grew
       about <b>${(Math.abs(fit.b) * Math.log(2)).toFixed(1)} points a year faster</b> in real per-capita terms over ${cv.T} years.
       The implied speed of ${lambda ? (lambda * 100).toFixed(1) : '–'}% a year sits close to the ~2% Barro and Sala-i-Martin found
       across US states and OECD economies.${chn && usa ? ` ${esc(chn.name)} multiplied real income per head ${chn.multiple.toFixed(1)}×, against ${usa.multiple.toFixed(1)}× for the ${esc(usa.name)}.` : ''}
       ${fastest ? `${esc(fastest.name)} was the fastest at ${fastest.y.toFixed(1)}% a year.` : ''}
-      This is conditional on being in the G20, which already selects for economies that took off, so it overstates global convergence.</p>`;
+      ${window.Scope && !Scope.isG20() ? '' : 'This is conditional on being in the G20, which already selects for economies that took off, so it overstates global convergence.'}</p>`;
   }
 
   function renderOkunTable(rows) {
@@ -233,7 +241,7 @@
         ${finding('Inflation erosion', `${fs(sum('infl'))} pp`, 'CPI as deflator proxy')}
         ${finding('Real growth', `${fs(sum('real'))} pp`, '')}
       </div>
-      <p class="an-read">Since ${DEBT_BASE} the typical G20 government ran deficits worth about ${Math.abs(sum('def')).toFixed(0)} points of GDP,
+      <p class="an-read">Since ${DEBT_BASE} the typical ${PEER()} government ran deficits worth about ${Math.abs(sum('def')).toFixed(0)} points of GDP,
       yet debt ratios rose by only ${sum('change').toFixed(0)}. The post-2021 price surge did much of the work: inflation shaved roughly
       <b>${Math.abs(sum('infl')).toFixed(0)} points</b> off the average ratio, more than real growth did.
       ${biggestInfl ? `${esc(biggestInfl.name)} gained most from it (${f(biggestInfl.infl, 0)} pp).` : ''}
@@ -254,7 +262,7 @@
       const strong = Math.abs(v) >= 0.6;
       return `<td style="background:${i === j ? 'transparent' : heatColor(v)};color:${strong && i !== j ? '#fff' : 'inherit'}" title="${A.escapeAttr(`${a.name} × ${s.list[j].name}: ${v.toFixed(2)}`)}">${i === j ? '' : v.toFixed(1)}</td>`;
     }).join('')}<td class="an-heat__avg">${s.avgRow[i].toFixed(2)}</td></tr>`).join('');
-    return `<div class="table-scroll"><table class="an-heat" aria-label="Correlation of annual real GDP growth between G20 economies, ${ERAS[eraKey].label}">
+    return `<div class="table-scroll"><table class="an-heat" aria-label="Correlation of annual real GDP growth between ${PEER()} economies, ${ERAS[eraKey].label}">
       <thead><tr><th></th>${head}<th>Avg</th></tr></thead><tbody>${body}</tbody></table></div>`;
   }
 
@@ -269,7 +277,7 @@
         ${finding('Full, ex-pandemic', ex.toFixed(2), '')}
         ${finding('Full, with 2020–21', all.toFixed(2), '')}
       </div>
-      <p class="an-read">In normal years the G20 shares only part of its cycle (average correlation ${ex.toFixed(2)}). Including 2020–21 lifts that
+      <p class="an-read">In normal years the ${PEER()} shares only part of its cycle (average correlation ${ex.toFixed(2)}). Including 2020–21 lifts that
       to ${all.toFixed(2)}, because one common shock hit everyone at once. Co-movement ${post < pre ? 'fell' : 'rose'} from ${pre.toFixed(2)} before the
       financial crisis to ${post.toFixed(2)} in the 2010s. ${esc(most.name)} moves most with the group. ${esc(least.name)} moves least, so its
       cycle is driven more by domestic and commodity factors than by the global one.</p>`;
@@ -279,11 +287,14 @@
     const cv = computeConvergence();
     const okun = computeOkun(_okunExCovid);
     const debt = computeDebt();
+    const scopeNote = window.Scope && !Scope.isG20() && window.G20.filter(c => c.iso3 !== 'EUU').length > ANALYSIS_MAX
+      ? `<div class="scope-note">These panels are country-by-country tests, so they use the ${ANALYSIS_MAX} largest economies in ${esc(Scope.label())} by GDP.</div>` : '';
     return `
 <div class="page-body an-page">
+  ${scopeNote}
   <div class="an-hero">
     <div class="an-hero__eyebrow">Econometric analysis · estimated live from the dashboard's data</div>
-    <h1 class="an-hero__title">Four tests of how G20 economies work</h1>
+    <h1 class="an-hero__title">Four tests of how ${PEER()} economies work</h1>
     <p class="an-hero__sub">Each panel takes a textbook relationship, estimates it on ${START} to ${END} annual data from the World Bank and IMF,
     and reports the coefficient, its uncertainty, and what it means. The numbers recompute every time the data refreshes.</p>
     <nav class="an-toc">
@@ -295,7 +306,7 @@
   </div>
 
   <section class="panel mb-20 an-section" id="an-conv">
-    <div class="panel__head"><div><span class="panel__title">1 · Are poorer G20 economies catching up?</span>
+    <div class="panel__head"><div><span class="panel__title">1 · Are poorer ${PEER()} economies catching up?</span>
       <span class="panel__sub">β-convergence · real GDP per capita growth ${START}–${END} vs ${START} income (PPP)</span></div></div>
     <div class="panel__body an-grid">
       <div class="an-chart" style="height:400px"><canvas id="an-conv-chart" role="img" aria-label="Scatter of average real GDP per capita growth against starting income, with fitted regression line"></canvas></div>
@@ -330,7 +341,7 @@
   </section>
 
   <section class="panel mb-20 an-section" id="an-sync">
-    <div class="panel__head"><div><span class="panel__title">4 · Do G20 economies share one business cycle?</span>
+    <div class="panel__head"><div><span class="panel__title">4 · Do ${PEER()} economies share one business cycle?</span>
       <span class="panel__sub">Pairwise correlation of annual real GDP growth</span></div>
       <div class="sec-head__actions">
         ${Object.entries(ERAS).map(([k, e]) => `<button class="sec-head__tab ${k === _syncEra ? 'active' : ''}" onclick="analysisSync('${k}', this)">${e.label}</button>`).join('')}

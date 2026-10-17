@@ -9,14 +9,37 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
   // Plus G20_DATA._latest[iso3][indicatorKey] = most recent value
   let _data = {};
 
+  // Wider scopes render straight from the static shards (they hold the G20's annual
+  // series too), so the first view never waits on the paginated Supabase read; the G20
+  // annual, quarterly and metadata load continues in the background. The G20 scope
+  // loads exactly as before.
+  let _g20Full = false;
   async function loadAllData() {
+    if (window.Scope && !Scope.isG20()) {
+      const shard = await loadLatestShard();
+      if (shard && shard.values) {
+        _data = { _latest: {} };
+        window.G20_DATA = _data;
+        mergeLatestShard(shard, { overwriteG20: true });
+        window.G20_BACKGROUND_LOAD = loadG20FromSupabase({ background: true })
+          .catch(err => console.warn('Background G20 load failed; shards remain in use:', err));
+        return _data;
+      }
+    }
+    return loadG20FromSupabase();
+  }
+
+  async function loadG20FromSupabase({ background = false } = {}) {
     // Supabase default page size is 1000 rows — paginate until all rows are fetched.
     // If Supabase is unreachable (free tier auto-pauses), fall back to the static snapshot.
     let rows = [];
     let snapshot = null;
     // Only fetch the countries the dashboard shows. The table now holds every
     // economy in the registry, so an unfiltered read would download them all.
-    const scopeIso3 = (window.G20 || []).map(c => c.iso3).join(',');
+    // Always the G20 (incl. the EU), whatever scope is selected: other economies come
+    // from the static shards (data/latest.json up front, series on demand).
+    const scopeIso3 = (window.G20_MEMBERS || window.G20 || []).map(c => c.iso3).join(',');
+    const latestShard = background ? null : loadLatestShard();
     try {
       const PAGE = 1000;
       let offset = 0;
@@ -45,6 +68,21 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
       snapshot = await sr.json();
       rows = snapshot.annual.map(([country_iso3, indicator_key, year, value]) => ({ country_iso3, indicator_key, year, value }));
       window.G20_SNAPSHOT_AT = snapshot.generatedAt;
+    }
+
+    if (background) {
+      // Shards already rendered the page: fill in any G20 years they lack, keep the rest.
+      for (const { country_iso3: iso3, indicator_key: key, year, value } of rows) {
+        if (iso3 && key) mergeSeries(iso3, key, { [year]: value });
+      }
+      _g20Full = true;
+      if (snapshot) {
+        window.G20_QDATA = buildQuarterlyIndex(snapshot.quarterly.map(([country_iso3, indicator_key, period, value]) => ({ country_iso3, indicator_key, period, value })));
+        window.G20_INDICATOR_META = snapshot.meta || [];
+        return _data;
+      }
+      await loadQuarterlyAndMeta();
+      return _data;
     }
 
     // Build nested index
@@ -80,6 +118,8 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
     }
 
     window.G20_DATA = _data;
+    _g20Full = true;
+    await mergeLatestShard(await latestShard);
 
     if (snapshot) {
       window.G20_QDATA = buildQuarterlyIndex(snapshot.quarterly.map(([country_iso3, indicator_key, period, value]) => ({ country_iso3, indicator_key, period, value })));
@@ -87,6 +127,11 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
       return _data;
     }
 
+    await loadQuarterlyAndMeta();
+    return _data;
+  }
+
+  async function loadQuarterlyAndMeta() {
     // Load quarterly data from g20_quarterly_data table (non-blocking; graceful fallback)
     try {
       // Paginate: Supabase caps a single response at 1000 rows and the table has several thousand.
@@ -116,8 +161,102 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
       }
     } catch (_) {}
 
-    return _data;
   }
+
+  // ── Static shards (global scope) ──────────────────────────────────────────
+  // data/latest.json      every economy x indicator: [value, year] (latest actual only)
+  // data/indicator/K.json one indicator's actual series for every economy
+  // data/country/ISO.json one economy's series (+ IMF projections, kept separate)
+  const SHARD_BASE = 'data/';
+  const _loadedIndicators = new Set();
+  const _loadedCountries = new Set();
+  const _inflight = new Map();
+
+  function loadLatestShard() {
+    return fetch(SHARD_BASE + 'latest.json').then(r => r.ok ? r.json() : null).catch(() => null);
+  }
+
+  // G20 values already come from Supabase; the shard fills every other economy
+  // (and, when rendering from shards first, the G20 too).
+  function mergeLatestShard(shard, { overwriteG20 = false } = {}) {
+    if (!shard || !shard.values) return;
+    window.COVERAGE_TIERS = shard.tiers || {};
+    window.SHARDS_GENERATED_AT = shard.generatedAt;
+    const g20 = new Set((window.G20_MEMBERS || []).map(c => c.iso3));
+    for (const [iso3, vals] of Object.entries(shard.values)) {
+      if (!overwriteG20 && g20.has(iso3) && _data._latest[iso3]) continue;
+      _data._latest[iso3] = _data._latest[iso3] || {};
+      for (const [key, [value, year]] of Object.entries(vals)) {
+        if (year <= window.LATEST_ACTUAL_YEAR) _data._latest[iso3][key] = { value, year };
+      }
+    }
+  }
+
+  function mergeSeries(iso3, key, series) {
+    if (!_data[iso3]) _data[iso3] = {};
+    const cur = _data[iso3][key] || (_data[iso3][key] = {});
+    for (const [y, v] of Object.entries(series)) if (cur[y] === undefined) cur[y] = v;
+  }
+
+  function once(id, fn) {
+    if (!_inflight.has(id)) _inflight.set(id, fn().catch(e => { _inflight.delete(id); throw e; }));
+    return _inflight.get(id);
+  }
+
+  // Load indicator shards (all economies' actual series) for the given keys.
+  function ensureIndicators(keys) {
+    const need = keys.filter(k => !_loadedIndicators.has(k) && window.INDICATORS?.[k]);
+    return Promise.all(need.map(k => once('i:' + k, async () => {
+      const r = await fetch(`${SHARD_BASE}indicator/${k}.json`);
+      if (!r.ok) throw new Error(`indicator shard ${k}: ${r.status}`);
+      const shard = await r.json();
+      for (const [iso3, series] of Object.entries(shard.series || {})) mergeSeries(iso3, k, series);
+      _loadedIndicators.add(k);
+    })));
+  }
+
+  // Load one economy's full series, including IMF projections (years > latest actual).
+  function ensureCountry(iso3) {
+    if (_loadedCountries.has(iso3)) return Promise.resolve();
+    if (_g20Full && (window.G20_MEMBERS || []).some(c => c.iso3 === iso3) && _data[iso3]) { _loadedCountries.add(iso3); return Promise.resolve(); }
+    return once('c:' + iso3, async () => {
+      const r = await fetch(`${SHARD_BASE}country/${iso3}.json`);
+      if (!r.ok) throw new Error(`country shard ${iso3}: ${r.status}`);
+      const shard = await r.json();
+      for (const [key, series] of Object.entries(shard.series || {})) mergeSeries(iso3, key, series);
+      for (const [key, series] of Object.entries(shard.projections || {})) mergeSeries(iso3, key, series);
+      _loadedCountries.add(iso3);
+    });
+  }
+
+  // Series each page needs across the whole scope (latest values are already loaded).
+  const PAGE_INDICATORS = {
+    overview: ['GDP', 'GDP_GROWTH', 'INFLATION', 'UNEMPLOYMENT', 'DEBT_GDP', 'CURRENT_ACC'],
+    analysis: ['GDP_CAPITA_PPP', 'GDP_GROWTH', 'UNEMPLOYMENT', 'DEBT_GDP', 'FISCAL_BAL', 'GDP', 'INFLATION'],
+    prosperity: ['GDP_CAPITA_PPP', 'GDP_CAPITA', 'GDP_GROWTH', 'POPULATION'],
+    compare: null, // the selected indicator only (see pendingFor)
+    flags: [],
+    countries: [],
+  };
+
+  // Resolves once the data a page needs for the current scope is loaded. Returns null
+  // when nothing is missing (render immediately), else a promise.
+  function pendingFor(page) {
+    // Booted from shards in a wider scope and switched back to the G20: wait for the
+    // background G20 load (quarterly data, metadata) before rendering G20 pages.
+    if (window.Scope?.isG20?.() && !_g20Full && window.G20_BACKGROUND_LOAD) return window.G20_BACKGROUND_LOAD.then(() => {});
+    if (window.Scope?.isG20?.() && !page.startsWith('country/')) return null;
+    if (page.startsWith('country/')) {
+      const iso3 = page.split('/')[1];
+      return _loadedCountries.has(iso3) || (_g20Full && (window.G20_MEMBERS || []).some(c => c.iso3 === iso3) && _data[iso3])
+        ? null : ensureCountry(iso3);
+    }
+    const wanted = page === 'compare' ? [window.compareSelectedIndicator?.() || 'GDP_GROWTH', 'GDP'] : (PAGE_INDICATORS[page] || []);
+    const keys = wanted.filter(k => !_loadedIndicators.has(k));
+    return keys.length ? ensureIndicators(keys) : null;
+  }
+
+  const getTier = (iso3) => window.COVERAGE_TIERS?.[iso3] ?? null;
 
   // Build quarterly data index from flat row array.
   // Index: _qdata[iso3][key][period] = value
@@ -238,7 +377,7 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
 
   // Build enriched context for a single country AI query, including relevant news headlines.
   function buildCountryContext(iso3) {
-    const country = window.G20?.find(c => c.iso3 === iso3);
+    const country = window.G20?.find(c => c.iso3 === iso3) || window.findEconomy?.(iso3);
     if (!country) return '';
 
     const indicators = ['GDP', 'GDP_GROWTH', 'INFLATION', 'UNEMPLOYMENT', 'DEBT_GDP',
@@ -289,5 +428,6 @@ const SUPABASE_KEY = 'sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG';
     return lines.join('\n');
   }
 
-  window.G20Data = { loadAllData, getLatest, getSeries, getSeriesWithProjections, getRanking, buildAgentContext, buildCountryContext, getIndicatorMeta, getQuarterlySeries };
+  window.G20Data = { loadAllData, getLatest, getSeries, getSeriesWithProjections, getRanking, buildAgentContext, buildCountryContext, getIndicatorMeta, getQuarterlySeries,
+    ensureIndicators, ensureCountry, pendingFor, getTier };
 })();

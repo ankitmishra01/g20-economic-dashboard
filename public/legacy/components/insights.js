@@ -78,8 +78,8 @@
       c.year,
     ]);
 
-    const p = `${top3} carry the heaviest debt loads in the G20. The G20 median is ${pct(med, 0)}; ${under60} economies are below the commonly cited 60% threshold. Sustained high debt raises refinancing risks, particularly when interest rates are elevated.`;
-    return wrap('G20 Government Debt / GDP Rankings', `<p class="ins-p">${p}</p>` + table(['', 'Economy', 'Debt / GDP', 'Year'], rows), 'IMF DataMapper');
+    const p = `${top3} carry the heaviest debt loads in the ${PEER()}. The ${PEER()} median is ${pct(med, 0)}; ${under60} economies are below the commonly cited 60% threshold. Sustained high debt raises refinancing risks, particularly when interest rates are elevated.`;
+    return wrap(`${PEER_CAP()} Government Debt / GDP Rankings`, `<p class="ins-p">${p}</p>` + table(['', 'Economy', 'Debt / GDP', 'Year'], rows), 'IMF DataMapper');
   }
 
   // ── Insight: GDP growth rankings ──────────────────────────────────────────────
@@ -102,9 +102,9 @@
       ];
     });
 
-    const negStr = negative.length ? ` ${negative.map(c => esc(cname(c.iso3))).join(', ')} ${negative.length > 1 ? 'are' : 'is'} in contraction.` : ' No G20 economies are currently contracting.';
-    const p = `${esc(cname(fastest.iso3))} leads G20 growth at ${sign(fastest.value)}${pct(fastest.value)} (${fastest.year}). The G20 median is ${sign(med)}${pct(med)}.${negStr} ${esc(cname(slowest.iso3))} records the weakest growth at ${sign(slowest.value)}${pct(slowest.value)}.`;
-    return wrap('G20 GDP Growth Rankings', `<p class="ins-p">${p}</p>` + table(['', 'Economy', 'Growth', 'Year'], rows), 'World Bank');
+    const negStr = negative.length ? ` ${negative.map(c => esc(cname(c.iso3))).join(', ')} ${negative.length > 1 ? 'are' : 'is'} in contraction.` : ` No ${PEER()} economies are currently contracting.`;
+    const p = `${esc(cname(fastest.iso3))} leads ${PEER()} growth at ${sign(fastest.value)}${pct(fastest.value)} (${fastest.year}). The ${PEER()} median is ${sign(med)}${pct(med)}.${negStr} ${esc(cname(slowest.iso3))} records the weakest growth at ${sign(slowest.value)}${pct(slowest.value)}.`;
+    return wrap(`${PEER_CAP()} GDP Growth Rankings`, `<p class="ins-p">${p}</p>` + table(['', 'Economy', 'Growth', 'Year'], rows), 'World Bank');
   }
 
   // ── Insight: Inflation ────────────────────────────────────────────────────────
@@ -126,10 +126,10 @@
       ];
     });
 
-    const hiStr = high.length ? `${high.map(c => esc(cname(c.iso3))).join(', ')} ${high.length > 1 ? 'remain' : 'remains'} above the 8% threshold.` : 'No G20 economy currently exceeds 8% inflation.';
+    const hiStr = high.length ? `${high.map(c => esc(cname(c.iso3))).join(', ')} ${high.length > 1 ? 'remain' : 'remains'} above the 8% threshold.` : `No ${PEER()} economy currently exceeds 8% inflation.`;
     const loStr = low.length ? ` ${low.map(c => esc(cname(c.iso3))).join(', ')} show sub-2% inflation, raising mild deflation concerns.` : '';
-    const p = `G20 median CPI stands at ${pct(med)}. ${hiStr}${loStr}`;
-    return wrap('G20 Inflation Snapshot', `<p class="ins-p">${p}</p>` + table(['', 'Economy', 'CPI Inflation', 'Year'], rows), 'World Bank');
+    const p = `${PEER_CAP()} median CPI stands at ${pct(med)}. ${hiStr}${loStr}`;
+    return wrap(`${PEER_CAP()} Inflation Snapshot`, `<p class="ins-p">${p}</p>` + table(['', 'Economy', 'CPI Inflation', 'Year'], rows), 'World Bank');
   }
 
   // ── Insight: Recession risk ────────────────────────────────────────────────────
@@ -166,10 +166,10 @@
     }
 
     if (!rows.length) {
-      return wrap('Recession & Contraction Risk', `<p class="ins-p">No G20 economies are currently in contraction. All 19 non-EU members show positive GDP growth in the latest available data. The G20 median growth rate is ${pct(median(growthRank.map(c => c.value)))}, a broadly resilient backdrop, though several advanced economies are growing below long-run trend.</p>`, 'World Bank, IMF DataMapper');
+      return wrap('Recession & Contraction Risk', `<p class="ins-p">No ${PEER()} economies are currently in contraction. All 19 non-EU members show positive GDP growth in the latest available data. The ${PEER()} median growth rate is ${pct(median(growthRank.map(c => c.value)))}, a broadly resilient backdrop, though several advanced economies are growing below long-run trend.</p>`, 'World Bank, IMF DataMapper');
     }
 
-    const p = `${atrisk.length > 0 ? `${atrisk.length} G20 economy/economies are currently in contraction. ` : ''}${slowing.length} economies are growing below 1.5%, a common watch threshold. Economies with high debt loads face compounded risk when growth slows.`;
+    const p = `${atrisk.length > 0 ? `${atrisk.length} ${PEER()} economy/economies are currently in contraction. ` : ''}${slowing.length} economies are growing below 1.5%, a common watch threshold. Economies with high debt loads face compounded risk when growth slows.`;
     return wrap('Recession & Contraction Risk', `<p class="ins-p">${p}</p>` + table(['Economy', 'Latest Growth', 'Assessment'], rows), 'World Bank, IMF DataMapper');
   }
 
@@ -195,8 +195,8 @@
     const deficits = fiscalRank.filter(c => c.value < 0).length;
     const surplus  = fiscalRank.filter(c => c.value > 0).length;
     const worstFiscal = fiscalRank[0];
-    const p = `${deficits} G20 economies are running fiscal deficits (government spending exceeds revenue); ${surplus} have surpluses. ${worstFiscal ? `${esc(cname(worstFiscal.iso3))} has the largest deficit at ${pct(worstFiscal.value)} of GDP (${worstFiscal.year}).` : ''} High debt + persistent deficits = structural vulnerability when interest rates rise.`;
-    return wrap('G20 Fiscal Health Monitor', `<p class="ins-p">${p}</p>` + table(['Economy', 'Debt/GDP', 'Fiscal Balance', 'Tax Revenue'], rows), 'IMF DataMapper, World Bank');
+    const p = `${deficits} ${PEER()} economies are running fiscal deficits (government spending exceeds revenue); ${surplus} have surpluses. ${worstFiscal ? `${esc(cname(worstFiscal.iso3))} has the largest deficit at ${pct(worstFiscal.value)} of GDP (${worstFiscal.year}).` : ''} High debt + persistent deficits = structural vulnerability when interest rates rise.`;
+    return wrap(`${PEER_CAP()} Fiscal Health Monitor`, `<p class="ins-p">${p}</p>` + table(['Economy', 'Debt/GDP', 'Fiscal Balance', 'Tax Revenue'], rows), 'IMF DataMapper, World Bank');
   }
 
   // ── Insight: Youth unemployment ───────────────────────────────────────────────
@@ -222,8 +222,8 @@
       ];
     });
 
-    const p = `G20 median youth unemployment is ${pct(med)}. ${critical.length > 0 ? `${critical.map(c => esc(cname(c.iso3))).join(', ')} exceed the 25% critical threshold, indicating significant structural barriers to youth employment.` : 'No G20 economy currently exceeds the 25% critical threshold.'} Youth unemployment typically runs 2-3× the adult rate; ratios above 3× signal skill mismatch or labour market rigidities.`;
-    return wrap('Youth Unemployment Across G20', `<p class="ins-p">${p}</p>` + table(['', 'Economy', 'Youth Unemp.', 'Adult Unemp.', 'Ratio', 'Year'], rows), 'World Bank (ILO modelled estimates)');
+    const p = `${PEER_CAP()} median youth unemployment is ${pct(med)}. ${critical.length > 0 ? `${critical.map(c => esc(cname(c.iso3))).join(', ')} exceed the 25% critical threshold, indicating significant structural barriers to youth employment.` : `No ${PEER()} economy currently exceeds the 25% critical threshold.`} Youth unemployment typically runs 2-3× the adult rate; ratios above 3× signal skill mismatch or labour market rigidities.`;
+    return wrap(`Youth Unemployment Across ${PEER_IN()}`, `<p class="ins-p">${p}</p>` + table(['', 'Economy', 'Youth Unemp.', 'Adult Unemp.', 'Ratio', 'Year'], rows), 'World Bank (ILO modelled estimates)');
   }
 
   // ── Insight: Trade & Investment ───────────────────────────────────────────────
@@ -247,8 +247,8 @@
     const top = exportRank[0];
     const fdiRank = getRanking('FDI_INFLOWS').sort((a, b) => b.value - a.value);
     const topFDI  = fdiRank[0];
-    const p = `${esc(cname(top.iso3))} is the most export-oriented G20 economy at ${pct(top.value)} of GDP (${top.year}). ${topFDI ? `${esc(cname(topFDI.iso3))} attracts the most FDI relative to GDP at ${sign(topFDI.value)}${pct(topFDI.value)} (${topFDI.year}).` : ''} Export share reflects trade openness; capital formation shows investment appetite.`;
-    return wrap('G20 Trade & Investment Overview', `<p class="ins-p">${p}</p>` + table(['Economy', 'Exports/GDP', 'FDI Inflows', 'Capital Formation', 'Year'], rows), 'World Bank');
+    const p = `${esc(cname(top.iso3))} is the most export-oriented ${PEER()} economy at ${pct(top.value)} of GDP (${top.year}). ${topFDI ? `${esc(cname(topFDI.iso3))} attracts the most FDI relative to GDP at ${sign(topFDI.value)}${pct(topFDI.value)} (${topFDI.year}).` : ''} Export share reflects trade openness; capital formation shows investment appetite.`;
+    return wrap(`${PEER_CAP()} Trade & Investment Overview`, `<p class="ins-p">${p}</p>` + table(['Economy', 'Exports/GDP', 'FDI Inflows', 'Capital Formation', 'Year'], rows), 'World Bank');
   }
 
   // ── Insight: Country profile ──────────────────────────────────────────────────
@@ -315,15 +315,15 @@
     const sentences = [];
     if (gr && g20MedianGrowth != null) {
       const vs = gr.value >= g20MedianGrowth ? 'above' : 'below';
-      sentences.push(`${esc(country.name)} recorded ${sign(gr.value)}${pct(gr.value)} GDP growth in ${gr.year}, ${vs} the G20 median of ${sign(g20MedianGrowth)}${pct(g20MedianGrowth)}.`);
+      sentences.push(`${esc(country.name)} recorded ${sign(gr.value)}${pct(gr.value)} GDP growth in ${gr.year}, ${vs} the ${PEER()} median of ${sign(g20MedianGrowth)}${pct(g20MedianGrowth)}.`);
     }
     if (fiscal && debt) {
       const balDesc = fiscal.value > 0 ? `a surplus of ${pct(fiscal.value)}` : `a deficit of ${pct(Math.abs(fiscal.value))}`;
       const debtDesc = debt.value > g20MedianDebt ? 'above' : 'below';
-      sentences.push(`The fiscal position shows ${balDesc} of GDP (${fiscal.year}) with government debt at ${pct(debt.value, 0)} of GDP, ${debtDesc} the G20 median of ${pct(g20MedianDebt, 0)}.`);
+      sentences.push(`The fiscal position shows ${balDesc} of GDP (${fiscal.year}) with government debt at ${pct(debt.value, 0)} of GDP, ${debtDesc} the ${PEER()} median of ${pct(g20MedianDebt, 0)}.`);
     }
     if (youth && g20MedianYouth != null) {
-      const yDesc = youth.value > 25 ? `elevated at ${pct(youth.value)}` : youth.value > g20MedianYouth ? `${pct(youth.value)}, above the G20 median` : `${pct(youth.value)}, below the G20 median`;
+      const yDesc = youth.value > 25 ? `elevated at ${pct(youth.value)}` : youth.value > g20MedianYouth ? `${pct(youth.value)}, above the ${PEER()} median` : `${pct(youth.value)}, below the ${PEER()} median`;
       sentences.push(`Youth unemployment stands at ${yDesc} of ${pct(g20MedianYouth)} (${youth.year}).`);
     }
 
@@ -407,10 +407,10 @@
 
     const gdpGrowths = countries.map(c => getLatest(c.iso3, 'GDP_GROWTH')?.value).filter(v => v != null);
     const avgGrowth = gdpGrowths.reduce((s, v) => s + v, 0) / gdpGrowths.length;
-    const p = `${region} G20 members average ${sign(avgGrowth)}${pct(avgGrowth)} GDP growth. ${countries.length} economies shown.`;
+    const p = `${region} ${PEER()} members average ${sign(avgGrowth)}${pct(avgGrowth)} GDP growth. ${countries.length} economies shown.`;
 
     return wrap(
-      `${region}: G20 Economic Snapshot`,
+      `${region}: ${PEER()} Economic Snapshot`,
       `<p class="ins-p">${p}</p>` + table(['Economy', ...keys.map(k => k.label)], rows),
       'World Bank, IMF DataMapper'
     );
@@ -447,8 +447,8 @@
       ];
     });
 
-    const p = `G20 median GDP growth: ${sign(growthMed)}${pct(growthMed)} · Median CPI: ${pct(inflMed)} · Median debt/GDP: ${pct(debtMed, 0)}. ${contracting} economies are contracting, ${highInfl} have above-8% inflation, ${heavyDebt} carry debt above 100% of GDP, and ${deficits} are running fiscal deficits.`;
-    return wrap('G20 Economic Snapshot: All Economies', `<p class="ins-p">${p}</p>` + table(['Economy', 'Growth', 'CPI', 'Debt/GDP', 'Fiscal Bal.'], rows), 'World Bank, IMF DataMapper');
+    const p = `${PEER_CAP()} median GDP growth: ${sign(growthMed)}${pct(growthMed)} · Median CPI: ${pct(inflMed)} · Median debt/GDP: ${pct(debtMed, 0)}. ${contracting} economies are contracting, ${highInfl} have above-8% inflation, ${heavyDebt} carry debt above 100% of GDP, and ${deficits} are running fiscal deficits.`;
+    return wrap(`${PEER_CAP()} Economic Snapshot: All Economies`, `<p class="ins-p">${p}</p>` + table(['Economy', 'Growth', 'CPI', 'Debt/GDP', 'Fiscal Bal.'], rows), 'World Bank, IMF DataMapper');
   }
 
   // ── Country name / alias map ──────────────────────────────────────────────────

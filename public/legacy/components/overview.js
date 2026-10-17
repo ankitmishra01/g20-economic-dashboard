@@ -58,6 +58,7 @@ function flagBG(iso2) {
 
 // ── Main render ───────────────────────────────────────────────────────────────
 function renderOverview() {
+  const inG20 = !window.Scope || Scope.isG20();
   const gdpRank    = window.G20Data.getRanking('GDP');
   const growthRank = window.G20Data.getRanking('GDP_GROWTH');
   const infRank    = window.G20Data.getRanking('INFLATION').sort((a,b) => b.value - a.value);
@@ -101,10 +102,10 @@ function renderOverview() {
       <div>
         <div class="hero__eyebrow">
           <span class="tag"><span class="dot"></span>Live dataset</span>
-          <span>G20 · ${memberTotal} members (${tableRows.length} countries + EU) · ${Object.keys(window.INDICATORS || {}).length} indicators · 2015–${latestYear}</span>
+          <span>${inG20 ? `G20 · ${memberTotal} members (${tableRows.length} countries + EU)` : `${A.escapeText(Scope.label())} · ${tableRows.length} economies with data`} · ${Object.keys(window.INDICATORS || {}).length} indicators · 2015–${latestYear}</span>
         </div>
         <h1 class="hero__title">
-          G20 closed ${latestYear} with <span class="num-callout">${A.fmtSignedPct(medianGrowth)}</span> median real growth.<br>
+          ${inG20 ? 'G20' : Scope.id() === 'global' ? 'The world' : A.escapeText(PEER_CAP())} closed ${latestYear} with <span class="num-callout">${A.fmtSignedPct(medianGrowth)}</span> median real growth.<br>
           <span class="accent">Disinflation continues, yet debt levels persist.</span>
         </h1>
       </div>
@@ -114,7 +115,7 @@ function renderOverview() {
       <div class="hero__stat">
         <div class="hero__stat-lbl">Aggregate GDP</div>
         <div class="hero__stat-val">${(totalGDP / 1e12).toFixed(1)}<span class="unit">USD tn</span></div>
-        <div class="hero__stat-delta" title="Sum of the 19 countries. The EU aggregate is excluded because its GDP is already inside its member states."><span class="delta-pos">${memberExpand} of ${memberTotal} members expanding</span></div>
+        <div class="hero__stat-delta" title="${inG20 ? 'Sum of the 19 countries. The EU aggregate is excluded because its GDP is already inside its member states.' : 'Sum of the economies in this scope with a GDP reading.'}"><span class="delta-pos">${memberExpand} of ${memberTotal} ${inG20 ? 'members' : 'economies'} expanding</span></div>
       </div>
       <div class="hero__stat">
         <div class="hero__stat-lbl">Median growth</div>
@@ -153,21 +154,23 @@ function renderOverview() {
 
 <div class="page-body">
 
-  <div id="overview-projection-outlook" class="projection-mini panel mb-20"><span>Loading projected G20 median growth…</span></div>
+  ${inG20 ? `<div id="overview-projection-outlook" class="projection-mini panel mb-20"><span>Loading projected G20 median growth…</span></div>` : ''}
 
   <!-- KPI tiles -->
   <div class="sec-head">
     <div class="sec-head__title">Key indicators <span class="count">/ 5</span><span class="sec-head__sub">latest reads, 10y trend</span></div>
     <div class="sec-head__actions">
-      <button class="sec-head__tab active" onclick="overviewFilterClass('all',this)" title="All G20 economies">All G20</button>
+      ${inG20 ? `<button class="sec-head__tab active" onclick="overviewFilterClass('all',this)" title="All G20 economies">All G20</button>
       <button class="sec-head__tab" onclick="overviewFilterClass('ae',this)" title="Advanced economies">AE</button>
-      <button class="sec-head__tab" onclick="overviewFilterClass('em',this)" title="Emerging markets">EM</button>
+      <button class="sec-head__tab" onclick="overviewFilterClass('em',this)" title="Emerging markets">EM</button>` : `<button class="sec-head__tab active">${A.escapeText(Scope.label())}</button>`}
     </div>
   </div>
 
   <div class="kpi-grid" id="kpi-grid">
     ${renderKPITiles(totalGDP, medianGrowth, medianInf, memberExpand, memberTotal, debtRank, latestYear)}
   </div>
+
+  ${inG20 ? '' : renderWorldMapPanel()}
 
   <!-- Bar charts -->
   <div class="sec-head">
@@ -181,10 +184,10 @@ function renderOverview() {
     <div class="panel">
       <div class="panel__head">
         <div><span class="panel__title">Real GDP growth</span><span class="panel__sub">% YoY · ${latestYear}</span></div>
-        <div class="panel__meta">${growthRank.filter(nonEU).length} countries</div>
+        <div class="panel__meta">${inG20 ? `${growthRank.filter(nonEU).length} countries` : `top ${Math.min(20, growthRank.filter(nonEU).length)} of ${growthRank.filter(nonEU).length}`}</div>
       </div>
       <div class="panel__body">
-        ${renderGrowthBars(growthRank.filter(nonEU))}
+        ${renderGrowthBars(inG20 ? growthRank.filter(nonEU) : growthRank.filter(nonEU).slice(0, 20))}
       </div>
     </div>
     <div class="panel">
@@ -200,7 +203,7 @@ function renderOverview() {
 
   <!-- Rankings table -->
   <div class="sec-head">
-    <div class="sec-head__title">All economies <span class="count">/ ${tableRows.length} countries</span><span class="sec-head__sub">click row → country profile · EU aggregate on Countries page</span></div>
+    <div class="sec-head__title">${inG20 ? 'All economies' : 'Largest economies'} <span class="count">/ ${inG20 ? `${tableRows.length} countries` : `${Math.min(50, tableRows.length)} of ${tableRows.length}`}</span><span class="sec-head__sub">${inG20 ? 'click row → country profile · EU aggregate on Countries page' : 'click row → country profile · every economy on Countries page'}</span></div>
     <div class="sec-head__actions">
       <button class="sec-head__tab active" onclick="overviewSortTable('gdp',this)">By GDP</button>
       <button class="sec-head__tab" onclick="overviewSortTable('growth',this)">By growth</button>
@@ -226,7 +229,7 @@ function renderOverview() {
         </tr>
       </thead>
       <tbody id="rank-tbody">
-        ${renderRankingRows(tableRows)}
+        ${renderRankingRows(inG20 ? tableRows : tableRows.slice(0, 50))}
       </tbody>
     </table>
   </div>
@@ -247,7 +250,7 @@ function renderOverview() {
         <div><span class="panel__title">Inflation outliers</span><span class="panel__sub">CPI &gt; 8%</span></div>
         <div class="panel__meta">${cpiFlags.length} flagged</div>
       </div>
-      ${renderRiskRows(cpiFlags, c => `CPI &gt; 8% · ${c.region}`,
+      ${renderRiskRows(inG20 ? cpiFlags : cpiFlags.slice(0, 12), c => `CPI &gt; 8% · ${c.region}`,
          c => `<span class="v-neg">${c.value.toFixed(1)}%</span>`, '% YoY')}
     </div>
     <div class="panel" data-severity="high" id="risk-panel-growth">
@@ -256,16 +259,16 @@ function renderOverview() {
         <div class="panel__meta">${shrinkFlags.length ? shrinkFlags.length + ' flagged' : 'clear'}</div>
       </div>
       ${shrinkFlags.length
-        ? renderRiskRows(shrinkFlags, c => `Output contracted YoY · ${c.region}`,
+        ? renderRiskRows(inG20 ? shrinkFlags : shrinkFlags.slice(0, 12), c => `Output contracted YoY · ${c.region}`,
             c => `<span class="v-neg">${c.value.toFixed(1)}%</span>`, 'GROWTH')
-        : `<div class="risk-row"><div class="risk-row__main"><span class="risk-row__desc v-mute">No G20 economy contracting this quarter.</span></div><div></div></div>`}
+        : `<div class="risk-row"><div class="risk-row__main"><span class="risk-row__desc v-mute">No ${PEER()} economy contracting this quarter.</span></div><div></div></div>`}
     </div>
     <div class="panel" data-severity="medium" id="risk-panel-debt">
       <div class="panel__head">
         <div><span class="panel__title">Fiscal stress</span><span class="panel__sub">debt &gt; 100% GDP</span></div>
         <div class="panel__meta">${debtFlags.length} flagged</div>
       </div>
-      ${renderRiskRows(debtFlags, c => `Gross debt above 100% of GDP · ${c.region}`,
+      ${renderRiskRows(inG20 ? debtFlags : debtFlags.slice(0, 12), c => `Gross debt above 100% of GDP · ${c.region}`,
          c => `<span class="v-warn">${c.value.toFixed(0)}%</span>`, 'OF GDP')}
     </div>
   </div>
@@ -273,10 +276,10 @@ function renderOverview() {
   <!-- Global Outlook editorial -->
   ${renderGlobalOutlookComputed()}
 
-  <div class="sec-head" style="margin-top:24px">
+  ${inG20 ? `<div class="sec-head" style="margin-top:24px">
     <div class="sec-head__title">Forecast track record <span class="sec-head__sub">model accuracy · out-of-sample backtest</span></div>
   </div>
-  <div class="panel mb-20" id="track-record"></div>
+  <div class="panel mb-20" id="track-record"></div>` : ''}
 
   <!-- Data sources table -->
   <div class="sec-head" style="margin-top:24px">
@@ -357,8 +360,12 @@ function g20YearSeries(key, reducer, minCountries, fromYear) {
     .filter(y => byYear[y].length >= minCountries)
     .map(y => ({ year: y, value: reducer(byYear[y]) }));
 }
-const g20Median = (key, from = 2015) => g20YearSeries(key, median, 15, from);
-const g20Sum    = (key, from = 2015) => g20YearSeries(key, a => a.reduce((s, v) => s + v, 0), 19, from);
+// Minimum economies per year: the original 15 (medians) and 19 (sums) for the G20;
+// other scopes need most of their members reporting so a year is comparable.
+const _scopeN = () => window.G20.filter(c => c.iso3 !== 'EUU').length;
+const _minFor = (g20Min, share) => (!window.Scope || Scope.isG20()) ? g20Min : Math.max(2, Math.ceil(_scopeN() * share));
+const g20Median = (key, from = 2015) => g20YearSeries(key, median, _minFor(15, 0.6), from);
+const g20Sum    = (key, from = 2015) => g20YearSeries(key, a => a.reduce((s, v) => s + v, 0), _minFor(19, 0.85), from);
 function oecdGrowth(year) {
   const v = window.OECD_AGG?.series?.[String(year)];
   return typeof v === 'number' ? v : null;
@@ -379,7 +386,7 @@ function renderKPITiles(totalGDP, medianGrowth, medianInf, expanding, total, deb
   const tiles = [
     {
       lbl: 'Aggregate GDP', val: (totalGDP/1e12).toFixed(1), unit: 'USD tn',
-      delta: `<span class="d-pos">${expanding} of ${total}</span> members expanding`,
+      delta: `<span class="d-pos">${expanding} of ${total}</span> ${(!window.Scope || Scope.isG20()) ? 'members' : 'economies'} expanding`,
       series: gdpSeries, cls: 'pos',
     },
     {
@@ -398,7 +405,7 @@ function renderKPITiles(totalGDP, medianGrowth, medianInf, expanding, total, deb
     },
     {
       lbl: 'Unemployment median', val: '—', unit: '%',
-      delta: `<span class="d-pos">Latest available</span> G20 median`,
+      delta: `<span class="d-pos">Latest available</span> ${PEER()} median`,
       series: unempSer.map(d => d.value),
       cls: '',
       computeVal: () => {
@@ -513,7 +520,7 @@ function renderRankingRows(rows) {
       <td class="col-name">
         <div class="country-cell">${A.escapeText(c.name)}<span class="sub">${c.iso3}</span></div>
       </td>
-      <td>${c.value ? (c.value/1e12).toFixed(2) : '—'}</td>
+      <td>${c.value ? A.fmtTn(c.value) : '—'}</td>
       <td class="${growthCls}">${gv !== undefined ? A.fmtSignedPct(gv) : '—'}</td>
       <td class="${infCls}">${iv !== undefined ? iv.toFixed(1) + '%' : '—'}</td>
       <td>${unemp?.value !== undefined ? unemp.value.toFixed(1) + '%' : '—'}</td>
@@ -566,17 +573,17 @@ function renderGlobalOutlookComputed() {
   const pct  = (v, d=1) => `${parseFloat(v.toFixed(d))}%`;
 
   // Paragraph 1 — Economic Performance
-  const p1 = `G20 economies recorded a median real GDP growth rate of <strong>${pct(medGrowth)}</strong> in <strong>${latestYear}</strong>, with <strong>${A.escapeText(topGrowth.name)}</strong> leading the group at <strong>${pct(topGrowth.value)}</strong>. ${contractingN > 0 ? `${contractingN} member ${contractingN === 1 ? 'economy' : 'economies'} contracted in the same period, reflecting the uneven distribution of momentum across the group.` : 'All G20 members recorded positive growth in the same period, reflecting broadly supportive global conditions.'}`;
+  const p1 = `${PEER_CAP()} economies recorded a median real GDP growth rate of <strong>${pct(medGrowth)}</strong> in <strong>${latestYear}</strong>, with <strong>${A.escapeText(topGrowth.name)}</strong> leading the group at <strong>${pct(topGrowth.value)}</strong>. ${contractingN > 0 ? `${contractingN} member ${contractingN === 1 ? 'economy' : 'economies'} contracted in the same period, reflecting the uneven distribution of momentum across the group.` : `All ${PEER()} members recorded positive growth in the same period, reflecting broadly supportive global conditions.`}`;
 
   // Paragraph 2 — Inflation
   const highInflNames = highInflation.slice(0, 3).map(c => A.escapeText(c.name)).join(', ');
-  const p2 = `Median consumer price inflation across the G20 stood at <strong>${pct(medInf)}</strong> in <strong>${latestYear}</strong>. ${highInflation.length > 0 ? `However, ${highInflNames} continue to face elevated price pressures well above the group average, complicating monetary policy normalisation and compressing real household incomes.` : 'Inflationary pressures are broadly contained across the group, supporting the case for a gradual easing of monetary policy in major economies.'}`;
+  const p2 = `Median consumer price inflation across the ${PEER()} stood at <strong>${pct(medInf)}</strong> in <strong>${latestYear}</strong>. ${highInflation.length > 0 ? `However, ${highInflNames} continue to face elevated price pressures well above the group average, complicating monetary policy normalisation and compressing real household incomes.` : 'Inflationary pressures are broadly contained across the group, supporting the case for a gradual easing of monetary policy in major economies.'}`;
 
   // Paragraph 3 — Fiscal
-  const p3 = `Fiscal sustainability remains a structural concern across the G20. <strong>${highDebtN}</strong> member ${highDebtN === 1 ? 'economy' : 'economies'} carried government debt above 100% of GDP${topDebt ? `, led by <strong>${A.escapeText(topDebt.name)}</strong> at <strong>${parseFloat(topDebt.value.toFixed(0))}%</strong>` : ''}. Unless consolidation efforts accelerate, rising debt-service costs will progressively crowd out the discretionary investment needed in infrastructure, healthcare, and education.`;
+  const p3 = `Fiscal sustainability remains a structural concern across the ${PEER()}. <strong>${highDebtN}</strong> member ${highDebtN === 1 ? 'economy' : 'economies'} carried government debt above 100% of GDP${topDebt ? `, led by <strong>${A.escapeText(topDebt.name)}</strong> at <strong>${parseFloat(topDebt.value.toFixed(0))}%</strong>` : ''}. Unless consolidation efforts accelerate, rising debt-service costs will progressively crowd out the discretionary investment needed in infrastructure, healthcare, and education.`;
 
   // Paragraph 4 — Outlook (prescriptive close)
-  const p4 = `The near-term outlook is shaped by the interaction of three structural forces: the pace of disinflation, the trajectory of public debt, and the uneven diffusion of productivity-enhancing technology investment across member economies. The G20's strongest-growing economies in <strong>${latestYear}</strong>, including <strong>${topRisers.map(c => A.escapeText(c.name)).join(', ')}</strong>, need to sustain investment in physical and digital infrastructure to convert cyclical momentum into durable structural gains. Economies facing fiscal consolidation pressures should prioritise reforms that protect growth-enabling public spending while credibly narrowing deficits over the medium term.`;
+  const p4 = `The near-term outlook is shaped by the interaction of three structural forces: the pace of disinflation, the trajectory of public debt, and the uneven diffusion of productivity-enhancing technology investment across member economies. The ${PEER()}'s strongest-growing economies in <strong>${latestYear}</strong>, including <strong>${topRisers.map(c => A.escapeText(c.name)).join(', ')}</strong>, need to sustain investment in physical and digital infrastructure to convert cyclical momentum into durable structural gains. Economies facing fiscal consolidation pressures should prioritise reforms that protect growth-enabling public spending while credibly narrowing deficits over the medium term.`;
 
   // Paragraph 5 — House view (model-driven, descriptive yield curve; no probability)
   let p5 = '';
@@ -599,7 +606,7 @@ function renderGlobalOutlookComputed() {
   // Key risks — derived from live threshold breaches
   const keyRisks = [];
   if (highInflation.length > 0) keyRisks.push(`Persistent inflation above 8% in ${highInflation.length} ${highInflation.length === 1 ? 'economy' : 'economies'}, limiting the scope for monetary policy easing`);
-  if (contractingN > 0) keyRisks.push(`Economic contraction in ${contractingN} G20 ${contractingN === 1 ? 'economy' : 'economies'}, signalling structural rather than cyclical weakness`);
+  if (contractingN > 0) keyRisks.push(`Economic contraction in ${contractingN} ${PEER()} ${contractingN === 1 ? 'economy' : 'economies'}, signalling structural rather than cyclical weakness`);
   if (highDebtN > 3) keyRisks.push(`Elevated sovereign debt above 100% of GDP in ${highDebtN} economies, constraining counter-cyclical fiscal capacity`);
   keyRisks.push('Geopolitical economic fragmentation and tariff escalation weighing on global trade and investment flows');
   keyRisks.push('Divergent monetary policy cycles creating exchange rate volatility and capital flow disruption for emerging-market members');
@@ -607,7 +614,7 @@ function renderGlobalOutlookComputed() {
   // Upside factors — top growers
   const upsides = [
     `${A.escapeText(topGrowth.name)}'s ${pct(topGrowth.value)} growth rate demonstrates that strong domestic demand and structural reform can sustain above-trend expansion`,
-    'Disinflation across most advanced G20 economies is creating space for gradual monetary easing, which should support investment and consumption',
+    `Disinflation across most advanced ${PEER()} economies is creating space for gradual monetary easing, which should support investment and consumption`,
     'AI and digital infrastructure investment is generating productivity gains in leading economies that could broaden across the group over the 2026 to 2030 period',
   ];
 
@@ -619,7 +626,7 @@ function renderGlobalOutlookComputed() {
 
   return `
   <div class="sec-head">
-    <div class="sec-head__title">G20 Outlook<span class="sec-head__sub">${latestYear} · computed from live World Bank and IMF data</span></div>
+    <div class="sec-head__title">${PEER_CAP()} Outlook<span class="sec-head__sub">${latestYear} · computed from live World Bank and IMF data</span></div>
   </div>
 
   <div class="panel" style="margin-bottom:24px">
@@ -659,8 +666,9 @@ function median(arr) {
 
 // mountOverviewCharts is called by main.js after render — no chart.js needed now (pure CSS bars)
 function mountOverviewCharts() {
-  // No Chart.js charts on overview page — all CSS bars
-  if (window.renderTrackRecord) window.renderTrackRecord('track-record');
+  // Bars are pure CSS; the only canvas is the world map (wider scopes only).
+  if (window.renderTrackRecord && document.getElementById('track-record')) window.renderTrackRecord('track-record');
+  if (document.getElementById('overview-map') && window.mountWorldMap) window.mountWorldMap('overview-map');
 }
 
 // ── Ranking table sort ────────────────────────────────────────────────────────

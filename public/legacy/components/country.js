@@ -2,12 +2,21 @@
 
 // ── Countries grid ────────────────────────────────────────────────────────────
 function renderCountries() {
+  const inG20 = !window.Scope || Scope.isG20();
+  const regions = [...new Set(G20.map(c => c.region).filter(Boolean))].sort();
+  const incomes = [...new Set(G20.map(c => c.incomeLevel).filter(Boolean))].sort();
   return `
     <div class="page-body">
       <div class="sec-head">
         <div class="sec-head__title">All economies <span class="count">/ ${G20.length}</span><span class="sec-head__sub">click to open profile</span></div>
       </div>
-      <div class="country-grid">
+      ${inG20 ? '' : `<div class="filter-bar">
+        <input id="co-search" type="search" placeholder="Search ${G20.length} economies…" oninput="countriesFilter()" aria-label="Search economies">
+        ${regions.length > 1 ? `<select id="co-region" onchange="countriesFilter()" aria-label="Region"><option value="">All regions</option>${regions.map(r => `<option>${A.escapeText(r)}</option>`).join('')}</select>` : ''}
+        ${incomes.length > 1 ? `<select id="co-income" onchange="countriesFilter()" aria-label="Income group"><option value="">All income groups</option>${incomes.map(r => `<option>${A.escapeText(r)}</option>`).join('')}</select>` : ''}
+        <span class="filter-bar__count" id="co-count">${G20.length} shown</span>
+      </div>`}
+      <div class="country-grid" id="country-grid">
         ${G20.map(c => {
           const gdp  = window.G20Data.getLatest(c.iso3, 'GDP');
           const gr   = window.G20Data.getLatest(c.iso3, 'GDP_GROWTH');
@@ -17,18 +26,18 @@ function renderCountries() {
           const growthClass = gv === undefined ? '' : gv >= 2 ? 'good' : gv < 0 ? 'bad' : '';
           const infClass    = inf?.value > 8 ? 'bad' : inf?.value > 4 ? 'warn' : '';
           return `
-            <div class="co-card" ${A.navRowAttrs(c.iso3, c.name)}>
+            <div class="co-card" ${A.navRowAttrs(c.iso3, c.name)} data-name="${A.escapeAttr(c.name.toLowerCase())} ${c.iso3.toLowerCase()}" data-region="${A.escapeAttr(c.region || '')}" data-income="${A.escapeAttr(c.incomeLevel || '')}">
               <div class="co-card__head">
                 <div class="co-flag" style="background-image:url('https://flagcdn.com/${c.code.toLowerCase()}.svg');background-size:cover;background-position:center;"></div>
                 <div>
-                  <div class="co-name">${A.escapeText(c.name)}</div>
+                  <div class="co-name">${A.escapeText(c.name)}${inG20 ? '' : tierPill(c.iso3)}</div>
                   <div class="co-region">${A.escapeText(c.region)}</div>
                 </div>
               </div>
               <div class="co-card__stats">
                 <div>
                   <div class="co-stat-label">GDP</div>
-                  <div class="co-stat-value">${gdp?.value ? '$' + (gdp.value/1e12).toFixed(2) + 'T' : '—'}</div>
+                  <div class="co-stat-value">${gdp?.value ? A.fmtGDPScaled(gdp.value) : '—'}</div>
                 </div>
                 <div>
                   <div class="co-stat-label">Growth</div>
@@ -49,9 +58,33 @@ function renderCountries() {
     </div>`;
 }
 
+// Coverage tier badge (from data/latest.json): 1 = high-frequency data, 2 = broad
+// annual coverage, 3 = sparse annual coverage. Missing data is skipped, never filled.
+function tierPill(iso3) {
+  const t = window.G20Data.getTier ? window.G20Data.getTier(iso3) : null;
+  if (!t) return '';
+  const tip = { 1: 'Tier 1: quarterly or daily data alongside annual series', 2: 'Tier 2: broad annual coverage', 3: 'Tier 3: sparse annual coverage; some indicators missing' }[t];
+  return `<span class="risk-pill tier-pill tier-${t}" title="${tip}">T${t}</span>`;
+}
+window.tierPill = tierPill;
+
+window.countriesFilter = function () {
+  const q = (document.getElementById('co-search')?.value || '').trim().toLowerCase();
+  const reg = document.getElementById('co-region')?.value || '';
+  const inc = document.getElementById('co-income')?.value || '';
+  let shown = 0;
+  document.querySelectorAll('#country-grid .co-card').forEach(card => {
+    const ok = (!q || card.dataset.name.includes(q)) && (!reg || card.dataset.region === reg) && (!inc || card.dataset.income === inc);
+    card.style.display = ok ? '' : 'none';
+    if (ok) shown++;
+  });
+  const count = document.getElementById('co-count');
+  if (count) count.textContent = `${shown} shown`;
+};
+
 // ── Country profile ───────────────────────────────────────────────────────────
 function renderCountryProfile(iso3) {
-  const country = G20.find(c => c.iso3 === iso3);
+  const country = G20.find(c => c.iso3 === iso3) || (window.findEconomy && window.findEconomy(iso3));
   if (!country) return `<div class="page-body"><div class="loading-spinner"><span>Country not found: ${A.escapeText(iso3)}</span></div></div>`;
 
   // Headline figures use one annual basis so they agree with the outlook,
@@ -94,7 +127,7 @@ function renderCountryProfile(iso3) {
 
   // AI draft context for this country
   const contextSnippet = [
-    gdp   ? `GDP: $${(gdp.value/1e12).toFixed(2)}T` : null,
+    gdp   ? `GDP: ${A.fmtGDPScaled(gdp.value)}` : null,
     gv !== undefined ? `Growth: ${A.fmtSignedPct(gv)}` : null,
     iv !== undefined ? `Inflation: ${iv.toFixed(1)}%` : null,
     une?.value !== undefined ? `Unemployment: ${une.value.toFixed(1)}%` : null,
@@ -115,9 +148,9 @@ function renderCountryProfile(iso3) {
     <div class="profile-hero__flag" style="background-image:url('https://flagcdn.com/${country.code.toLowerCase()}.svg');"></div>
     <div class="profile-hero__meta">
       <div class="profile-hero__name">${A.escapeText(country.name)}</div>
-      <div class="profile-hero__region">${A.escapeText(country.region)}</div>
+      <div class="profile-hero__region">${A.escapeText(country.region)}${tierPill(iso3)}${window.Scope ? ` <button class="pill-btn watch-btn" aria-pressed="${Scope.isWatched(iso3)}" onclick="profileToggleWatch('${iso3}', this)" title="Add to or remove from your watchlist scope">${Scope.isWatched(iso3) ? '★ Watching' : '☆ Watch'}</button>` : ''}</div>
       <div class="profile-hero__stats">
-        ${gdp ? `<div><div class="profile-hero__stat-lbl">GDP</div><div class="profile-hero__stat-val">$${(gdp.value/1e12).toFixed(2)}T</div></div>` : ''}
+        ${gdp ? `<div><div class="profile-hero__stat-lbl">GDP</div><div class="profile-hero__stat-val">${A.fmtGDPScaled(gdp.value)}</div></div>` : ''}
         ${gv !== undefined ? `<div><div class="profile-hero__stat-lbl">Growth</div><div class="profile-hero__stat-val" style="color:${growthCls}">${A.fmtSignedPct(gv)}</div></div>` : ''}
         ${iv !== undefined ? `<div><div class="profile-hero__stat-lbl">CPI</div><div class="profile-hero__stat-val">${iv.toFixed(1)}%</div></div>` : ''}
         ${une?.value !== undefined ? `<div><div class="profile-hero__stat-lbl">Unemp.</div><div class="profile-hero__stat-val">${une.value.toFixed(1)}%</div></div>` : ''}
@@ -137,7 +170,7 @@ function renderCountryProfile(iso3) {
   <div id="country-projection-outlook" class="projection-mini panel mb-20"><span>Loading 2026 to 2028 outlook…</span></div>
 
   <div class="sec-head" style="margin-top:4px">
-    <div class="sec-head__title">Where ${A.escapeText(country.name)} sits in the G20<span class="sec-head__sub">latest annual value · each bar runs from the G20 lowest to highest · tick = G20 median</span></div>
+    <div class="sec-head__title">Where ${A.escapeText(country.name)} sits in the ${PEER()}<span class="sec-head__sub">latest annual value · each bar runs from the ${PEER()} lowest to highest · tick = ${PEER()} median</span></div>
   </div>
   <div class="panel mb-20">
     ${renderStanding(iso3)}
@@ -208,8 +241,8 @@ function renderStanding(iso3) {
     const better = good ? (good === 'high' ? v > med : v < med) : null;
     const dotCls = better === null ? '' : better ? ' is-good' : ' is-bad';
     const n = rank.length, r = me + 1;
-    const rankTxt = r === 1 ? 'highest in G20' : r === n ? 'lowest in G20' : `${ordinal(r)} highest of ${n}`;
-    const tip = `${label}: ${fmt(v)} (${yr}). G20 median ${fmt(med)}; range ${fmt(lo)} to ${fmt(hi)}.`;
+    const rankTxt = r === 1 ? `highest in ${PEER_IN()}` : r === n ? `lowest in ${PEER_IN()}` : `${ordinal(r)} highest of ${n}`;
+    const tip = `${label}: ${fmt(v)} (${yr}). ${PEER_CAP()} median ${fmt(med)}; range ${fmt(lo)} to ${fmt(hi)}.`;
     return `
       <div class="pos-row" title="${A.escapeAttr(tip)}">
         <div class="pos-lbl">${label}</div>
@@ -231,10 +264,10 @@ function renderStanding(iso3) {
   if (!body) return '<div class="panel__body"><span style="color:var(--text-3);font-size:12px">Insufficient data</span></div>';
   return `<div class="pos-grid">${body}</div>
     <div class="standing-legend">
-      <span class="pos-legend-dot is-good"></span> better than G20 median
+      <span class="pos-legend-dot is-good"></span> better than ${PEER()} median
       <span class="pos-legend-dot is-bad"></span> worse than median
       <span class="pos-legend-dot"></span> no better or worse direction
-      <span class="pos-legend-med"></span> G20 median
+      <span class="pos-legend-med"></span> ${PEER()} median
     </div>`;
 }
 
@@ -251,7 +284,7 @@ function renderKeyFacts(iso3) {
   const life   = get('LIFE_EXPECT');
 
   const items = [
-    gdp    ? { label: 'GDP',          val: '$' + (gdp.value/1e12).toFixed(2) + 'T',   yr: gdp.year }    : null,
+    gdp    ? { label: 'GDP',          val: A.fmtGDPScaled(gdp.value),   yr: gdp.year }    : null,
     gr     ? { label: 'GDP Growth',   val: A.fmtSignedPct(gr.value), yr: gr.year,
                cls: gr.value < 0 ? 'color:var(--neg)' : gr.value >= 4 ? 'color:var(--pos)' : '' } : null,
     inf    ? { label: 'Inflation',    val: inf.value.toFixed(1) + '%',    yr: inf.year,
@@ -433,7 +466,7 @@ window.draftAnalysis = async function(iso3, blockId, context) {
 
   body.innerHTML = `<div class="analyst-draft">Drafting analysis…</div>`;
 
-  const country = G20.find(c => c.iso3 === iso3);
+  const country = G20.find(c => c.iso3 === iso3) || (window.findEconomy && window.findEconomy(iso3));
   // The server supplies the indicators for this country; the prompt carries no numbers.
   const prompt = `Write a concise 3-4 sentence analyst note for ${country?.name || iso3} based on its latest indicators. Focus on key trends, risks, and outlook, in a professional, neutral tone suitable for an OECD-style economic brief.`;
 
@@ -458,8 +491,8 @@ window.draftAnalysis = async function(iso3, blockId, context) {
 };
 
 function fallbackDraft(iso3, context) {
-  const country = G20.find(c => c.iso3 === iso3);
-  return `${country?.name || iso3}: ${context}. The economy shows mixed signals consistent with broader G20 trends. Further monitoring of fiscal trajectory and external balance is warranted.`;
+  const country = G20.find(c => c.iso3 === iso3) || (window.findEconomy && window.findEconomy(iso3));
+  return `${country?.name || iso3}: ${context}. The economy shows mixed signals consistent with broader ${PEER()} trends. Further monitoring of fiscal trajectory and external balance is warranted.`;
 }
 
 // ── Data-driven commentary generator ─────────────────────────────────────────
@@ -534,7 +567,7 @@ function generateBriefContent(iso3) {
     return n + (s[(v - 20) % 10] || s[v] || s[0]);
   };
 
-  const country = G20.find(c => c.iso3 === iso3);
+  const country = G20.find(c => c.iso3 === iso3) || (window.findEconomy && window.findEconomy(iso3));
   const name    = country?.name || iso3;
 
   const gdp    = L('GDP');          const gr     = L('GDP_GROWTH');
@@ -566,20 +599,20 @@ function generateBriefContent(iso3) {
   } else if (gv != null && gv >= 5) {
     const grRank = g20Rank('GDP_GROWTH');
     headline = grRank?.rank <= 3
-      ? `${name} leads the G20 with ${gv.toFixed(1)}% growth, though structural development gaps require sustained attention`
-      : `${name}'s ${gv.toFixed(1)}% expansion outpaces G20 peers as investment and reform dividends materialise`;
+      ? `${name} leads the ${PEER()} with ${gv.toFixed(1)}% growth, though structural development gaps require sustained attention`
+      : `${name}'s ${gv.toFixed(1)}% expansion outpaces ${PEER()} peers as investment and reform dividends materialise`;
   } else if (debt?.value != null && debt.value > 100 && gv != null && gv < 2) {
     headline = `${name}: below-trend growth and elevated debt constrain the government's fiscal manoeuvre room`;
   } else if (une?.value != null && une.value > 15) {
     headline = `${name}'s structural unemployment crisis casts a shadow over ${gv != null ? gv.toFixed(1) + '%' : 'moderate'} growth`;
   } else if (gv != null && g20GrAvg != null) {
     const diff = gv - g20GrAvg;
-    const rel  = Math.abs(diff) < 0.4 ? 'broadly in line with G20 peers'
-               : diff > 0 ? `outperforming the G20 average of ${g20GrAvg.toFixed(1)}%`
-                           : `below the G20 average of ${g20GrAvg.toFixed(1)}%`;
-    headline = `${name}: ${gv >= 0 ? '+' : ''}${gv.toFixed(1)}% growth, ${rel}${gdp?.value ? `, $${(gdp.value/1e12).toFixed(2)}T economy` : ''}`;
+    const rel  = Math.abs(diff) < 0.4 ? `broadly in line with ${PEER()} peers`
+               : diff > 0 ? `outperforming the ${PEER()} average of ${g20GrAvg.toFixed(1)}%`
+                           : `below the ${PEER()} average of ${g20GrAvg.toFixed(1)}%`;
+    headline = `${name}: ${gv >= 0 ? '+' : ''}${gv.toFixed(1)}% growth, ${rel}${gdp?.value ? `, ${A.fmtGDPScaled(gdp.value)} economy` : ''}`;
   } else if (gdp?.value) {
-    headline = `${name}: $${(gdp.value/1e12).toFixed(2)}T economy`;
+    headline = `${name}: ${A.fmtGDPScaled(gdp.value)} economy`;
   }
 
   // ── Section 0 — Economic Performance ────────────────────────────────────────
@@ -590,11 +623,11 @@ function generateBriefContent(iso3) {
     if (gv != null) {
       const grDiff = g20GrAvg != null ? gv - g20GrAvg : null;
       const grRel  = grDiff == null ? '' :
-        Math.abs(grDiff) < 0.4 ? ', in line with the G20 average' :
-        grDiff > 0 ? `, above the G20 average of <strong>${g20GrAvg.toFixed(1)}%</strong>` :
-                     `, below the G20 average of <strong>${g20GrAvg.toFixed(1)}%</strong>`;
-      let lead = `<strong>${name}</strong>'s <strong>$${(gdp.value/1e12).toFixed(2)}T</strong> economy`;
-      if (gdpRank) lead += `, the G20's <strong>${ordinal(gdpRank.rank)}-largest</strong>,`;
+        Math.abs(grDiff) < 0.4 ? `, in line with the ${PEER()} average` :
+        grDiff > 0 ? `, above the ${PEER()} average of <strong>${g20GrAvg.toFixed(1)}%</strong>` :
+                     `, below the ${PEER()} average of <strong>${g20GrAvg.toFixed(1)}%</strong>`;
+      let lead = `<strong>${name}</strong>'s <strong>${A.fmtGDPScaled(gdp.value)}</strong> economy`;
+      if (gdpRank) lead += `, the ${PEER()}'s <strong>${ordinal(gdpRank.rank)}-largest</strong>,`;
       lead += gv < 0
         ? ` contracted <strong>${Math.abs(gv).toFixed(1)}%</strong> in <strong>${periodLabel(gr)}</strong>${grRel}.`
         : ` expanded <strong>${gv.toFixed(1)}%</strong> in <strong>${periodLabel(gr)}</strong>${grRel}.`;
@@ -605,8 +638,8 @@ function generateBriefContent(iso3) {
       }
       sec0.push(lead);
     } else {
-      let lead = `<strong>${name}</strong> recorded a GDP of <strong>$${(gdp.value/1e12).toFixed(2)}T</strong>`;
-      if (gdpRank) lead += `, the <strong>${ordinal(gdpRank.rank)}-largest</strong> economy in the G20`;
+      let lead = `<strong>${name}</strong> recorded a GDP of <strong>${A.fmtGDPScaled(gdp.value)}</strong>`;
+      if (gdpRank) lead += `, the <strong>${ordinal(gdpRank.rank)}-largest</strong> economy in the ${PEER()}`;
       sec0.push(lead + '.');
     }
   }
@@ -629,12 +662,12 @@ function generateBriefContent(iso3) {
     const g20capMed  = g20Median('GDP_CAPITA');
     let s = `At <strong>$${Math.round(capToUse.value/1000)}K</strong> per capita${capPPP ? ' in PPP terms' : ''}`;
     if (g20capMed != null) {
-      s += `, ${capToUse.value > g20capMed * 1.1 ? 'well above' : capToUse.value < g20capMed * 0.9 ? 'below' : 'near'} the G20 median of <strong>$${Math.round(g20capMed/1000)}K</strong>`;
+      s += `, ${capToUse.value > g20capMed * 1.1 ? 'well above' : capToUse.value < g20capMed * 0.9 ? 'below' : 'near'} the ${PEER()} median of <strong>$${Math.round(g20capMed/1000)}K</strong>`;
     }
     s += `, ${name} sits firmly in the <strong>${bracket}</strong> bracket`;
     s += capToUse.value > 40000 ? ', reflecting a mature, productivity-intensive economy.' :
          capToUse.value > 12000 ? ', with significant scope for further convergence toward advanced-economy income levels.' :
-                                   ', with substantial catch-up potential relative to higher-income G20 peers.';
+                                   `, with substantial catch-up potential relative to higher-income ${PEER()} peers.`;
     sec0.push(s);
   }
 
@@ -644,7 +677,7 @@ function generateBriefContent(iso3) {
     let s = `Fixed capital formation at <strong>${capfrm.value.toFixed(1)}% of GDP</strong>`;
     if (avgCapfrm != null) {
       const diff = capfrm.value - avgCapfrm;
-      s += ` compares ${Math.abs(diff) < 1 ? 'broadly in line with' : diff > 0 ? 'favourably with' : 'unfavourably with'} the G20 average of <strong>${avgCapfrm.toFixed(1)}%</strong>`;
+      s += ` compares ${Math.abs(diff) < 1 ? 'broadly in line with' : diff > 0 ? 'favourably with' : 'unfavourably with'} the ${PEER()} average of <strong>${avgCapfrm.toFixed(1)}%</strong>`;
     }
     s += ctrend === 'rising' ? ', suggesting an <strong>expanding investment cycle</strong>.' :
          ctrend === 'falling' ? ', with a declining trend that warrants monitoring for longer-term growth implications.' : '.';
@@ -669,9 +702,9 @@ function generateBriefContent(iso3) {
     const infMed  = g20Median('INFLATION');
     const infDiff = infMed != null ? inf.value - infMed : null;
     const relToMed = infDiff == null ? '' :
-      Math.abs(infDiff) < 0.5 ? ', broadly in line with the G20 median' :
-      infDiff > 0 ? `, above the G20 median of <strong>${infMed.toFixed(1)}%</strong>` :
-                    `, below the G20 median of <strong>${infMed.toFixed(1)}%</strong>`;
+      Math.abs(infDiff) < 0.5 ? `, broadly in line with the ${PEER()} median` :
+      infDiff > 0 ? `, above the ${PEER()} median of <strong>${infMed.toFixed(1)}%</strong>` :
+                    `, below the ${PEER()} median of <strong>${infMed.toFixed(1)}%</strong>`;
     const infClassify = inf.value > 15 ? '<strong>severe</strong>, well beyond price stability parameters' :
                         inf.value > 8  ? '<strong>elevated</strong>, complicating monetary policy normalisation' :
                         inf.value > 4  ? '<strong>above-target</strong>, warranting sustained policy vigilance' :
@@ -696,9 +729,9 @@ function generateBriefContent(iso3) {
     const uneAvg   = g20Avg('UNEMPLOYMENT');
     const uneTrend = trendDir('UNEMPLOYMENT');
     const uneRel   = uneAvg != null
-      ? (Math.abs(une.value - uneAvg) < 0.5 ? 'comparable with the G20 average'
-        : une.value < uneAvg ? `below the G20 average of <strong>${uneAvg.toFixed(1)}%</strong>`
-                              : `above the G20 average of <strong>${uneAvg.toFixed(1)}%</strong>`)
+      ? (Math.abs(une.value - uneAvg) < 0.5 ? `comparable with the ${PEER()} average`
+        : une.value < uneAvg ? `below the ${PEER()} average of <strong>${uneAvg.toFixed(1)}%</strong>`
+                              : `above the ${PEER()} average of <strong>${uneAvg.toFixed(1)}%</strong>`)
       : null;
     const uneClassify = une.value > 10 ? 'signals <strong>structural labour market challenges</strong> that aggregate demand stimulus alone cannot resolve' :
                         une.value < 4  ? 'indicates a <strong>tight labour market</strong> by historical standards, supporting wage growth but risking inflationary wage-price dynamics' :
@@ -726,9 +759,9 @@ function generateBriefContent(iso3) {
     const flfRank = g20Rank('FEMALE_LFP');
     const flfAvg  = g20Avg('FEMALE_LFP');
     let s = `Female labour force participation at <strong>${flf.value.toFixed(1)}%</strong>`;
-    if (flfRank?.rank <= 5)  s += `, among the highest in the G20,`;
-    else if (flfRank?.rank > 15) s += `, among the lowest in the G20,`;
-    if (flfAvg != null) s += ` compares with a G20 average of <strong>${flfAvg.toFixed(1)}%</strong>`;
+    if (flfRank?.rank <= 5)  s += `, among the highest in the ${PEER()},`;
+    else if (flfRank && flfRank.rank > flfRank.total - 4) s += `, among the lowest in the ${PEER()},`;
+    if (flfAvg != null) s += ` compares with a ${PEER()} average of <strong>${flfAvg.toFixed(1)}%</strong>`;
     s += flf.value >= (flfAvg || 60)
       ? ', reflecting an inclusive labour market that draws on the full productive capacity of the working-age population.'
       : ', representing a significant <strong>untapped productivity reservoir</strong>. Closing this gap would meaningfully expand the economy\'s supply-side potential.';
@@ -746,8 +779,8 @@ function generateBriefContent(iso3) {
     const debtOld   = debtOldS.length >= 2 ? debtOldS[0] : null;
 
     let debtLead = `Government debt stood at <strong>${debt.value.toFixed(0)}% of GDP</strong> in <strong>${periodLabel(debt)}</strong>`;
-    if (debtAvg != null) debtLead += `, against a G20 average of <strong>${debtAvg.toFixed(0)}%</strong>,`;
-    if (debtRank)         debtLead += ` ranking <strong>${ordinal(debtRank.rank)}-highest</strong> in the G20`;
+    if (debtAvg != null) debtLead += `, against a ${PEER()} average of <strong>${debtAvg.toFixed(0)}%</strong>,`;
+    if (debtRank)         debtLead += ` ranking <strong>${ordinal(debtRank.rank)}-highest</strong> in the ${PEER()}`;
     sec2.push(debtLead + '.');
 
     if (debtOld && debtTrend !== 'stable') {
@@ -788,7 +821,7 @@ function generateBriefContent(iso3) {
     if (tax?.value != null) {
       const taxAvg = g20Avg('TAX_REVENUE');
       let t = `Revenue mobilisation at <strong>${tax.value.toFixed(1)}% of GDP</strong>`;
-      if (taxAvg != null) t += ` (G20 avg: <strong>${taxAvg.toFixed(1)}%</strong>)`;
+      if (taxAvg != null) t += ` (${PEER()} avg: <strong>${taxAvg.toFixed(1)}%</strong>)`;
       t += tax.value > 25 ? ' reflects a deep tax base supporting substantial public investment' : ' suggests scope to broaden the tax base and reduce reliance on deficit financing';
       parts.push(t);
     }
@@ -797,7 +830,7 @@ function generateBriefContent(iso3) {
       parts.push(`health and education spending combined at <strong>${combined.toFixed(1)}% of GDP</strong> characterises the social investment stance as ${combined > 12 ? '<strong>substantial</strong>' : combined > 8 ? '<strong>moderate</strong>' : '<strong>restrained</strong>'}`);
     } else if (health?.value != null) {
       const hAvg = g20Avg('HEALTH_EXP');
-      parts.push(`health expenditure at <strong>${health.value.toFixed(1)}% of GDP</strong>${hAvg != null ? ` (G20 avg: <strong>${hAvg.toFixed(1)}%</strong>)` : ''}`);
+      parts.push(`health expenditure at <strong>${health.value.toFixed(1)}% of GDP</strong>${hAvg != null ? ` (${PEER()} avg: <strong>${hAvg.toFixed(1)}%</strong>)` : ''}`);
     }
     if (parts.length) sec2.push(parts.join('; ') + '.');
   }
@@ -807,11 +840,11 @@ function generateBriefContent(iso3) {
 
   if (trade?.value != null) {
     const tradeAvg  = g20Avg('TRADE_GDP');
-    const openClass = trade.value > 80 ? 'among the <strong>most open</strong> economies in the G20' :
+    const openClass = trade.value > 80 ? `among the <strong>most open</strong> economies in the ${PEER()}` :
                       trade.value > 40 ? 'an <strong>open economy</strong> with significant global trade integration' :
                                           'a <strong>predominantly domestically-oriented</strong> economy';
     let s = `Trade accounts for <strong>${trade.value.toFixed(1)}% of GDP</strong>`;
-    if (tradeAvg != null) s += ` (G20 average: <strong>${tradeAvg.toFixed(1)}%</strong>)`;
+    if (tradeAvg != null) s += ` (${PEER()} average: <strong>${tradeAvg.toFixed(1)}%</strong>)`;
     s += `, placing ${name} among ${openClass}.`;
     sec3.push(s);
   }
@@ -838,7 +871,7 @@ function generateBriefContent(iso3) {
   if (fdi?.value != null) {
     const fdiAvg = g20Avg('FDI_INFLOWS');
     let s = `FDI inflows at <strong>${fdi.value.toFixed(1)}% of GDP</strong>`;
-    if (fdiAvg != null) s += ` (G20 avg: <strong>${fdiAvg.toFixed(1)}%</strong>)`;
+    if (fdiAvg != null) s += ` (${PEER()} avg: <strong>${fdiAvg.toFixed(1)}%</strong>)`;
     s += fdi.value > 3 ? ' demonstrate strong <strong>investment attractiveness</strong>, reflecting confidence in the regulatory environment and growth prospects.' :
          fdi.value > 1 ? ' reflect moderate foreign investor engagement, with scope to improve through regulatory reform and infrastructure investment.' :
                           ' remain subdued, potentially reflecting constraints in the business environment or elevated perceived country risk.';
@@ -864,7 +897,7 @@ function generateBriefContent(iso3) {
     const med = (typeof g20Median === 'function') ? g20Median('GDP_GROWTH') : null;
     if (fc) {
       const peer = med != null
-        ? (fc.modelForecast >= med ? `above the G20 median of <strong>${med.toFixed(1)}%</strong>` : `below the G20 median of <strong>${med.toFixed(1)}%</strong>`)
+        ? (fc.modelForecast >= med ? `above the ${PEER()} median of <strong>${med.toFixed(1)}%</strong>` : `below the ${PEER()} median of <strong>${med.toFixed(1)}%</strong>`)
         : '';
       sec4.push(`Our model projects real GDP growth of <strong>${fc.modelForecast >= 0 ? '+' : ''}${fc.modelForecast.toFixed(1)}%</strong> in <strong>${fc.targetYear}</strong>${peer ? ', ' + peer : ''}, against <strong>${fc.latestActual >= 0 ? '+' : ''}${fc.latestActual.toFixed(1)}%</strong> in ${fc.baseYear}; the forecast beats a naive persistence rule out of sample, so the direction carries information even where the level is uncertain.`);
       if (yc.covered) {
@@ -887,9 +920,9 @@ function generateBriefContent(iso3) {
     outlookS += gv < 0 ? `the economy is <strong>contracting</strong>` : `growth of <strong>${gv.toFixed(1)}%</strong> `;
     if (g20GrAvg != null && gv >= 0) {
       const diff = gv - g20GrAvg;
-      outlookS += Math.abs(diff) < 0.4 ? 'is tracking broadly in line with G20 peers'
-               : diff > 0 ? `outpaces the G20 average of <strong>${g20GrAvg.toFixed(1)}%</strong>`
-                           : `trails the G20 average of <strong>${g20GrAvg.toFixed(1)}%</strong>`;
+      outlookS += Math.abs(diff) < 0.4 ? `is tracking broadly in line with ${PEER()} peers`
+               : diff > 0 ? `outpaces the ${PEER()} average of <strong>${g20GrAvg.toFixed(1)}%</strong>`
+                           : `trails the ${PEER()} average of <strong>${g20GrAvg.toFixed(1)}%</strong>`;
     }
     if (grTrend && a5 != null) {
       outlookS += `, with the 5-year trajectory ${grTrend === 'falling' ? '<strong>decelerating</strong>' : grTrend === 'rising' ? '<strong>accelerating</strong>' : '<strong>stable</strong>'} around a ${a5.toFixed(1)}% trend`;
@@ -925,7 +958,7 @@ function generateBriefContent(iso3) {
                   rd.value > 1   ? `<strong>building knowledge-economy capacity</strong>, with room to intensify investment` :
                                     `with a <strong>resource-intensive growth model</strong> that would benefit from deeper knowledge-economy investment`;
     let rdS = `R&amp;D investment at <strong>${rd.value.toFixed(2)}% of GDP</strong>`;
-    if (rdAvg != null) rdS += ` (G20 avg: <strong>${rdAvg.toFixed(2)}%</strong>)`;
+    if (rdAvg != null) rdS += ` (${PEER()} avg: <strong>${rdAvg.toFixed(2)}%</strong>)`;
     rdS += ` positions ${name} ${rdPos}`;
     if (researchers?.value != null) rdS += `, supported by <strong>${Math.round(researchers.value).toLocaleString()}</strong> researchers per million population`;
     rdS += '.';
@@ -941,7 +974,7 @@ function generateBriefContent(iso3) {
                     gini.value > 35 ? '<strong>moderate inequality</strong> that warrants sustained policy attention to ensure the benefits of growth are broadly shared' :
                                        'a <strong>relatively equitable income distribution</strong> that supports durable consumption-led growth';
     let giniS = `Income inequality, measured by a Gini coefficient of <strong>${gini.value.toFixed(1)}</strong>`;
-    if (giniAvg != null) giniS += ` against a G20 average of <strong>${giniAvg.toFixed(1)}</strong>`;
+    if (giniAvg != null) giniS += ` against a ${PEER()} average of <strong>${giniAvg.toFixed(1)}</strong>`;
     giniS += `, reflects ${giniPos}.`;
     if (gini.value > 40) giniS += ` Unless ${name} actively addresses distributional imbalances through progressive fiscal policy and targeted social investment, high inequality will continue to limit the breadth and durability of economic expansion.`;
     sec4.push(giniS);
@@ -950,8 +983,8 @@ function generateBriefContent(iso3) {
   if (life?.value != null) {
     const lifeRank = g20Rank('LIFE_EXPECT');
     let s = `Life expectancy of <strong>${life.value.toFixed(1)} years</strong>`;
-    if (lifeRank?.rank <= 5)  s += ', among the highest in the G20,';
-    else if (lifeRank?.rank > 15) s += ', among the lowest in the G20,';
+    if (lifeRank?.rank <= 5)  s += `, among the highest in the ${PEER()},`;
+    else if (lifeRank && lifeRank.rank > lifeRank.total - 4) s += `, among the lowest in the ${PEER()},`;
     s += ' reflects the cumulative outcomes of healthcare access, nutrition, and living standards, a key indicator of the quality of growth alongside its quantity.';
     sec4.push(s);
   }
@@ -1160,7 +1193,7 @@ window.mountCountryProfileCharts = function(iso3) {
       });
     }
 
-    lineChart('profile-gdp-chart',        'GDP',          'rgba(10,10,10,0.8)',  v => '$' + (v/1e12).toFixed(2) + 'T');
+    lineChart('profile-gdp-chart',        'GDP',          'rgba(10,10,10,0.8)',  v => A.fmtGDPScaled(v));
     lineChart('profile-unemp-chart',      'UNEMPLOYMENT', 'rgba(161,98,7,1)',    v => v.toFixed(1) + '%');
     lineChart('profile-inflation-chart',  'INFLATION',    'rgba(185,28,28,1)',   v => v.toFixed(1) + '%');
     lineChart('profile-debt-chart',       'DEBT_GDP',     'rgba(91,33,182,1)',   v => v.toFixed(0) + '%');
@@ -1300,3 +1333,11 @@ function median(arr) {
   const m = Math.floor(s.length / 2);
   return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 }
+
+// Watchlist toggle on the profile hero; the Watchlist scope updates immediately.
+window.profileToggleWatch = function (iso3, btn) {
+  const on = Scope.toggleWatch(iso3);
+  btn.setAttribute('aria-pressed', String(on));
+  btn.textContent = on ? '★ Watching' : '☆ Watch';
+  if (window.renderScopeSelect) window.renderScopeSelect();
+};
