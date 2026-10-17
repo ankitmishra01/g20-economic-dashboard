@@ -25,11 +25,15 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   typedRoutes: true,
   async redirects() {
-    return RETIRED_ROUTES.map((source) => ({
-      source,
-      destination: "/",
-      permanent: false,
-    }));
+    return [
+      ...RETIRED_ROUTES.map((source) => ({
+        source,
+        destination: "/",
+        permanent: false,
+      })),
+      // Browsers ask for /favicon.ico; the brand mark is an SVG.
+      { source: "/favicon.ico", destination: "/favicon.svg", permanent: true },
+    ];
   },
   async rewrites() {
     return {

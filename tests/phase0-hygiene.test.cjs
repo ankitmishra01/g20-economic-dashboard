@@ -24,7 +24,7 @@ test('retired PR #11 routes redirect to the original dashboard', async () => {
   for (const route of ['/pulse', '/countries', '/countries/:iso3', '/indicators', '/calendar', '/compare', '/account', '/sign-in', '/legacy', '/legacy/index.html']) {
     assert.ok(sources.includes(route), `${route} should redirect`);
   }
-  for (const r of redirects) {
+  for (const r of redirects.filter((x) => x.source !== '/favicon.ico')) {
     assert.equal(r.destination, '/');
     assert.equal(r.permanent, false);
   }
