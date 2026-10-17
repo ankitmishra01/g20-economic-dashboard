@@ -70,8 +70,15 @@ function loadScope({ search = '', stored = {} } = {}) {
   return { ctx, window, store, G20: () => vm.runInContext('G20', ctx) };
 }
 
-test('default scope is the G20, in its original order, with the EU comparator', () => {
+test('default scope is Global (every registry economy)', () => {
   const { window, G20 } = loadScope();
+  assert.strictEqual(window.Scope.id(), 'global');
+  assert.strictEqual(G20().length, window.COUNTRY_REGISTRY.countries.length);
+});
+
+test('G20 scope keeps its original order, with the EU comparator', () => {
+  const { window, G20 } = loadScope();
+  window.Scope.set('g20');
   assert.strictEqual(window.Scope.id(), 'g20');
   assert.strictEqual(G20().length, 20);
   assert.strictEqual(G20()[0].iso3, 'USA');
@@ -94,12 +101,12 @@ test('region and income scopes are subsets of the registry; scope persists and r
   const { window, G20, store } = loadScope();
   window.Scope.set('region:SSF');
   assert.ok(G20().length > 40 && G20().every((c) => c.regionCode === 'SSF'));
-  assert.strictEqual(JSON.parse(store['g20-scope']), 'region:SSF');
+  assert.strictEqual(JSON.parse(store['gei-scope-v2']), 'region:SSF');
   const viaUrl = loadScope({ search: '?scope=income:LIC' });
   assert.strictEqual(viaUrl.window.Scope.id(), 'income:LIC');
   assert.ok(viaUrl.G20().every((c) => c.incomeCode === 'LIC'));
   const bogus = loadScope({ search: '?scope=nope' });
-  assert.strictEqual(bogus.window.Scope.id(), 'g20');
+  assert.strictEqual(bogus.window.Scope.id(), 'global');
 });
 
 test('watchlist scope follows toggles and ignores unknown codes', () => {

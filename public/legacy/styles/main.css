@@ -2255,7 +2255,15 @@ html.present .agent-drawer { zoom: 1.1; }
 /* ── Daily market layer (Phase 3) — reuses the wires strip and risk-pill styles ── */
 .market-strip { border-top: 0; border-bottom: 1px solid var(--rule-on-ink); }
 .market-strip[hidden] { display: none; }
-.market-strip .mkt-track { animation: none; overflow: hidden; flex: 1; gap: 22px; }
+/* Market ticker: scrolls right to left with the shared ticker-scroll animation; hover pauses it. */
+.market-strip .mkt-viewport { flex: 1; min-width: 0; overflow: hidden; height: 100%; display: flex; align-items: center; }
+.market-strip .mkt-track { width: max-content; gap: 0; padding-left: 0; animation: ticker-scroll 45s linear infinite; }
+.market-strip .mkt-group { display: inline-flex; align-items: center; gap: 22px; padding: 0 11px; }
+@media (prefers-reduced-motion: reduce) {
+  .market-strip .mkt-track { animation: none; }
+  .market-strip .mkt-loop { display: none; }
+  .market-strip .mkt-viewport { overflow-x: auto; }
+}
 .mkt-item { gap: 5px; color: var(--text-on-ink); }
 .mkt-chg { font-size: 10.5px; color: var(--text-on-ink-2); }
 .mkt-up, .mkt-up-ink { color: var(--pos-on-ink); }
@@ -2267,4 +2275,4 @@ html.present .agent-drawer { zoom: 1.1; }
 .mkt-hero .profile-hero__stat-val span { font-size: 11px; font-family: var(--font-mono); margin-left: 4px; }
 .mkt-sub { color: var(--text-on-ink-3); }
 .mkt-hero-asof { margin-top: 8px; font-family: var(--font-mono); font-size: 10px; color: var(--text-on-ink-3); }
-@media (max-width: 760px) { .market-strip .mkt-track { overflow-x: auto; } .mkt-asof { display: none; } }
+@media (max-width: 760px) { .mkt-asof { display: none; } }

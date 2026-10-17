@@ -1,5 +1,5 @@
 // Scope: which economies every page iterates over.
-// G20 (default, unchanged) · Global (every registry economy) · a World Bank region ·
+// Global (default: every registry economy) · G20 · a World Bank region ·
 // an income group · the viewer's watchlist (localStorage). Pages read `G20` / `window.G20`,
 // which setScope() reassigns, so existing components follow the selected scope.
 
@@ -20,15 +20,15 @@
   for (const c of G20_MEMBERS) if (!allByIso.has(c.iso3)) allByIso.set(c.iso3, c); // EU comparator
 
   const WATCH_KEY = 'g20-watchlist';
-  const SCOPE_KEY = 'g20-scope';
+  const SCOPE_KEY = 'gei-scope-v2'; // v2: Global became the default, so earlier saved G20 choices reset
   const read = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (_) { return d; } };
   const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) { /* private mode */ } };
 
   function watchlist() { return read(WATCH_KEY, []).filter(iso => allByIso.has(iso)); }
 
   // Scope definitions: id → { label, short, members() }.
-  const SCOPES = [{ id: 'g20', label: 'G20', short: 'G20', group: 'Default', members: () => G20_MEMBERS.slice() },
-    { id: 'global', label: 'Global', short: 'Global', group: 'Default', members: () => ALL.slice() }];
+  const SCOPES = [{ id: 'global', label: 'Global', short: 'Global', group: 'Default', members: () => ALL.slice() },
+    { id: 'g20', label: 'G20', short: 'G20', group: 'Default', members: () => G20_MEMBERS.slice() }];
   for (const r of REG.collections.regions || []) {
     SCOPES.push({ id: `region:${r.code}`, label: r.name, short: r.name, group: 'Region',
       members: () => r.members.map(iso => allByIso.get(iso)).filter(Boolean) });
@@ -43,7 +43,8 @@
 
   // ?scope=global (or region:SSF, income:LIC, watchlist) gives a shareable link to a scope.
   const fromUrl = new URLSearchParams(location.search).get('scope');
-  let current = byId.has(fromUrl) ? fromUrl : byId.has(read(SCOPE_KEY, 'g20')) ? read(SCOPE_KEY, 'g20') : 'g20';
+  // Global is the default view (every economy); a saved choice or ?scope= overrides it.
+  let current = byId.has(fromUrl) ? fromUrl : byId.has(read(SCOPE_KEY, 'global')) ? read(SCOPE_KEY, 'global') : 'global';
 
   function apply(id) {
     const s = byId.get(id) || byId.get('g20');
