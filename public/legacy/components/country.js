@@ -434,7 +434,8 @@ window.draftAnalysis = async function(iso3, blockId, context) {
   body.innerHTML = `<div class="analyst-draft">Drafting analysis…</div>`;
 
   const country = G20.find(c => c.iso3 === iso3);
-  const prompt = `You are an institutional economic analyst. Write a concise 3-4 sentence analyst note for ${country?.name || iso3} based on these latest indicators: ${context}. Focus on key trends, risks, and outlook. Write in a professional, neutral tone suitable for an OECD-style economic brief.`;
+  // The server supplies the indicators for this country; the prompt carries no numbers.
+  const prompt = `Write a concise 3-4 sentence analyst note for ${country?.name || iso3} based on its latest indicators. Focus on key trends, risks, and outlook, in a professional, neutral tone suitable for an OECD-style economic brief.`;
 
   try {
     const r = await fetch('/api/agent', {
@@ -442,7 +443,7 @@ window.draftAnalysis = async function(iso3, blockId, context) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         question: prompt,
-        context: context,
+        country: iso3,
       }),
     });
     const { text, error } = await r.json();

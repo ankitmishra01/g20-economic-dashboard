@@ -33,7 +33,8 @@ test('comparison is URL-shareable and reports sparse coverage', () => {
 
 test('homepage restores the original dashboard as the default experience', () => {
   const source = read('src/app/page.tsx');
-  assert.match(source, /redirect\("\/legacy\/index\.html"\)/);
+  // `as never` satisfies typedRoutes for a static file path; the target is what matters.
+  assert.match(source, /redirect\("\/legacy\/index\.html"(\s+as never)?\)/);
 });
 
 test('pulse surfaces calculate latest periods from observed values only', () => {

@@ -1,7 +1,7 @@
 name: Market and health checks
 on:
-  schedule:
-    - cron: "17 */6 * * 1-5"
+  # Schedule retired in Phase 0: it targeted the retired PR #11 surfaces and
+  # failed or opened issues on every run. Manual dispatch is kept.
   workflow_dispatch:
 permissions:
   contents: read

@@ -3,6 +3,9 @@ on:
   schedule:
     - cron: "0 6 1 * *"
   workflow_dispatch:
+permissions:
+  contents: read
+  issues: write     # a failed refresh opens an issue (GitHub emails the repo owner)
 jobs:
   refresh:
     runs-on: ubuntu-latest
@@ -10,11 +13,40 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: "22" }
+      - name: Verify refresh credentials
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: test -n "$SUPABASE_SERVICE_ROLE_KEY" || (echo "SUPABASE_SERVICE_ROLE_KEY is not configured" && exit 1)
       - name: Refresh official structural sources and normalized facts
         run: node sync/seed.js
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      - name: Verify the refresh really wrote to the database
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        run: |
+          # Publishable key is read-only and already public in public/legacy/data.js
+          KEY="sb_publishable_8I4WpqENYtTkUNKzqfxkkQ_lrQKG3cG"
+          BASE="${SUPABASE_URL:-https://qozknjenyhewmkapsizk.supabase.co}"
+          latest=$(curl -sS -H "apikey: $KEY" "$BASE/rest/v1/g20_economic_data?select=fetched_at&order=fetched_at.desc&limit=1" | python3 -c 'import sys,json; print(json.load(sys.stdin)[0]["fetched_at"])')
+          echo "Latest fetched_at: $latest"
+          python3 - "$latest" <<'PY'
+          import sys, datetime
+          ts = datetime.datetime.fromisoformat(sys.argv[1].replace("Z", "+00:00"))
+          age = (datetime.datetime.now(datetime.timezone.utc) - ts).total_seconds() / 3600
+          if age > 2:
+              print(f"::error::Refresh finished but the newest row is {age:.1f} hours old, so nothing was written")
+              sys.exit(1)
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: structural-data-quality-report, path: sync/report.json, if-no-files-found: ignore }
+      - name: Open an issue if the refresh failed
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create --repo "$GITHUB_REPOSITORY" \
+            --title "Monthly data refresh failed ($(date -u +%Y-%m-%d))" \
+            --body "The scheduled refresh failed, so the dashboard data may be out of date. Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"

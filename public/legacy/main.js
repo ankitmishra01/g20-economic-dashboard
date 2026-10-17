@@ -371,17 +371,13 @@
       addMsg('Data Engine', `${reason} The data engine can still answer questions about specific countries, rankings, fiscal health, growth, inflation, trade and regional comparisons. Try asking about a G20 economy by name.`);
     };
     try {
-      // Use country-enriched context (with news + projections) when on a country page
+      // The server builds the data context itself; we only say which country page is open.
       const hash = location.hash.replace('#', '');
       const activeIso3 = hash.startsWith('country/') ? hash.split('/')[1] : null;
-      const context = window.G20Data
-        ? (activeIso3 ? window.G20Data.buildCountryContext(activeIso3) : window.G20Data.buildAgentContext())
-        : '';
-      const projectionContext = window.projectionContext?.(question) || '';
       const r = await fetch('/api/agent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question, context: [context, projectionContext].filter(Boolean).join('\n\n') }),
+        body: JSON.stringify(activeIso3 ? { question, country: activeIso3 } : { question }),
       });
       const data = await r.json().catch(() => ({}));
       if (!r.ok || !data.text) {
