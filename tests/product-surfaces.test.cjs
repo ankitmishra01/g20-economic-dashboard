@@ -31,10 +31,12 @@ test('comparison is URL-shareable and reports sparse coverage', () => {
   assert.match(source, /observedObservations/, 'default comparison must exclude estimates and forecasts');
 });
 
-test('homepage restores the original dashboard as the default experience', () => {
-  const source = read('src/app/page.tsx');
-  // `as never` satisfies typedRoutes for a static file path; the target is what matters.
-  assert.match(source, /redirect\("\/legacy\/index\.html"(\s+as never)?\)/);
+test('the dashboard is served at the site root, not behind a /legacy URL', async () => {
+  const path = require('node:path');
+  const { default: config } = await import(path.join(__dirname, '..', 'next.config.ts'));
+  const { beforeFiles, fallback } = await config.rewrites();
+  assert.deepEqual(beforeFiles, [{ source: '/', destination: '/legacy/index.html' }]);
+  assert.deepEqual(fallback, [{ source: '/:path*', destination: '/legacy/:path*' }]);
 });
 
 test('pulse surfaces calculate latest periods from observed values only', () => {

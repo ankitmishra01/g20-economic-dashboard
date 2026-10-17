@@ -21,11 +21,11 @@ test('retired PR #11 routes redirect to the original dashboard', async () => {
   const { default: config } = await import(path.join(root, 'next.config.ts'));
   const redirects = await config.redirects();
   const sources = redirects.map((r) => r.source);
-  for (const route of ['/pulse', '/countries', '/countries/:iso3', '/indicators', '/calendar', '/compare', '/account', '/sign-in', '/legacy']) {
+  for (const route of ['/pulse', '/countries', '/countries/:iso3', '/indicators', '/calendar', '/compare', '/account', '/sign-in', '/legacy', '/legacy/index.html']) {
     assert.ok(sources.includes(route), `${route} should redirect`);
   }
   for (const r of redirects) {
-    assert.equal(r.destination, '/legacy/index.html');
+    assert.equal(r.destination, '/');
     assert.equal(r.permanent, false);
   }
 });
