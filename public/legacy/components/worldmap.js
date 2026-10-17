@@ -115,7 +115,8 @@
 
     const data = geo.features.map(f => {
       const l = f.iso3 && values.get(f.iso3);
-      return { feature: f, value: l ? l.value : null, year: l?.year, iso3: f.iso3, inScope: !!(f.iso3 && scope.has(f.iso3)) };
+      const name = (f.iso3 && scope.get(f.iso3)?.name) || f.properties?.name || f.iso3 || 'Unknown';
+      return { feature: f, name, value: l ? l.value : null, year: l?.year, iso3: f.iso3, inScope: !!(f.iso3 && scope.has(f.iso3)) };
     });
 
     Chart.getChart(canvas)?.destroy();
@@ -123,7 +124,7 @@
     new Chart(canvas.getContext('2d'), {
       type: 'choropleth',
       data: {
-        labels: data.map(d => (d.iso3 && scope.get(d.iso3)?.name) || d.feature.properties.name),
+        labels: data.map(d => d.name),
         datasets: [{
           outline: geo.features,
           data,
@@ -146,10 +147,12 @@
           datalabels: { display: false },
           tooltip: {
             callbacks: {
+              // The choropleth controller does not fill ctx.label, so read the name from the data point.
+              title: items => (items[0]?.raw?.name || ''),
               label: ctx => {
-                const d = ctx.raw;
-                if (!d.inScope) return `${ctx.label}: outside scope`;
-                return d.value == null ? `${ctx.label}: no data` : `${ctx.label}: ${meta.fmt(d.value)} (${d.year})`;
+                const d = ctx.raw || {};
+                if (!d.inScope) return `${meta.label}: outside scope`;
+                return d.value == null ? `${meta.label}: no data` : `${meta.label}: ${meta.fmt(d.value)} (${d.year})`;
               },
             },
           },
