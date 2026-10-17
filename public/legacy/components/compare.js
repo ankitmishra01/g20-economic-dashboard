@@ -13,7 +13,17 @@ let _barChartInst  = null;
 const SPARSE_INDICATORS = new Set(['GINI','RESEARCHERS','FISCAL_BAL','TAX_REVENUE','EDUC_EXP']);
 
 function renderCompare() {
+  const inG20 = !window.Scope || Scope.isG20();
+  // Keep only selections inside the current scope; fall back to its four largest economies.
+  const inScope = new Set(G20.map(c => c.iso3));
+  _compareState.selected = _compareState.selected.filter(i => inScope.has(i));
+  if (!_compareState.selected.length) {
+    _compareState.selected = window.G20Data.getRanking('GDP').filter(c => c.iso3 !== 'EUU').slice(0, 4).map(c => c.iso3);
+  }
   const { selected, indicator } = _compareState;
+  const regions = [...new Set(G20.map(c => c.region).filter(Boolean))].sort();
+  // Wider scopes list selected economies first so they stay visible when filtering.
+  const chips = inG20 ? G20 : [...G20].sort((a, b) => (selected.includes(b.iso3) - selected.includes(a.iso3)) || a.name.localeCompare(b.name));
 
   return `
 <div class="page-body">
@@ -26,9 +36,14 @@ function renderCompare() {
       <span class="panel__title">Countries</span>
       <span class="panel__meta">${selected.length} selected</span>
     </div>
-    <div class="panel__body" style="display:flex;flex-wrap:wrap;gap:6px">
-      ${G20.map(c => `
+    ${inG20 ? '' : `<div class="panel__body" style="padding-bottom:0"><div class="filter-bar" style="margin:0">
+      <input id="cmp-search" type="search" placeholder="Search ${G20.length} economies…" oninput="compareFilter()" aria-label="Search economies">
+      ${regions.length > 1 ? `<select id="cmp-region" onchange="compareFilter()" aria-label="Region"><option value="">All regions</option>${regions.map(r => `<option>${A.escapeText(r)}</option>`).join('')}</select>` : ''}
+    </div></div>`}
+    <div class="panel__body" id="cmp-chips" style="display:flex;flex-wrap:wrap;gap:6px${inG20 ? '' : ';max-height:180px;overflow:auto'}">
+      ${chips.map(c => `
         <button class="sec-head__tab ${selected.includes(c.iso3) ? 'active' : ''}"
+          data-name="${A.escapeAttr(c.name.toLowerCase())}" data-region="${A.escapeAttr(c.region || '')}"
           onclick="compareToggleCountry('${c.iso3}', this)"
           style="display:inline-flex;align-items:center;gap:6px">
           <span style="display:inline-block;width:16px;height:11px;border-radius:2px;border:1px solid var(--rule);background-image:url('https://flagcdn.com/${c.code.toLowerCase()}.svg');background-size:cover;background-position:center;flex-shrink:0"></span>
@@ -47,7 +62,7 @@ function renderCompare() {
       ${Object.entries(INDICATORS).map(([key, meta]) => `
         <button class="sec-head__tab ${indicator === key ? 'active' : ''}${SPARSE_INDICATORS.has(key) ? ' tab-sparse' : ''}"
           onclick="compareSetIndicator('${key}', this)"
-          title="${SPARSE_INDICATORS.has(key) ? 'Limited G20 coverage' : ''}">
+          title="${SPARSE_INDICATORS.has(key) ? `Limited ${PEER()} coverage` : ''}">
           ${A.escapeText(meta.label)}${meta.unit ? ' (' + meta.unit + ')' : ''}
         </button>
       `).join('')}
@@ -135,7 +150,7 @@ function mountCompareCharts() {
             </div>
             <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-4);line-height:1.6">
               Coverage is limited for this indicator across the selected economies.<br>
-              Try <strong style="color:var(--text-3)">GDP Growth</strong>, <strong style="color:var(--text-3)">Inflation</strong>, or <strong style="color:var(--text-3)">Unemployment</strong> for full G20 data.
+              Try <strong style="color:var(--text-3)">GDP Growth</strong>, <strong style="color:var(--text-3)">Inflation</strong>, or <strong style="color:var(--text-3)">Unemployment</strong> for full ${PEER()} data.
             </div>
           </div>
         </div>
@@ -233,7 +248,7 @@ function mountCompareCharts() {
     if (g20Avg !== null) {
       barDatasets.push({
         type: 'line',
-        label: 'G20 avg',
+        label: `${PEER_CAP()} avg`,
         data: Array(latest.length).fill(g20Avg),
         borderColor: 'rgba(161,98,7,0.65)',
         borderDash: [5, 3],
@@ -270,8 +285,8 @@ function mountCompareCharts() {
             ...TOOLTIP_STYLE,
             callbacks: {
               title: ctx => ctx[0]?.label,
-              label: ctx => ctx.dataset.label === 'G20 avg'
-                ? `  G20 average: ${ctx.parsed.y.toFixed(1)}${unit}`
+              label: ctx => ctx.dataset.label === `${PEER_CAP()} avg`
+                ? `  ${PEER_CAP()} average: ${ctx.parsed.y.toFixed(1)}${unit}`
                 : `  ${ctx.parsed.y.toFixed(1)}${unit} (${latest[ctx.dataIndex]?.year || '—'})`,
             },
           },
@@ -308,7 +323,21 @@ window.compareToggleCountry = function (iso3, btn) {
   }
 };
 
-window.compareSetIndicator = function (key, btn) {
+window.compareFilter = function () {
+  const q = (document.getElementById('cmp-search')?.value || '').trim().toLowerCase();
+  const reg = document.getElementById('cmp-region')?.value || '';
+  document.querySelectorAll('#cmp-chips .sec-head__tab').forEach(b => {
+    const ok = b.classList.contains('active') || ((!q || b.dataset.name.includes(q)) && (!reg || b.dataset.region === reg));
+    b.style.display = ok ? '' : 'none';
+  });
+};
+window.compareSelectedIndicator = () => _compareState.indicator;
+
+window.compareSetIndicator = async function (key, btn) {
+  // Wider scopes load the indicator's series for every economy on demand.
+  if (window.Scope && !Scope.isG20() && window.G20Data.ensureIndicators) {
+    try { await window.G20Data.ensureIndicators([key]); } catch (_) { /* chart shows what is loaded */ }
+  }
   _compareState.indicator = key;
   document.querySelectorAll('[onclick^="compareSetIndicator"]').forEach(el => el.classList.remove('active'));
   btn.classList.add('active');

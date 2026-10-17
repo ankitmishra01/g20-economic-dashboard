@@ -6,6 +6,14 @@ const REGION_COLORS = {
   'Asia':        { bg: 'rgba(16,185,129,0.75)',  border: '#10b981' },
   'Middle East': { bg: 'rgba(245,158,11,0.75)',  border: '#f59e0b' },
   'Africa':      { bg: 'rgba(239,68,68,0.75)',   border: '#ef4444' },
+  // World Bank regions (wider scopes) reuse the same five hues plus two from the palette.
+  'North America':                                      { bg: 'rgba(59,130,246,0.75)',  border: '#3b82f6' },
+  'Latin America & Caribbean':                          { bg: 'rgba(30,64,175,0.75)',   border: '#1E40AF' },
+  'Europe & Central Asia':                              { bg: 'rgba(139,92,246,0.75)',  border: '#8b5cf6' },
+  'East Asia & Pacific':                                { bg: 'rgba(16,185,129,0.75)',  border: '#10b981' },
+  'South Asia':                                         { bg: 'rgba(4,120,87,0.75)',    border: '#047857' },
+  'Middle East, North Africa, Afghanistan & Pakistan':  { bg: 'rgba(245,158,11,0.75)',  border: '#f59e0b' },
+  'Sub-Saharan Africa':                                 { bg: 'rgba(239,68,68,0.75)',   border: '#ef4444' },
 };
 
 // Growth is a multi-year average: one year is too noisy to describe a trajectory.
@@ -23,10 +31,12 @@ let _prosperityMode = 'ppp';
 let _prosperityChartInst = null;
 
 function renderProsperity() {
+  const inG20 = !window.Scope || Scope.isG20();
   return `
 <div class="page-body">
+  ${inG20 ? '' : renderWorldMapPanel('prosperity-map', 'GDP_CAPITA_PPP')}
   <div class="sec-head">
-    <div class="sec-head__title">Prosperity Map <span class="count">G20</span><span class="sec-head__sub">How rich is each economy per person, and how fast is it growing?</span></div>
+    <div class="sec-head__title">Prosperity Map <span class="count">${PEER_CAP()}</span><span class="sec-head__sub">How rich is each economy per person, and how fast is it growing?</span></div>
     <div class="sec-head__actions">
       <button class="sec-head__tab active" onclick="prosperityToggleX(this,'ppp')">PPP</button>
       <button class="sec-head__tab" onclick="prosperityToggleX(this,'nominal')">Nominal</button>
@@ -36,7 +46,7 @@ function renderProsperity() {
   <div class="pros-guide mb-20">
     <div><b>Across</b> income per person, adjusted for living costs (PPP). Further right = richer.</div>
     <div><b>Up</b> average real GDP growth over ${PROS_GROWTH_FROM}–${PROS_GROWTH_TO}. Higher = growing faster.</div>
-    <div><b>Dashed lines</b> G20 medians, splitting the map into four groups.</div>
+    <div><b>Dashed lines</b> ${PEER()} medians, splitting the map into four groups.</div>
     <div><b>Bubble size</b> population.</div>
   </div>
 
@@ -61,7 +71,7 @@ function renderProsperity() {
     </div>
     <div class="panel">
       <div class="panel__head">
-        <div><span class="panel__title">The four groups</span><span class="panel__sub">split at the G20 medians</span></div>
+        <div><span class="panel__title">The four groups</span><span class="panel__sub">split at the ${PEER()} medians</span></div>
       </div>
       <div class="panel__body" id="quadrant-table"></div>
     </div>
@@ -71,6 +81,7 @@ function renderProsperity() {
 
 function mountProsperityChart(mode) {
   if (!window.Chart) { setTimeout(() => mountProsperityChart(mode), 200); return; }
+  if (!mode && document.getElementById('prosperity-map') && window.mountWorldMap) window.mountWorldMap('prosperity-map');
   if (mode) _prosperityMode = mode;
   const isNominal = _prosperityMode === 'nominal';
   const metricKey = isNominal ? 'GDP_CAPITA' : 'GDP_CAPITA_PPP';
@@ -196,7 +207,7 @@ function mountProsperityChart(mode) {
         c2.fillText('FALLING BEHIND · poorer, growing slower', a.left + 8, a.bottom - 6);
         c2.globalAlpha = 1; c2.font = '10px JetBrains Mono, monospace'; c2.fillStyle = theme.tick;
         c2.textAlign = 'left'; c2.textBaseline = 'bottom';
-        c2.fillText(`G20 median ${A.fmtSignedPct(medGrowth)}`, a.left + 8, my - 3);
+        c2.fillText(`${PEER_CAP()} median ${A.fmtSignedPct(medGrowth)}`, a.left + 8, my - 3);
         c2.textBaseline = 'top';
         c2.fillText(`median $${Math.round(medPPP / 1000)}K`, mx + 4, a.top + 24);
         c2.restore();
@@ -231,7 +242,10 @@ function mountProsperityChart(mode) {
   if (titleEl) titleEl.textContent = isNominal ? 'GDP per Capita (Nominal)' : 'GDP per Capita PPP';
   if (subEl)   subEl.textContent   = isNominal ? 'US$ · highest first' : "Int'l $ · highest first";
 
-  const pppRanked = [...data].sort((a, b) => b.ppp - a.ppp);
+  // Wider scopes rank the top 25 here; every economy is on the map and bubble chart.
+  const pppAll = [...data].sort((a, b) => b.ppp - a.ppp);
+  const pppRanked = (!window.Scope || Scope.isG20()) ? pppAll : pppAll.slice(0, 25);
+  if (subEl && pppRanked.length < pppAll.length) subEl.textContent += ` · top ${pppRanked.length} of ${pppAll.length}`;
   const maxPPP = pppRanked[0].ppp;
   document.getElementById('ppp-bars').innerHTML = `<div class="bar-chart">${pppRanked.map(d => {
     const pct = (d.ppp / maxPPP) * 100;
@@ -262,7 +276,13 @@ function mountProsperityChart(mode) {
     <div style="padding:10px 14px;border-bottom:1px solid var(--rule)">
       <div class="panel__title ${q.cls}" style="font-size:11px;margin-bottom:2px">${q.label}</div>
       <div style="font-size:11.5px;color:var(--text-3);margin-bottom:6px">${q.desc}</div>
-      <div style="font-size:12px;color:var(--text-2);line-height:1.6">${countries.sort((a, b) => b.y - a.y).map(d => `${A.escapeText(d.name)} <span style="font-family:var(--font-mono);font-size:10.5px;color:var(--text-3)">${A.fmtSignedPct(d.y)}</span>`).join(' · ') || '—'}</div>
+      <div style="font-size:12px;color:var(--text-2);line-height:1.6">${(() => {
+        // Wider scopes list the 12 fastest-growing per group; the bubble chart shows all.
+        const cap = (!window.Scope || Scope.isG20()) ? Infinity : 12;
+        const sorted = countries.sort((a, b) => b.y - a.y);
+        const shown = sorted.slice(0, cap).map(d => `${A.escapeText(d.name)} <span style="font-family:var(--font-mono);font-size:10.5px;color:var(--text-3)">${A.fmtSignedPct(d.y)}</span>`).join(' · ');
+        return (shown || '—') + (sorted.length > cap ? ` <span style="font-family:var(--font-mono);font-size:10.5px;color:var(--text-3)">+${sorted.length - cap} more</span>` : '');
+      })()}</div>
     </div>`;
   }).join('');
 }

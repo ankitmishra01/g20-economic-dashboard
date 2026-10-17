@@ -39,6 +39,22 @@
     return `$${Math.round(n).toLocaleString()}`;
   }
 
+  // GDP in the dashboard's trillion style ($0.63T) for economies of $100B and up
+  // (every G20 member, so the G20 view is unchanged); smaller economies read in
+  // billions or millions instead of "$0.00T".
+  function fmtGDPScaled(n) {
+    if (n == null || isNaN(n)) return '—';
+    const a = Math.abs(n);
+    if (a >= 1e11) return `$${(n / 1e12).toFixed(2)}T`;
+    if (a >= 1e9)  return `$${(n / 1e9).toFixed(1)}B`;
+    return `$${(n / 1e6).toFixed(0)}M`;
+  }
+  // Same rule for tables that print the number in USD tn without a unit.
+  function fmtTn(n) {
+    if (n == null || isNaN(n)) return '—';
+    return Math.abs(n) >= 1e11 ? (n / 1e12).toFixed(2) : (n / 1e12).toFixed(3);
+  }
+
   function fmtPct(n, decimals) {
     if (n == null || isNaN(n)) return '—';
     const d = decimals ?? 1;
@@ -128,6 +144,6 @@
       `aria-label="Open ${escapeAttr(name)} profile"`;
   }
 
-  global.A = { icon, colorHash, fmtGDP, fmtPct, fmtSignedPct, fmtMillions, fmtThousands, fmtDecimal,
+  global.A = { icon, colorHash, fmtGDP, fmtGDPScaled, fmtTn, fmtPct, fmtSignedPct, fmtMillions, fmtThousands, fmtDecimal,
                fmtByFormat, deltaBadge, escapeText, escapeAttr, chartTheme, navRowAttrs };
 })(window);

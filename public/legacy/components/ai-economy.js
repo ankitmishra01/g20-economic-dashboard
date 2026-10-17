@@ -71,7 +71,7 @@ function renderAIEconomy() {
 <div class="page-body">
 
   <div class="sec-head">
-    <div class="sec-head__title">AI Economy <span class="count">G20</span><span class="sec-head__sub">AI readiness · trajectory · workforce displacement risk</span></div>
+    <div class="sec-head__title">AI Economy <span class="count">${PEER_CAP()}</span><span class="sec-head__sub">AI readiness · trajectory · workforce displacement risk</span></div>
     <div class="sec-head__actions">
       <a href="https://ai-trajectory-index.vercel.app" target="_blank" rel="noopener" class="sec-head__tab" style="text-decoration:none">
         Full Index ↗
@@ -92,7 +92,7 @@ function renderAIEconomy() {
       <div class="kpi-tile__delta" id="hero-traj-name">by 2028</div>
     </div></div>
     <div class="panel"><div class="panel__body" style="padding:14px 16px">
-      <div class="kpi-tile__lbl">G20 Median Score</div>
+      <div class="kpi-tile__lbl">${PEER_CAP()} Median Score</div>
       <div class="kpi-tile__val" id="hero-median">—<span class="unit">/100</span></div>
       <div class="kpi-tile__delta">AI Trajectory Index</div>
     </div></div>
@@ -103,7 +103,7 @@ function renderAIEconomy() {
     </div></div>
   </div>
 
-  <!-- G20 AI Landscape Editorial — injected async after data loads -->
+  <!-- ${PEER()} AI Landscape Editorial — injected async after data loads -->
   <div id="ai-editorial" class="ai-editorial-placeholder">
     <div style="height:4px;background:linear-gradient(90deg,var(--bg-3) 25%,var(--bg-2) 50%,var(--bg-3) 75%);background-size:200% 100%;border-radius:2px;animation:shimmer 1.4s infinite"></div>
   </div>
@@ -258,15 +258,15 @@ function renderAIEconomyEditorial(aiData, g20sorted) {
   });
 
   // Paragraph 1 — The Divide
-  const p1 = `The G20 AI landscape is bifurcated along familiar economic lines. The five leading economies (${top5.map(c => `<strong>${A.escapeText(c.name)}</strong>`).join(', ')}) average ${top5avg}/100 on the AI Trajectory Index, while the bottom five (${bottom5.map(c => A.escapeText(c.name)).join(', ')}) average just ${bot5avg}/100. That ${gap}-point gap reflects decades of divergent investment in digital infrastructure, STEM pipelines, and technology governance frameworks. The G20 median stands at ${medScore}/100, with ${g20sorted.filter(c => c.ai.total_score >= medScore).length} of 19 economies at or above that threshold.`;
+  const p1 = `The ${PEER()} AI landscape is bifurcated along familiar economic lines. The five leading economies (${top5.map(c => `<strong>${A.escapeText(c.name)}</strong>`).join(', ')}) average ${top5avg}/100 on the AI Trajectory Index, while the bottom five (${bottom5.map(c => A.escapeText(c.name)).join(', ')}) average just ${bot5avg}/100. That ${gap}-point gap reflects decades of divergent investment in digital infrastructure, STEM pipelines, and technology governance frameworks. The ${PEER()} median stands at ${medScore}/100, with ${g20sorted.filter(c => c.ai.total_score >= medScore).length} of 19 economies at or above that threshold.`;
 
   // Paragraph 2 — The Risk Zone
   let p2;
   if (riskZone.length === 0) {
-    p2 = `The displacement risk analysis reveals no G20 economy in the danger quadrant, where high AI job exposure combines with low institutional readiness, at current trajectory. However, several emerging-market members sit close to the threshold. As AI adoption accelerates in services and light manufacturing through 2027, readiness investment will determine whether the G20's developing economies manage the workforce transition or absorb it as structural unemployment.`;
+    p2 = `The displacement risk analysis reveals no ${PEER()} economy in the danger quadrant, where high AI job exposure combines with low institutional readiness, at current trajectory. However, several emerging-market members sit close to the threshold. As AI adoption accelerates in services and light manufacturing through 2027, readiness investment will determine whether the ${PEER()}'s developing economies manage the workforce transition or absorb it as structural unemployment.`;
   } else {
     const rzNames = riskZone.map(c => `<strong>${A.escapeText(c.name)}</strong> (${AI_LABOR_EXPOSURE[c.name]}% exposure, ${c.ai.total_score}/100 readiness)`);
-    p2 = `The displacement risk analysis flags ${riskZone.length} G20 ${riskZone.length === 1 ? 'economy' : 'economies'} in the risk quadrant, where AI job exposure exceeds 40% and readiness scores fall below 60: ${rzNames.join('; ')}. These economies face compressed timelines, with automation reaching their workforces faster than the institutional infrastructure needed to retrain and redeploy affected workers. Unless readiness investment accelerates materially before 2027, structural displacement rather than cyclical unemployment becomes the more likely outcome.`;
+    p2 = `The displacement risk analysis flags ${riskZone.length} ${PEER()} ${riskZone.length === 1 ? 'economy' : 'economies'} in the risk quadrant, where AI job exposure exceeds 40% and readiness scores fall below 60: ${rzNames.join('; ')}. These economies face compressed timelines, with automation reaching their workforces faster than the institutional infrastructure needed to retrain and redeploy affected workers. Unless readiness investment accelerates materially before 2027, structural displacement rather than cyclical unemployment becomes the more likely outcome.`;
   }
 
   // Paragraph 3 — The Trajectory Story
@@ -282,9 +282,9 @@ function renderAIEconomyEditorial(aiData, g20sorted) {
       const g = window.G20Data.getLatest(c.iso3, 'GDP_GROWTH', { annualOnly: true });
       return `<strong>${A.escapeText(c.name)}</strong> (${g.value.toFixed(1)}% GDP growth at ${c.ai.total_score}/100 AI readiness)`;
     }).join(' and ');
-    p4 = `Across the G20, AI readiness and near-term GDP growth show only a weak correlation, consistent with early-phase technology adoption where infrastructure build-out precedes productivity payoff. ${outlierText} illustrate the paradox: catch-up growth dynamics and demographic dividends can outpace readiness-driven productivity gains in the short run. The productive payoff of AI investment is likely to concentrate in the 2026 to 2030 window as adoption crosses the deployment threshold. First-mover advantage should accrue to ${top3Traj.slice(0, 2).map(c => A.escapeText(c.name)).join(' and ')}, whose current trajectory positions them to capture outsized productivity gains as frontier AI diffuses into enterprise operations.`;
+    p4 = `Across the ${PEER()}, AI readiness and near-term GDP growth show only a weak correlation, consistent with early-phase technology adoption where infrastructure build-out precedes productivity payoff. ${outlierText} illustrate the paradox: catch-up growth dynamics and demographic dividends can outpace readiness-driven productivity gains in the short run. The productive payoff of AI investment is likely to concentrate in the 2026 to 2030 window as adoption crosses the deployment threshold. First-mover advantage should accrue to ${top3Traj.slice(0, 2).map(c => A.escapeText(c.name)).join(' and ')}, whose current trajectory positions them to capture outsized productivity gains as frontier AI diffuses into enterprise operations.`;
   } else {
-    p4 = `Across the G20, AI readiness and near-term GDP growth show only a weak positive correlation, consistent with early-phase technology diffusion where infrastructure build-out precedes measurable productivity payoff. Advanced economies with the highest AI scores are largely growing at 1% to 3%, while some emerging-market members with lower readiness scores are growing at 4% to 6%. The productive payoff of AI readiness is likely to concentrate in the 2026 to 2030 window as adoption crosses the enterprise deployment threshold. First-mover advantage should accrue to ${top3Traj.slice(0, 2).map(c => A.escapeText(c.name)).join(' and ')}, whose current trajectory positions them to capture outsized productivity gains once frontier AI diffuses into the broader economy.`;
+    p4 = `Across the ${PEER()}, AI readiness and near-term GDP growth show only a weak positive correlation, consistent with early-phase technology diffusion where infrastructure build-out precedes measurable productivity payoff. Advanced economies with the highest AI scores are largely growing at 1% to 3%, while some emerging-market members with lower readiness scores are growing at 4% to 6%. The productive payoff of AI readiness is likely to concentrate in the 2026 to 2030 window as adoption crosses the enterprise deployment threshold. First-mover advantage should accrue to ${top3Traj.slice(0, 2).map(c => A.escapeText(c.name)).join(' and ')}, whose current trajectory positions them to capture outsized productivity gains once frontier AI diffuses into the broader economy.`;
   }
 
   // Sidebar
@@ -306,7 +306,7 @@ function renderAIEconomyEditorial(aiData, g20sorted) {
 
   el.innerHTML = `
     <div class="sec-head">
-      <div class="sec-head__title">G20 AI Landscape <span class="sec-head__sub">editorial · computed from AI Trajectory Index</span></div>
+      <div class="sec-head__title">${PEER_CAP()} AI Landscape <span class="sec-head__sub">editorial · computed from AI Trajectory Index</span></div>
     </div>
     <div class="panel mb-20">
       <div class="panel__body" style="padding:20px 24px">
@@ -682,7 +682,7 @@ function mountGrowthChart(sorted) {
     data: {
       datasets: [
         {
-          label: 'G20 Countries',
+          label: `${PEER_CAP()} Countries`,
           data: points,
           backgroundColor: 'rgba(10,10,10,0.8)',
           pointRadius: 7,

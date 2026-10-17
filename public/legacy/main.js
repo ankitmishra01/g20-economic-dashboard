@@ -73,8 +73,29 @@
   };
 
   // ── Boot ──────────────────────────────────────────────────────────────────
+  // ── Scope selector (G20 default · Global · regions · income groups · watchlist) ──
+  function renderScopeSelect() {
+    const sel = document.getElementById('scope-select');
+    if (!sel || !window.Scope) return;
+    const groups = {};
+    for (const s of Scope.list()) (groups[s.group] = groups[s.group] || []).push(s);
+    sel.innerHTML = Object.entries(groups).map(([g, items]) => g === 'Default'
+      ? items.map(s => `<option value="${s.id}">${A.escapeText(s.label)}</option>`).join('')
+      : `<optgroup label="${A.escapeAttr(g)}">${items.map(s => `<option value="${s.id}">${A.escapeText(s.label)}${s.id === 'watchlist' ? ` (${Scope.watchlist().length})` : ''}</option>`).join('')}</optgroup>`).join('');
+    sel.value = Scope.id();
+  }
+  window.renderScopeSelect = renderScopeSelect;
+
+  // Re-render the current route for the new scope (pages iterate over window.G20).
+  window.onScopeChange = function () {
+    renderScopeSelect();
+    const page = location.hash.replace('#', '') || 'overview';
+    navTo(page.startsWith('country/') ? page : (NAV_ITEMS.find(n => n.id === page) ? page : 'overview'));
+  };
+
   document.addEventListener('DOMContentLoaded', async () => {
     renderRail();
+    renderScopeSelect();
     updateLiveClock();
     loadRefreshStamp();
 
@@ -219,9 +240,16 @@
       el.classList.toggle('active', el.dataset.page === navPage);
     });
 
+    // A country outside the current scope (e.g. opened from a link) is shown against
+    // the global sample, so its rankings and comparisons stay meaningful.
+    if (isCountry && window.Scope && Scope.id() !== 'global' && !G20.some(c => c.iso3 === page.split('/')[1]) && Scope.find(page.split('/')[1])) {
+      Scope.set('global');
+      return;
+    }
+
     // Update crumbs
     const label = isCountry
-      ? (G20.find(c => c.iso3 === page.split('/')[1])?.name || page.split('/')[1])
+      ? ((window.findEconomy?.(page.split('/')[1]) || G20.find(c => c.iso3 === page.split('/')[1]))?.name || page.split('/')[1])
       : (NAV_ITEMS.find(n => n.id === page)?.label || page);
     document.getElementById('crumb-page').textContent = label;
 
@@ -237,6 +265,18 @@
              <button class="ask-btn" onclick="location.reload()">Retry</button>
            </div>`
         : `<div class="loading-spinner"><div class="spinner"></div><span>Loading data…</span></div>`;
+      return;
+    }
+
+    // Wider scopes load series from static shards on demand; show the skeleton until ready.
+    const pending = window.G20Data.pendingFor ? window.G20Data.pendingFor(page) : null;
+    if (pending) {
+      root.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><span>Loading ${A.escapeText(window.Scope ? Scope.label() : '')} data…</span></div>`;
+      pending.then(() => { if (_lastRoute === page) navTo(page); })
+        .catch(err => {
+          console.warn('Shard load failed:', err);
+          if (_lastRoute === page) root.innerHTML = `<div class="loading-spinner" style="flex-direction:column;gap:12px;text-align:center"><strong>Data for this scope is unavailable</strong><span>Switch back to G20 or retry shortly.</span><button class="ask-btn" onclick="Scope.set('g20')">Back to G20</button></div>`;
+        });
       return;
     }
 

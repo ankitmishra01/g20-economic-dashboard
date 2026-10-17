@@ -4,7 +4,8 @@
 // sync/registry.js from the World Bank country API). The default scope is the
 // G20 in its original order, names and regions.
 const _flagEmoji = (iso2) => String.fromCodePoint(...[...iso2.toUpperCase()].map(ch => 0x1F1E6 + ch.charCodeAt(0) - 65));
-const G20 = (window.COUNTRY_REGISTRY?.collections?.g20?.members || []).map(m => ({
+// `let`, not `const`: scope.js reassigns it when the viewer switches scope.
+let G20 = (window.COUNTRY_REGISTRY?.collections?.g20?.members || []).map(m => ({
   code: m.iso2, iso3: m.iso3, name: m.name, flag: _flagEmoji(m.iso2), region: m.region,
 }));
 

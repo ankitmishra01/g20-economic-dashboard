@@ -2,6 +2,9 @@
 (function () {
   const LABEL = { GDP_GROWTH:'Real growth', INFLATION:'Inflation', UNEMPLOYMENT:'Unemployment', DEBT_GDP:'Debt to GDP', FISCAL_BAL:'Fiscal balance', CURRENT_ACC:'Current account' };
   const EXPORTERS = window.COUNTRY_SETS.commodityExporters; // from the country registry
+  // The projection engine is trained on the G20 only, so this page always shows the G20
+  // whatever scope is selected (a note says so when the scope is wider).
+  const G20 = window.G20_MEMBERS || window.G20;
   let data, loading, fanChart, outlookChart;
   const esc = value => window.A?.escapeText ? A.escapeText(String(value)) : String(value);
   const countryName = iso => iso === 'G20_MEDIAN' ? 'G20 median' : iso === 'OECD' ? 'OECD aggregate' : G20.find(c => c.iso3 === iso)?.name || iso;
@@ -17,7 +20,7 @@
     return loading;
   }
 
-  window.renderProjections = () => `<div class="page-body projections-page"><div id="projections-root" class="loading-spinner"><div class="spinner"></div><span>Loading projection results…</span></div></div>`;
+  window.renderProjections = () => `<div class="page-body projections-page">${window.Scope && !Scope.isG20() ? `<div class="scope-note">The outlook model is trained on the G20, so this page shows the G20 whatever scope is selected. ${esc(Scope.label())} economies appear on every other page.</div>` : ''}<div id="projections-root" class="loading-spinner"><div class="spinner"></div><span>Loading projection results…</span></div></div>`;
 
   function interval(r) { return `${r.point.toFixed(1)}% <small>${r.p10.toFixed(1)} to ${r.p90.toFixed(1)}</small>`; }
   function movement(iso, key, r) {

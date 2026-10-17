@@ -16,11 +16,12 @@
   <link rel="stylesheet" href="styles/flags.css">
 
   <!-- Apply saved theme before paint to avoid flash -->
-  <script>if(localStorage.getItem('g20-theme')==='dark')document.getElementById('html-root').setAttribute('data-theme','dark');</script>
+  <script>(function(){var t=new URLSearchParams(location.search).get('theme');try{if(t==='dark'||t==='light')localStorage.setItem('g20-theme',t);}catch(e){}if((t||localStorage.getItem('g20-theme'))==='dark')document.getElementById('html-root').setAttribute('data-theme','dark');})();</script>
 
   <!-- Config must load before everything -->
   <script src="countries.js"></script>
   <script src="config.js"></script>
+  <script src="scope.js"></script>
 </head>
 <body>
 
@@ -86,6 +87,10 @@
       </div>
       <div class="cmd-spacer" style="flex:1"></div>
       <div class="cmd-actions">
+        <label class="scope-pick" title="Which economies every page covers">
+          <span class="scope-pick__lbl">Scope</span>
+          <select class="pill-btn scope-select" id="scope-select" onchange="Scope.set(this.value)" aria-label="Economies in scope"></select>
+        </label>
         <div class="live-pill">
           <span class="dot"></span>
           <span id="live-time">Live · —</span>
@@ -169,6 +174,7 @@
 <script src="components/projections.js"></script>
 <script src="components/analysis.js"></script>
 <script src="components/insights.js"></script>
+<script src="components/worldmap.js"></script>
 <!-- Forecast model + yield-curve term spread (generated offline) + inference -->
 <script src="forecast-model.js"></script>
 <script src="term-spread.js"></script>
